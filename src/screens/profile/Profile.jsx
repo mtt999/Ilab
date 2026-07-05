@@ -44,14 +44,18 @@ async function createAuthUser(email, password) {
 // [TeammatesPanel imported from components/TeammatesPanel.jsx]
 // ══════════════════════════════════════════════════════════════
 
+const SOLO_PROFILE_TABS    = ['info','teammates','dashboard','notifications','storage','privacy','password','danger']
+const STAFF_PROFILE_TABS   = ['info','password','dashboard','notifs','storage','privacy','team','danger']
+const STUDENT_PROFILE_TABS = ['info','password','dashboard','notifs','storage','privacy','team','danger']
+const ADMIN_PROFILE_TABS   = ['admin','icons','dashboard','notifs','org','privacy']
+
 // ══════════════════════════════════════════════════════════════
 // SOLO PROFILE — reads from solo_users table
 // ══════════════════════════════════════════════════════════════
 function SoloProfile({ session }) {
-  const { toast, setSession, clearSession } = useAppStore()
+  const { toast, setSession, clearSession, sidebarSubTab, setSidebarSubTab } = useAppStore()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('info')
   const [form, setForm] = useState({})
   const [pinForm, setPinForm] = useState({ current: '', newPin: '', confirm: '' })
   const [pinError, setPinError] = useState('')
@@ -59,7 +63,10 @@ function SoloProfile({ session }) {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
 
+  const activeTab = SOLO_PROFILE_TABS.includes(sidebarSubTab) ? sidebarSubTab : 'info'
+
   useEffect(() => { load() }, [])
+  useEffect(() => { if (!SOLO_PROFILE_TABS.includes(sidebarSubTab)) setSidebarSubTab('info') }, [])
 
   async function load() {
     setLoading(true)
@@ -68,6 +75,8 @@ function SoloProfile({ session }) {
     setUser(data)
     if (data) setForm({
       name: data.name || '',
+      last_name: data.last_name || '',
+      nick_name: data.nick_name || '',
       email: data.email || '',
       phone: data.phone || '',
       photo_url: data.photo_url || '',
@@ -79,12 +88,14 @@ function SoloProfile({ session }) {
     setSaving(true)
     const { error } = await sb.from('solo_users').update({
       name: form.name.trim(),
+      last_name: form.last_name?.trim() || null,
+      nick_name: form.nick_name?.trim() || null,
       email: form.email || null,
       phone: form.phone || null,
       photo_url: form.photo_url || null,
     }).eq('id', user.id)
     if (error) { toast('Error saving: ' + error.message); setSaving(false); return }
-    setSession({ ...session, username: form.name.trim(), photoUrl: form.photo_url || null })
+    setSession({ ...session, username: form.nick_name?.trim() || form.name.trim(), photoUrl: form.photo_url || null })
     toast('Profile saved ✓'); setSaving(false); load()
   }
 
@@ -145,7 +156,7 @@ function SoloProfile({ session }) {
           {form.photo_url ? <img src={form.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 32, color: 'var(--text3)' }}>👤</span>}
         </div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 20 }}>{form.name || user.name}</div>
+          <div style={{ fontWeight: 700, fontSize: 20 }}>{form.nick_name?.trim() || form.name || user.name}</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>{form.email || user.email}</div>
           <span style={{ display: 'inline-block', marginTop: 6, background: '#EEEDFE', color: '#534AB7', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 600 }}>Solo</span>
         </div>
@@ -161,10 +172,9 @@ function SoloProfile({ session }) {
           { key: 'storage',       label: '🗄️ Storage' },
           { key: 'privacy',       label: '🔒 Privacy' },
           { key: 'password',      label: '🔑 Password' },
-          { key: 'photo',         label: '🖼️ Photo' },
           { key: 'danger',        label: '⚠️ Delete Account' },
         ].map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)}
+          <button key={t.key} onClick={() => setSidebarSubTab(t.key)}
             style={{ padding: '10px 22px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: activeTab === t.key ? '#534AB7' : 'var(--text2)', borderBottom: `2px solid ${activeTab === t.key ? '#534AB7' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
             {t.label}
           </button>
@@ -173,10 +183,38 @@ function SoloProfile({ session }) {
 
       {activeTab === 'info' && (
         <div className="card">
-          <div className="field"><label>Full Name *</label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-          <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-          <div className="field"><label>Phone</label><input value={form.phone || ''} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-          <button className="btn btn-primary" onClick={saveInfo} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+          <div className="grid-2">
+            <div className="field"><label>First Name *</label><input autoComplete="given-name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+            <div className="field"><label>Last Name *</label><input autoComplete="family-name" value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} /></div>
+          </div>
+          <div className="field">
+            <label>Nick Name <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: 12 }}>(optional — shown instead of first name)</span></label>
+            <input autoComplete="nickname" value={form.nick_name} onChange={e => setForm(f => ({ ...f, nick_name: e.target.value }))} placeholder="e.g. Alex" />
+          </div>
+          <div className="field"><label>Email</label><input type="email" autoComplete="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
+          <div className="field"><label>Phone</label><input autoComplete="tel" value={form.phone || ''} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>Profile Photo</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12, padding: '12px 16px', background: 'var(--surface2)', borderRadius: 'var(--radius-lg)' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--surface)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                {form.photo_url ? <img src={form.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28, color: 'var(--text3)' }}>👤</span>}
+              </div>
+              <div style={{ flex: 1, fontSize: 13, color: 'var(--text3)' }}>Saves automatically after upload.</div>
+              {form.photo_url && (
+                <button className="btn btn-sm" onClick={async () => {
+                  await sb.from('solo_users').update({ photo_url: null }).eq('id', user.id)
+                  setForm(f => ({ ...f, photo_url: '' }))
+                  setSession({ ...session, photoUrl: null })
+                  toast('Photo removed.')
+                }}>Remove</button>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadPhoto(e.target.files[0])} />
+            <button className="btn btn-sm btn-primary" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? '⏳ Uploading…' : '⬆️ Choose photo'}</button>
+          </div>
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 16, paddingTop: 16 }}>
+            <button className="btn btn-primary" onClick={saveInfo} disabled={saving || !form.name.trim()}>{saving ? 'Saving…' : 'Save changes'}</button>
+          </div>
         </div>
       )}
 
@@ -193,39 +231,15 @@ function SoloProfile({ session }) {
       {activeTab === 'password' && (
         <div className="card">
           <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Change password</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Min. 8 characters with uppercase, lowercase & symbol.</div>
-          <div className="field"><label>Current password</label><input type="password" value={pinForm.current} onChange={e => { setPinForm(f => ({ ...f, current: e.target.value })); setPinError('') }} /></div>
+          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Min. 8 characters with uppercase, lowercase &amp; symbol.</div>
+          <div className="field"><label>Current password</label><input type="password" autoComplete="current-password" value={pinForm.current} onChange={e => { setPinForm(f => ({ ...f, current: e.target.value })); setPinError('') }} /></div>
           <div className="grid-2">
-            <div className="field"><label>New password</label><input type="password" value={pinForm.newPin} onChange={e => { setPinForm(f => ({ ...f, newPin: e.target.value })); setPinError('') }} /></div>
-            <div className="field"><label>Confirm</label><input type="password" value={pinForm.confirm} onChange={e => { setPinForm(f => ({ ...f, confirm: e.target.value })); setPinError('') }} /></div>
+            <div className="field"><label>New password</label><input type="password" autoComplete="new-password" value={pinForm.newPin} onChange={e => { setPinForm(f => ({ ...f, newPin: e.target.value })); setPinError('') }} /></div>
+            <div className="field"><label>Confirm</label><input type="password" autoComplete="new-password" value={pinForm.confirm} onChange={e => { setPinForm(f => ({ ...f, confirm: e.target.value })); setPinError('') }} /></div>
           </div>
           <PasswordStrengthHint password={pinForm.newPin} />
           {pinError && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {pinError}</div>}
           <button className="btn btn-primary" onClick={savePassword} disabled={!pinForm.current || !pinForm.newPin || !pinForm.confirm}>Update password</button>
-        </div>
-      )}
-
-      {activeTab === 'photo' && (
-        <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: '12px 16px', background: 'var(--surface2)', borderRadius: 'var(--radius-lg)' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--surface)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-              {form.photo_url ? <img src={form.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 32, color: 'var(--text3)' }}>👤</span>}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>Current photo</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Saves automatically after upload.</div>
-            </div>
-            {form.photo_url && (
-              <button className="btn btn-sm" onClick={async () => {
-                await sb.from('solo_users').update({ photo_url: null }).eq('id', user.id)
-                setForm(f => ({ ...f, photo_url: '' }))
-                setSession({ ...session, photoUrl: null })
-                toast('Photo removed.')
-              }}>Remove</button>
-            )}
-          </div>
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadPhoto(e.target.files[0])} />
-          <button className="btn btn-sm btn-primary" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? '⏳ Uploading…' : '⬆️ Choose photo'}</button>
         </div>
       )}
 
@@ -1005,9 +1019,12 @@ function OrgContactPanel({ session, toast }) {
 
 
 function AdminProfile() {
-  const { session, toast } = useAppStore()
+  const { session, toast, sidebarSubTab, setSidebarSubTab } = useAppStore()
   const isOrgAdmin = !!session?.userId   // false = super admin (userId null)
-  const [adminTab, setAdminTab] = useState('admin')
+
+  const adminTab = ADMIN_PROFILE_TABS.includes(sidebarSubTab) ? sidebarSubTab : 'admin'
+
+  useEffect(() => { if (isOrgAdmin && !ADMIN_PROFILE_TABS.includes(sidebarSubTab)) setSidebarSubTab('admin') }, [])
 
   // Super admin: password change + notification email
   if (!isOrgAdmin) {
@@ -1035,7 +1052,7 @@ function AdminProfile() {
       </div>
       <ScrollTabs style={{ borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
         {tabs.map(t => (
-          <button key={t.key} onClick={() => setAdminTab(t.key)}
+          <button key={t.key} onClick={() => setSidebarSubTab(t.key)}
             style={{ padding: '10px 24px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: adminTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${adminTab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
             {t.label}
           </button>
@@ -1108,10 +1125,10 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
       <div className="card">
         <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>🔑 Account Settings</div>
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>Update the admin password.</div>
-        <div className="field"><label>Current password</label><input type="password" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} placeholder="••••••••" /></div>
-        <div className="field"><label>New password</label><input type="password" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" /></div>
+        <div className="field"><label>Current password</label><input type="password" autoComplete="current-password" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} placeholder="••••••••" /></div>
+        <div className="field"><label>New password</label><input type="password" autoComplete="new-password" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" /></div>
         <PasswordStrengthHint password={form.newPassword} />
-        <div className="field"><label>Confirm new password</label><input type="password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="••••••••" /></div>
+        <div className="field"><label>Confirm new password</label><input type="password" autoComplete="new-password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="••••••••" /></div>
         {error && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {error}</div>}
         <button className="btn btn-primary" onClick={savePassword} disabled={saving}>{saving ? 'Saving…' : 'Update password'}</button>
       </div>
@@ -1828,16 +1845,55 @@ function StaffStudentIconManager() {
   )
 }
 
+function PasswordChangePanel({ session, toast }) {
+  const [form, setForm] = useState({ current: '', newPin: '', confirm: '' })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setError('')
+    if (!form.current) { setError('Enter your current password.'); return }
+    if (!form.newPin || form.newPin.length < 6) { setError('New password must be at least 6 characters.'); return }
+    if (form.newPin !== form.confirm) { setError('Passwords do not match.'); return }
+    setSaving(true)
+    const email = session?.email || (await sb.auth.getUser()).data?.user?.email
+    const { error: reAuthErr } = await sb.auth.signInWithPassword({ email, password: form.current })
+    if (reAuthErr) { setError('Current password is incorrect.'); setSaving(false); return }
+    const { error: updateErr } = await sb.auth.updateUser({ password: form.newPin })
+    if (updateErr) { setError('Failed to update. Try again.'); setSaving(false); return }
+    toast('Password updated ✓')
+    setForm({ current: '', newPin: '', confirm: '' })
+    setSaving(false)
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: 480 }}>
+      <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Change password</div>
+      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Min. 8 characters with uppercase, lowercase &amp; symbol.</div>
+      <div className="field"><label>Current password</label><input type="password" autoComplete="current-password" value={form.current} onChange={e => { setForm(f => ({ ...f, current: e.target.value })); setError('') }} /></div>
+      <div className="grid-2">
+        <div className="field"><label>New password</label><input type="password" autoComplete="new-password" value={form.newPin} onChange={e => { setForm(f => ({ ...f, newPin: e.target.value })); setError('') }} /></div>
+        <div className="field"><label>Confirm</label><input type="password" autoComplete="new-password" value={form.confirm} onChange={e => { setForm(f => ({ ...f, confirm: e.target.value })); setError('') }} /></div>
+      </div>
+      <PasswordStrengthHint password={form.newPin} />
+      {error && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {error}</div>}
+      <button className="btn btn-primary" onClick={save} disabled={saving || !form.current || !form.newPin || !form.confirm}>{saving ? 'Saving…' : 'Update password'}</button>
+    </div>
+  )
+}
+
 // ══════════════════════════════════════════════════════════════
 // STAFF PROFILE
 // ══════════════════════════════════════════════════════════════
 function StaffProfile({ session }) {
-  const { toast, pendingProfileTab, setPendingProfileTab, clearSession } = useAppStore()
-  const [activeTab, setActiveTab] = useState('info')
+  const { toast, pendingProfileTab, setPendingProfileTab, clearSession, sidebarSubTab, setSidebarSubTab } = useAppStore()
 
+  const activeTab = STAFF_PROFILE_TABS.includes(sidebarSubTab) ? sidebarSubTab : 'info'
+
+  useEffect(() => { if (!STAFF_PROFILE_TABS.includes(sidebarSubTab)) setSidebarSubTab('info') }, [])
   useEffect(() => {
     if (pendingProfileTab) {
-      setActiveTab(pendingProfileTab)
+      setSidebarSubTab(pendingProfileTab)
       setPendingProfileTab(null)
     }
   }, [pendingProfileTab])
@@ -1850,6 +1906,7 @@ function StaffProfile({ session }) {
       <ScrollTabs style={{ borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
         {[
           { key: 'info',      label: '👤 My Profile' },
+          { key: 'password',  label: '🔑 Password' },
           { key: 'dashboard', label: '🎛️ Dashboard Icons' },
           { key: 'notifs',    label: '🔔 Notifications' },
           { key: 'storage',   label: '🗄️ Storage' },
@@ -1857,13 +1914,14 @@ function StaffProfile({ session }) {
           { key: 'team',      label: '🤝 Project Team' },
           { key: 'danger',    label: '⚠️ Delete Account' },
         ].map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)}
+          <button key={t.key} onClick={() => setSidebarSubTab(t.key)}
             style={{ padding: '10px 24px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: activeTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${activeTab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
             {t.label}
           </button>
         ))}
       </ScrollTabs>
       {activeTab === 'info'      && <UserProfileForm session={session} toast={toast} />}
+      {activeTab === 'password'  && <PasswordChangePanel session={session} toast={toast} />}
       {activeTab === 'dashboard' && <DashboardIconsPanel session={session} />}
       {activeTab === 'notifs'    && <NotificationPrefsPanel userId={session?.userId} role="user" />}
       {activeTab === 'storage'   && <StorageTab toast={toast} />}
@@ -1878,10 +1936,7 @@ function UserProfileForm({ session, toast }) {
   const { setSession } = useAppStore()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('info')
   const [form, setForm] = useState({})
-  const [pinForm, setPinForm] = useState({ current: '', newPin: '', confirm: '' })
-  const [pinError, setPinError] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
@@ -1894,7 +1949,7 @@ function UserProfileForm({ session, toast }) {
     if (session.userId) { const { data } = await sb.from('users').select('*').eq('id', session.userId).maybeSingle(); u = data }
     if (!u) { const { data } = await sb.from('users').select('*').eq('name', session.username).maybeSingle(); u = data }
     setUser(u)
-    if (u) setForm({ name: u.name||'', last_name: u.last_name||'', email: u.email||'', phone: u.phone||'', degree: u.degree||'', year_semester: u.year_semester||'', supervisor: u.supervisor||'', project_group: u.project_group||'', photo_url: u.photo_url||'' })
+    if (u) setForm({ name: u.name||'', last_name: u.last_name||'', nick_name: u.nick_name||'', email: u.email||'', phone: u.phone||'', degree: u.degree||'', year_semester: u.year_semester||'', supervisor: u.supervisor||'', project_group: u.project_group||'', photo_url: u.photo_url||'' })
     setLoading(false)
   }
 
@@ -1902,24 +1957,12 @@ function UserProfileForm({ session, toast }) {
 
   async function saveInfo() {
     setSaving(true)
-    const payload = { name: form.name.trim(), last_name: form.last_name||null, phone: form.phone||null, degree: form.degree||null, year_semester: form.year_semester||null, photo_url: form.photo_url||null }
+    const payload = { name: form.name.trim(), last_name: form.last_name||null, nick_name: form.nick_name?.trim()||null, phone: form.phone||null, degree: form.degree||null, year_semester: form.year_semester||null, photo_url: form.photo_url||null }
     if (!isStudent) { payload.supervisor = form.supervisor||null; payload.project_group = form.project_group||null }
     const { error } = await sb.from('users').update(payload).eq('id', user.id)
     if (error) { toast('Error saving: ' + error.message); setSaving(false); return }
-    setSession({ ...session, username: form.name.trim(), photoUrl: form.photo_url||null })
+    setSession({ ...session, username: form.nick_name?.trim() || form.name.trim(), photoUrl: form.photo_url||null })
     toast('Profile saved ✓'); setSaving(false); load()
-  }
-
-  async function savePin() {
-    setPinError('')
-    if (!pinForm.current) { setPinError('Enter your current password.'); return }
-    if (!pinForm.newPin || pinForm.newPin.length < 6) { setPinError('New password must be at least 6 characters.'); return }
-    if (pinForm.newPin !== pinForm.confirm) { setPinError('Passwords do not match.'); return }
-    const { error: reAuthErr } = await sb.auth.signInWithPassword({ email: session.email, password: pinForm.current })
-    if (reAuthErr) { setPinError('Current password is incorrect.'); return }
-    const { error: updateErr } = await sb.auth.updateUser({ password: pinForm.newPin })
-    if (updateErr) { setPinError('Failed to update. Try again.'); return }
-    toast('Password updated ✓'); setPinForm({ current: '', newPin: '', confirm: '' })
   }
 
   async function uploadPhoto(file) {
@@ -1953,7 +1996,7 @@ function UserProfileForm({ session, toast }) {
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
   if (!user) return <div className="empty-state"><div className="empty-icon">👤</div>Profile not found.</div>
 
-  const displayName = [user.name, user.last_name].filter(Boolean).join(' ')
+  const displayName = form.nick_name?.trim() || [user.name, user.last_name].filter(Boolean).join(' ')
   const previewPhoto = form.photo_url || user.photo_url
 
   return (
@@ -1970,74 +2013,63 @@ function UserProfileForm({ session, toast }) {
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
-        {[{ key: 'info', label: '👤 Info' }, { key: 'avatar', label: '🖼️ Photo' }, { key: 'pin', label: '🔑 Password' }].map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)}
-            style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: activeTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${activeTab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s' }}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {activeTab === 'info' && (
-        <div className="card">
-          <div className="grid-2">
-            <div className="field"><label>First Name *</label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-            <div className="field"><label>Last Name</label><input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} /></div>
+      <div className="card">
+        <div className="grid-2">
+          <div className="field"><label>First Name *</label><input autoComplete="given-name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+          <div className="field"><label>Last Name *</label><input autoComplete="family-name" value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} /></div>
+        </div>
+        <div className="field">
+          <label>Nick Name <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: 12 }}>(optional — shown instead of first name)</span></label>
+          <input autoComplete="nickname" value={form.nick_name} onChange={e => setForm(f => ({ ...f, nick_name: e.target.value }))} placeholder="e.g. Alex" />
+        </div>
+        <div className="grid-2">
+          <div className="field">
+            <label>Email</label>
+            <input value={form.email} readOnly placeholder="—" style={{ background: 'var(--surface2)', color: 'var(--text3)', cursor: 'default' }} />
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Email is managed by your organization admin.</div>
           </div>
-          <div className="grid-2">
-            <div className="field">
-              <label>Email</label>
-              <input value={form.email} readOnly placeholder="—" style={{ background: 'var(--surface2)', color: 'var(--text3)', cursor: 'default' }} />
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Email is managed by your organization admin.</div>
-            </div>
-            <div className="field"><label>Phone</label><input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+          <div className="field"><label>Phone</label><input autoComplete="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+        </div>
+        <div className="grid-2">
+          <div className="field"><label>Degree</label>
+            <select value={form.degree} onChange={e => setForm(f => ({ ...f, degree: e.target.value }))}>
+              <option value="">— Select —</option>{DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
           </div>
-          <div className="grid-2">
-            <div className="field"><label>Degree</label>
-              <select value={form.degree} onChange={e => setForm(f => ({ ...f, degree: e.target.value }))}>
-                <option value="">— Select —</option>{DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
+          <div className="field"><label>Semester &amp; Year Started</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select value={(form.year_semester||'').split(' ')[0]||''} onChange={e => { const yr = (form.year_semester||'').split(' ')[1]||''; setForm(f => ({ ...f, year_semester: `${e.target.value} ${yr}`.trim() })) }} style={{ flex: 1 }}>
+                <option value="">Sem</option>{SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select value={(form.year_semester||'').split(' ')[1]||''} onChange={e => { const sem = (form.year_semester||'').split(' ')[0]||''; setForm(f => ({ ...f, year_semester: `${sem} ${e.target.value}`.trim() })) }} style={{ flex: 1 }}>
+                <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            <div className="field"><label>Semester & Year Started</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <select value={(form.year_semester||'').split(' ')[0]||''} onChange={e => { const yr = (form.year_semester||'').split(' ')[1]||''; setForm(f => ({ ...f, year_semester: `${e.target.value} ${yr}`.trim() })) }} style={{ flex: 1 }}>
-                  <option value="">Sem</option>{SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select value={(form.year_semester||'').split(' ')[1]||''} onChange={e => { const sem = (form.year_semester||'').split(' ')[0]||''; setForm(f => ({ ...f, year_semester: `${sem} ${e.target.value}`.trim() })) }} style={{ flex: 1 }}>
-                  <option value="">Year</option>{YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-            </div>
           </div>
-          <div className="grid-2">
-            <div className="field"><label>Supervisor</label>
-              {isStudent
-                ? <input value={form.supervisor || '—'} readOnly style={{ background: 'var(--surface2)', color: 'var(--text3)', cursor: 'default' }} />
-                : <SupervisorSelect value={form.supervisor} onChange={v => setForm(f => ({ ...f, supervisor: v }))} />}
-            </div>
-            {session?.organizationId === ICT_ORG_ID && (
-              <div className="field"><label>Project Group</label>
-                {isStudent
-                  ? <input value={form.project_group || '—'} readOnly style={{ background: 'var(--surface2)', color: 'var(--text3)', cursor: 'default' }} />
-                  : <select value={form.project_group} onChange={e => setForm(f => ({ ...f, project_group: e.target.value }))}>
-                      <option value="">— Select —</option>{PROJECT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>}
-              </div>
-            )}
-          </div>
-          <button className="btn btn-primary" onClick={saveInfo} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
         </div>
-      )}
-      {activeTab === 'avatar' && (
-        <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, padding: '12px 16px', background: 'var(--surface2)', borderRadius: 'var(--radius-lg)' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--surface)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-              {form.photo_url ? <img src={form.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 32, color: 'var(--text3)' }}>👤</span>}
+        <div className="grid-2">
+          <div className="field"><label>Supervisor</label>
+            {isStudent
+              ? <input value={form.supervisor || '—'} readOnly style={{ background: 'var(--surface2)', color: 'var(--text3)', cursor: 'default' }} />
+              : <SupervisorSelect value={form.supervisor} onChange={v => setForm(f => ({ ...f, supervisor: v }))} />}
+          </div>
+          {session?.organizationId === ICT_ORG_ID && (
+            <div className="field"><label>Project Group</label>
+              {isStudent
+                ? <input value={form.project_group || '—'} readOnly style={{ background: 'var(--surface2)', color: 'var(--text3)', cursor: 'default' }} />
+                : <select value={form.project_group} onChange={e => setForm(f => ({ ...f, project_group: e.target.value }))}>
+                    <option value="">— Select —</option>{PROJECT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>Current photo</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Photo saves automatically after upload.</div>
+          )}
+        </div>
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>Profile Photo</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12, padding: '12px 16px', background: 'var(--surface2)', borderRadius: 'var(--radius-lg)' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--surface)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+              {form.photo_url ? <img src={form.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28, color: 'var(--text3)' }}>👤</span>}
             </div>
+            <div style={{ flex: 1, fontSize: 13, color: 'var(--text3)' }}>Saves automatically after upload.</div>
             {form.photo_url && (
               <button className="btn btn-sm" onClick={async () => {
                 await sb.from('users').update({ photo_url: null }).eq('id', user.id)
@@ -2045,28 +2077,13 @@ function UserProfileForm({ session, toast }) {
               }}>Remove</button>
             )}
           </div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Upload a photo</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>Saves automatically.</div>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadPhoto(e.target.files[0])} />
-            <button className="btn btn-sm btn-primary" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? '⏳ Uploading…' : '⬆️ Choose photo'}</button>
-          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadPhoto(e.target.files[0])} />
+          <button className="btn btn-sm btn-primary" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? '⏳ Uploading…' : '⬆️ Choose photo'}</button>
         </div>
-      )}
-      {activeTab === 'pin' && (
-        <div className="card">
-          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Change password</div>
-          <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>Min. 8 characters with uppercase, lowercase & symbol.</div>
-          <div className="field"><label>Current password</label><input type="password" value={pinForm.current} onChange={e => { setPinForm(f => ({ ...f, current: e.target.value })); setPinError('') }} /></div>
-          <div className="grid-2">
-            <div className="field"><label>New password</label><input type="password" value={pinForm.newPin} onChange={e => { setPinForm(f => ({ ...f, newPin: e.target.value })); setPinError('') }} /></div>
-            <div className="field"><label>Confirm</label><input type="password" value={pinForm.confirm} onChange={e => { setPinForm(f => ({ ...f, confirm: e.target.value })); setPinError('') }} /></div>
-          </div>
-          <PasswordStrengthHint password={pinForm.newPin} />
-          {pinError && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {pinError}</div>}
-          <button className="btn btn-primary" onClick={savePin} disabled={!pinForm.current || !pinForm.newPin || !pinForm.confirm}>Update password</button>
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 16, paddingTop: 16 }}>
+          <button className="btn btn-primary" onClick={saveInfo} disabled={saving || !form.name.trim()}>{saving ? 'Saving…' : 'Save changes'}</button>
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -2075,12 +2092,14 @@ function UserProfileForm({ session, toast }) {
 // STUDENT PROFILE
 // ══════════════════════════════════════════════════════════════
 function UserProfile({ session }) {
-  const { toast, pendingProfileTab, setPendingProfileTab, clearSession } = useAppStore()
-  const [activeTab, setActiveTab] = useState('info')
+  const { toast, pendingProfileTab, setPendingProfileTab, clearSession, sidebarSubTab, setSidebarSubTab } = useAppStore()
 
+  const activeTab = STUDENT_PROFILE_TABS.includes(sidebarSubTab) ? sidebarSubTab : 'info'
+
+  useEffect(() => { if (!STUDENT_PROFILE_TABS.includes(sidebarSubTab)) setSidebarSubTab('info') }, [])
   useEffect(() => {
     if (pendingProfileTab) {
-      setActiveTab(pendingProfileTab)
+      setSidebarSubTab(pendingProfileTab)
       setPendingProfileTab(null)
     }
   }, [pendingProfileTab])
@@ -2093,6 +2112,7 @@ function UserProfile({ session }) {
       <ScrollTabs style={{ borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
         {[
           { key: 'info',      label: '👤 My Info' },
+          { key: 'password',  label: '🔑 Password' },
           { key: 'dashboard', label: '🎛️ Dashboard Icons' },
           { key: 'notifs',    label: '🔔 Notifications' },
           { key: 'storage',   label: '🗄️ Storage' },
@@ -2100,13 +2120,14 @@ function UserProfile({ session }) {
           { key: 'team',      label: '🤝 Project Team' },
           { key: 'danger',    label: '⚠️ Delete Account' },
         ].map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)}
+          <button key={t.key} onClick={() => setSidebarSubTab(t.key)}
             style={{ padding: '10px 24px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: activeTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${activeTab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
             {t.label}
           </button>
         ))}
       </ScrollTabs>
       {activeTab === 'info'      && <UserProfileForm session={session} toast={toast} />}
+      {activeTab === 'password'  && <PasswordChangePanel session={session} toast={toast} />}
       {activeTab === 'dashboard' && <DashboardIconsPanel session={session} />}
       {activeTab === 'notifs'    && <NotificationPrefsPanel userId={session?.userId} role="student" />}
       {activeTab === 'storage'   && <StorageTab toast={toast} />}

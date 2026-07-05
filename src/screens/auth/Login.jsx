@@ -308,7 +308,7 @@ export default function Login() {
       const adminLevel = user.admin_level || 0
       const role = user.role === 'admin' || adminLevel >= 1 ? 'admin' : user.role
       const teamSessionObj = {
-        role, dbRole: user.role, username: user.name, userId: user.id, email: user.email,
+        role, dbRole: user.role, username: user.nick_name?.trim() || user.name, userId: user.id, email: user.email,
         adminLevel, photoUrl: user.photo_url, avatar: user.avatar,
         loginMode: 'team',
         organizationId: user.organization_id || null,
@@ -335,7 +335,7 @@ export default function Login() {
       if (!soloUser) { await sb.auth.signOut(); setError('No Solo account found. Please sign up first.'); setLoading(false); return }
       if (soloUser.deletion_requested_at) { await sb.auth.signOut(); setError('This account is pending deletion. Your teammates have been notified and have 7 days to respond.'); setLoading(false); return }
       const soloSessionObj = {
-        role: 'solo', username: soloUser.name, userId: soloUser.id,
+        role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id,
         email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar,
         activeModules: soloUser.active_modules || [], loginMode: 'solo',
         termsAcceptedVersion: soloUser.terms_accepted_version || null,

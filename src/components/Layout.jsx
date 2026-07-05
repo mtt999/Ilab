@@ -133,6 +133,38 @@ function getScreenTabs(screen, session) {
     ]
   }
 
+  if (screen === 'profile') {
+    if (session?.userId === null) return null // super admin — no sub-tabs
+    if (session?.loginMode === 'solo') return [
+      { key: 'info',          icon: '👤', label: 'My Info' },
+      { key: 'teammates',     icon: '👥', label: 'Teammates' },
+      { key: 'dashboard',     icon: '🎛️', label: 'Dashboard Icons' },
+      { key: 'notifications', icon: '🔔', label: 'Notifications' },
+      { key: 'storage',       icon: '🗄️', label: 'Storage' },
+      { key: 'privacy',       icon: '🔒', label: 'Privacy' },
+      { key: 'password',      icon: '🔑', label: 'Password' },
+      { key: 'danger',        icon: '⚠️', label: 'Delete Account' },
+    ]
+    if (session?.role === 'admin') return [
+      { key: 'admin',     icon: '🔑', label: 'Admin Settings' },
+      { key: 'icons',     icon: '🖼️', label: 'Icon Images' },
+      { key: 'dashboard', icon: '🎛️', label: 'Dashboard Icons' },
+      { key: 'notifs',    icon: '🔔', label: 'Notifications' },
+      { key: 'org',       icon: '🏢', label: 'Organization' },
+      { key: 'privacy',   icon: '🔒', label: 'Privacy' },
+    ]
+    return [
+      { key: 'info',      icon: '👤', label: 'My Info' },
+      { key: 'password',  icon: '🔑', label: 'Password' },
+      { key: 'dashboard', icon: '🎛️', label: 'Dashboard Icons' },
+      { key: 'notifs',    icon: '🔔', label: 'Notifications' },
+      { key: 'storage',   icon: '🗄️', label: 'Storage' },
+      { key: 'privacy',   icon: '🔒', label: 'Privacy' },
+      { key: 'team',      icon: '🤝', label: 'Project Team' },
+      { key: 'danger',    icon: '⚠️', label: 'Delete Account' },
+    ]
+  }
+
   return null
 }
 
