@@ -20,10 +20,16 @@ const FEEDBACK_SCREENS = {
 
 const ACCENT = '#f59e0b'
 const ACCENT_DARK = '#d97706'
-const MODULE_KEYS = Object.keys(FEEDBACK_SCREENS)
 
 export default function FeedbackWidget({ bottomOffset = 24 }) {
-  const { session, screen } = useAppStore()
+  const { session, screen, activeModules } = useAppStore()
+
+  // Only ask about modules the user actually has access to.
+  // dashboard is always included (everyone has the home page).
+  // activeModules null = all modules visible.
+  const userModuleKeys = Object.keys(FEEDBACK_SCREENS).filter(k =>
+    k === 'dashboard' || activeModules === null || activeModules.includes(k)
+  )
   const [active, setActive] = useState(false)
   const [responses, setResponses] = useState({})
   const [comment, setComment] = useState('')
@@ -67,7 +73,7 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
     if (autoTimer.current) clearTimeout(autoTimer.current)
 
     // If user had typed but didn't submit on the previous screen, save it as pending
-    if (prev && FEEDBACK_SCREENS[prev] && comment.trim() && !(prev in responses)) {
+    if (prev && userModuleKeys.includes(prev) && comment.trim() && !(prev in responses)) {
       setPendingFrom({ key: prev, name: FEEDBACK_SCREENS[prev], text: comment.trim() })
     }
 
@@ -77,7 +83,7 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
     prevScreenRef.current = screen
 
     // Auto-expand after 25s on unreviewed module screens
-    if (FEEDBACK_SCREENS[screen] && !(screen in responses)) {
+    if (userModuleKeys.includes(screen) && !(screen in responses)) {
       autoTimer.current = setTimeout(() => setMinimized(false), 25000)
     }
 
@@ -104,9 +110,9 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
 
   if (!active) return null
 
-  const reviewed   = MODULE_KEYS.filter(k => k in responses).length
-  const total      = MODULE_KEYS.length
-  const onModule   = !!FEEDBACK_SCREENS[screen]
+  const reviewed   = userModuleKeys.filter(k => k in responses).length
+  const total      = userModuleKeys.length
+  const onModule   = userModuleKeys.includes(screen)
   const alreadyDone = responses.hasOwnProperty(screen)
   const widgetBottom = bottomOffset + 64 + 10
 
