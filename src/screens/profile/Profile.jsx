@@ -712,6 +712,19 @@ function DashboardIconsPanel({ session }) {
             </div>
           )
         })}
+        {/* studentLocked modules: visible on dashboard as gray cards, also shown here so students see the full picture */}
+        {session?.role === 'student' && ALL_MODULES_META
+          .filter(m => m.studentLocked && m.roles.includes('team') && !allowedPool?.includes(m.key))
+          .map(m => (
+            <div key={m.key} style={{ borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface2)', padding: '14px 14px 12px', cursor: 'default', position: 'relative', opacity: 0.45, userSelect: 'none', filter: 'grayscale(0.7)' }}>
+              <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface2)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, pointerEvents: 'none' }}>🔒</div>
+              <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{m.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{m.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{m.sub}</div>
+              <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text3)', fontWeight: 600, pointerEvents: 'none' }}>Staff access only</div>
+            </div>
+          ))
+        }
       </div>
       <button className="btn btn-primary" onClick={save} disabled={saving || !selected}>{saving ? 'Saving…' : 'Save dashboard icons'}</button>
       {isSolo && <CustomLinksManager session={session} />}
