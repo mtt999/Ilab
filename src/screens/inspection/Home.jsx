@@ -355,9 +355,14 @@ async function imgUrlToBase64(url) {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now() })
+    const maxDim = 600
+    const w = img.naturalWidth || maxDim
+    const h = img.naturalHeight || maxDim
+    const ratio = w / h
     const canvas = document.createElement('canvas')
-    canvas.width = 300; canvas.height = 300
-    canvas.getContext('2d').drawImage(img, 0, 0, 300, 300)
+    if (ratio >= 1) { canvas.width = Math.min(w, maxDim); canvas.height = Math.round(canvas.width / ratio) }
+    else            { canvas.height = Math.min(h, maxDim); canvas.width  = Math.round(canvas.height * ratio) }
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
     return canvas.toDataURL('image/png').split(',')[1]
   } catch { return null }
 }
@@ -374,16 +379,23 @@ function ExportData() {
   const [exportFormat, setExportFormat] = useState('excel')   // 'excel' | 'pdf'
   const [orgName, setOrgName] = useState('')
   const [orgLogoSrc, setOrgLogoSrc] = useState(null)
+  const [inspectorFullName, setInspectorFullName] = useState('')
 
   const canDelete = session?.role === 'admin' || session?.role === 'user'
 
   useEffect(() => { load() }, [])
   useEffect(() => {
+    // Fetch current user's full name for report header
+    if (session?.userId) {
+      const table = isSolo ? 'solo_users' : 'users'
+      sb.from(table).select('name').eq('id', session.userId).single()
+        .then(({ data: ud }) => { if (ud?.name) setInspectorFullName(ud.name) })
+    }
     if (!isSolo && orgId) {
       sb.from('organizations').select('name, logo_url').eq('id', orgId).single()
         .then(({ data: od }) => { setOrgName(od?.name || ''); setOrgLogoSrc(od?.logo_url || null) })
     }
-  }, [orgId])
+  }, [orgId, session?.userId])
 
   async function load() {
     let q = sb.from('inspections').select('*').eq('login_mode', loginMode).order('inspected_at', { ascending: false }).limit(200)
@@ -407,6 +419,7 @@ function ExportData() {
   // ── PDF: professional report for any set of room records ──
   async function exportPDF(roomRecords, fileTitle, reportTitle) {
     toast('Preparing PDF…')
+    try {
     const { jsPDF } = await import('jspdf')
     const { default: autoTable } = await import('jspdf-autotable')
 
@@ -452,7 +465,7 @@ function ExportData() {
       [['Organization:', orgName || '—'], ['Report to:', '________________________']],
       [['Date:', reportDate],              ['Items Inspected:', String(totalItems)]],
       [['Inspector:', inspector],          ['Items OK:', String(okItems)]],
-      [['Title:', 'Lab Manager'],          ['Items Low:', String(lowItems)]],
+      [['Name:', inspectorFullName || inspector], ['Items Low:', String(lowItems)]],
     ]
     doc.setFontSize(9.5)
     infoRows.forEach(([L, R], i) => {
@@ -484,7 +497,7 @@ function ExportData() {
       doc.text(`${rec.inspector}  ·  ${timeStr}`, PW - MR - 2, y + 5, { align: 'right' })
       doc.setTextColor(0); y += 9
 
-      autoTable(doc, {
+      const tbl = autoTable(doc, {
         startY: y,
         margin: { left: ML, right: MR },
         head: [['#', 'Item Name', 'Unit', 'Count', 'Min', 'Status', 'To Order', 'Notes']],
@@ -506,7 +519,7 @@ function ExportData() {
           6: { cellWidth: 16, halign: 'center' },
           7: { cellWidth: 'auto' },
         },
-        willDrawCell: data => {
+        didParseCell: data => {
           if (data.section === 'body' && data.column.index === 5 && data.cell.raw === 'LOW') {
             data.cell.styles.fillColor = [254, 243, 199]
             data.cell.styles.textColor = [146, 64, 14]
@@ -514,11 +527,12 @@ function ExportData() {
           }
         },
       })
-      y = doc.lastAutoTable.finalY + 6
+      const finalY = tbl?.finalY ?? doc.lastAutoTable?.finalY ?? (y + 30)
+      y = finalY + 6
     }
 
     // Footer on every page
-    const total = doc.internal.getNumberOfPages()
+    const total = (doc.getNumberOfPages?.() ?? doc.internal.getNumberOfPages?.() ?? 1)
     for (let p = 1; p <= total; p++) {
       doc.setPage(p)
       doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(150)
@@ -531,6 +545,10 @@ function ExportData() {
 
     doc.save(`${fileTitle}.pdf`)
     toast('PDF exported!')
+    } catch (e) {
+      console.error('PDF export error:', e)
+      toast('PDF export failed: ' + e.message)
+    }
   }
 
   // ── Excel: all rooms stacked, with logos via ExcelJS ──
@@ -539,58 +557,65 @@ function ExportData() {
     const wb  = new ExcelJS.Workbook()
     const ws  = wb.addWorksheet(sheetTitle.substring(0, 31))
 
+    // Set column widths FIRST — before any data rows to avoid ExcelJS cell reset
+    ws.columns = [
+      { width: 36 }, { width: 10 }, { width: 10 },
+      { width: 10 }, { width: 12 }, { width: 16 }, { width: 30 },
+    ]
+
     const labhiveB64 = await imgUrlToBase64(window.location.origin + '/labhive_logo.svg')
     const orgB64     = orgLogoSrc ? await imgUrlToBase64(orgLogoSrc) : null
 
     let dataStartRow = 1
     if (labhiveB64 || orgB64) {
-      // 4-row logo header
+      // 4-row logo header — rows sized to fit images (pt ≈ px/1.333)
       dataStartRow = 5
-      ws.getRow(1).height = 15; ws.getRow(2).height = 40; ws.getRow(3).height = 15; ws.getRow(4).height = 8
+      ws.getRow(1).height = 10; ws.getRow(2).height = 56; ws.getRow(3).height = 10; ws.getRow(4).height = 5
+      // LabHive logo: portrait 680×860, fixed 48×60 px
       if (labhiveB64) {
         const id = wb.addImage({ base64: labhiveB64, extension: 'png' })
-        ws.addImage(id, { tl: { col: 0, row: 0 }, br: { col: 1, row: 3 } })
+        ws.addImage(id, { tl: { col: 0, row: 0 }, ext: { width: 48, height: 60 } })
       }
+      // Org logo: fixed 110×55 px (landscape)
       if (orgB64) {
         const id = wb.addImage({ base64: orgB64, extension: 'png' })
-        ws.addImage(id, { tl: { col: 5, row: 0 }, br: { col: 7, row: 3 } })
+        ws.addImage(id, { tl: { col: 5, row: 0 }, ext: { width: 110, height: 55 } })
       }
-      // Title centred in middle columns
+      // Fixed title — not the filename
       const titleCell = ws.getRow(2).getCell(3)
-      titleCell.value = sheetTitle
+      titleCell.value = 'Supply Inventory Report'
       titleCell.font  = { bold: true, size: 14, color: { argb: 'FF0C1140' } }
       titleCell.alignment = { horizontal: 'center', vertical: 'middle' }
       ws.mergeCells(2, 3, 3, 5)
     }
 
-    // Data rows
+    // Write data rows (values only, no commit — commit() is for streaming workbooks)
     rows.forEach((row, ri) => {
       const wsRow = ws.getRow(dataStartRow + ri)
-      row.forEach((val, ci) => {
-        const cell = wsRow.getCell(ci + 1)
-        cell.value = val
-        // Style room-header rows (single-cell rows)
-        if (row.length === 1 && val) {
-          cell.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } }
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0C1140' } }
-        }
-        // Style column-header rows
-        if (['Item', 'Item Name'].includes(String(val))) {
-          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D9E75' } }
-        }
-        if (String(val) === 'LOW') {
-          cell.font = { bold: true, color: { argb: 'FF92400E' } }
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }
-        }
-      })
-      wsRow.commit()
+      row.forEach((val, ci) => { wsRow.getCell(ci + 1).value = val ?? '' })
     })
 
-    ws.columns = [
-      { width: 36 }, { width: 10 }, { width: 10 },
-      { width: 10 }, { width: 12 }, { width: 16 }, { width: 30 },
-    ]
+    // Style in a separate pass using the original rows array for reliable detection
+    rows.forEach((row, ri) => {
+      const wsRow = ws.getRow(dataStartRow + ri)
+      if (row.length === 1 && row[0]) {
+        // Room / section header
+        wsRow.getCell(1).font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } }
+        wsRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0C1140' } }
+      } else if (row[0] === 'Item' || row[0] === 'Item Name') {
+        // Column header row
+        for (let c = 1; c <= row.length; c++) {
+          wsRow.getCell(c).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+          wsRow.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D9E75' } }
+        }
+      } else if (row[4] === 'LOW') {
+        // Low-stock data row
+        for (let c = 1; c <= row.length; c++) {
+          wsRow.getCell(c).font = { bold: true, color: { argb: 'FF92400E' } }
+          wsRow.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }
+        }
+      }
+    })
 
     const buf  = await wb.xlsx.writeBuffer()
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
@@ -598,6 +623,211 @@ function ExportData() {
     const a    = document.createElement('a'); a.href = url; a.download = fileName + '.xlsx'; a.click()
     URL.revokeObjectURL(url)
     toast('Excel exported!')
+  }
+
+  // ── Excel report matching PDF structure: logo header → info block → room tables ──
+  async function exportExcelReport(roomRecords, fileName, uninspectedRooms = []) {
+    if (!roomRecords.length && !uninspectedRooms.length) { toast('No records to export.'); return }
+    try {
+      const { default: ExcelJS } = await import('exceljs')
+      const wb = new ExcelJS.Workbook()
+      const ws = wb.addWorksheet('Report')
+
+      // Column widths first — must be before any data
+      ws.columns = [
+        { width: 36 }, { width: 12 }, { width: 10 },
+        { width: 12 }, { width: 16 }, { width: 18 }, { width: 28 },
+      ]
+
+      const labhiveB64 = await imgUrlToBase64(window.location.origin + '/labhive_logo.svg')
+      const orgB64 = orgLogoSrc ? await imgUrlToBase64(orgLogoSrc) : null
+
+      // ── Row 1-3: Logo header ──
+      ws.getRow(1).height = 10
+      ws.getRow(2).height = 60
+      ws.getRow(3).height = 10
+      if (labhiveB64) {
+        const id = wb.addImage({ base64: labhiveB64, extension: 'png' })
+        ws.addImage(id, { tl: { col: 0, row: 0 }, ext: { width: 48, height: 60 } })
+      }
+      if (orgB64) {
+        const id = wb.addImage({ base64: orgB64, extension: 'png' })
+        ws.addImage(id, { tl: { col: 6, row: 0 }, ext: { width: 80, height: 55 } })
+      }
+      ws.mergeCells('B2:F2')
+      const titleCell = ws.getCell('B2')
+      titleCell.value = 'SUPPLY INVENTORY INSPECTION REPORT'
+      titleCell.font = { bold: true, size: 13, color: { argb: 'FF0C1140' } }
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' }
+      if (orgName) {
+        ws.mergeCells('B3:F3')
+        const subCell = ws.getCell('B3')
+        subCell.value = orgName
+        subCell.font = { size: 9, color: { argb: 'FF4B5563' }, italic: true }
+        subCell.alignment = { horizontal: 'center', vertical: 'middle' }
+      }
+
+      // ── Row 4: Teal divider ──
+      ws.getRow(4).height = 4
+      for (let c = 1; c <= 7; c++) {
+        ws.getRow(4).getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D9E75' } }
+      }
+
+      // ── Rows 5-8: Info block matching PDF layout ──
+      const allResults = roomRecords.flatMap(r => r.results || [])
+      const totalItems = allResults.length
+      const lowItems   = allResults.filter(i => i.low).length
+      const okItems    = totalItems - lowItems
+      const firstRec   = roomRecords[0]
+      const reportDate = firstRec
+        ? new Date(firstRec.inspected_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        : ''
+      const inspector  = firstRec?.inspector || ''
+
+      const infoData = [
+        ['Organization:', orgName || '—',                      'Report to:',        '________________________'],
+        ['Date:',         reportDate,                          'Items Inspected:',   String(totalItems)],
+        ['Inspector:',    inspector,                           'Items OK:',          String(okItems)],
+        ['Name:',         inspectorFullName || inspector,      'Items Low:',         String(lowItems)],
+      ]
+      infoData.forEach(([lbl, val, rLbl, rVal], ri) => {
+        const r = ws.getRow(5 + ri)
+        r.height = 18
+        const lc = r.getCell(1)
+        lc.value = lbl; lc.font = { bold: true, size: 10, color: { argb: 'FF374151' } }; lc.alignment = { horizontal: 'right', vertical: 'middle' }
+        ws.mergeCells(5 + ri, 2, 5 + ri, 4)
+        const vc = r.getCell(2)
+        vc.value = val; vc.font = { size: 10, color: { argb: 'FF111827' } }; vc.alignment = { vertical: 'middle' }
+        const rc = r.getCell(5)
+        rc.value = rLbl; rc.font = { bold: true, size: 10, color: { argb: 'FF374151' } }; rc.alignment = { horizontal: 'right', vertical: 'middle' }
+        ws.mergeCells(5 + ri, 6, 5 + ri, 7)
+        const rv = r.getCell(6)
+        rv.value = rVal
+        rv.font = (ri === 3 && lowItems > 0)
+          ? { bold: true, size: 10, color: { argb: 'FF92400E' } }
+          : { size: 10, color: { argb: 'FF111827' } }
+        rv.alignment = { vertical: 'middle' }
+      })
+
+      // ── Row 9: Light separator ──
+      ws.getRow(9).height = 3
+      for (let c = 1; c <= 7; c++) {
+        ws.getRow(9).getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } }
+      }
+
+      let dr = 10  // data row cursor
+
+      // ── Inspected room sections ──
+      const colHeaders = ['Item', 'Unit', 'Count', 'Min Qty', 'Status', 'To Order', 'Notes']
+      for (const rec of roomRecords) {
+        const timeStr = new Date(rec.inspected_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+        // Room header bar — dark navy, merged full width
+        ws.mergeCells(dr, 1, dr, 7)
+        ws.getRow(dr).height = 22
+        const rhCell = ws.getCell(dr, 1)
+        rhCell.value = `ROOM: ${rec.room_name}   —   ${rec.inspector}   —   ${timeStr}`
+        rhCell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } }
+        rhCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0C1140' } }
+        rhCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 }
+        dr++
+
+        // Column header row — teal
+        const chrRow = ws.getRow(dr); chrRow.height = 18
+        colHeaders.forEach((h, ci) => {
+          const cell = chrRow.getCell(ci + 1)
+          cell.value = h
+          cell.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } }
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D9E75' } }
+          cell.alignment = { horizontal: 'center', vertical: 'middle' }
+        })
+        dr++
+
+        // Item rows
+        ;(rec.results || []).forEach((r, idx) => {
+          const itemRow = ws.getRow(dr); itemRow.height = 16
+          const isLow = r.low; const isAlt = idx % 2 === 1
+          const rowData = [r.name, r.unit, r.qty ?? '', r.min_qty ?? '', isLow ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '']
+          rowData.forEach((val, ci) => {
+            const cell = itemRow.getCell(ci + 1)
+            cell.value = val ?? ''
+            cell.font = isLow ? { bold: true, size: 9, color: { argb: 'FF92400E' } } : { size: 9, color: { argb: 'FF111827' } }
+            cell.fill = {
+              type: 'pattern', pattern: 'solid',
+              fgColor: { argb: isLow ? 'FFFEF3C7' : isAlt ? 'FFF0FAF5' : 'FFFFFFFF' }
+            }
+            cell.alignment = ci >= 2 && ci <= 5 ? { horizontal: 'center', vertical: 'middle' } : { vertical: 'middle' }
+          })
+          dr++
+        })
+        dr++ // gap row
+      }
+
+      // ── Uninspected rooms section ──
+      if (uninspectedRooms.length > 0) {
+        ws.mergeCells(dr, 1, dr, 7)
+        ws.getRow(dr).height = 22
+        const uhCell = ws.getCell(dr, 1)
+        uhCell.value = 'ROOMS NOT INSPECTED THIS DATE'
+        uhCell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } }
+        uhCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF92400E' } }
+        uhCell.alignment = { vertical: 'middle', horizontal: 'center' }
+        dr++
+
+        uninspectedRooms.forEach(({ room_name, items }) => {
+          ws.mergeCells(dr, 1, dr, 7)
+          ws.getRow(dr).height = 20
+          const rCell = ws.getCell(dr, 1)
+          rCell.value = `ROOM: ${room_name}`
+          rCell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } }
+          rCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } }
+          rCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 }
+          dr++
+
+          const uChrRow = ws.getRow(dr); uChrRow.height = 18
+          ;['Item', 'Unit', 'Min Qty', '', 'Status', '', 'Notes'].forEach((h, ci) => {
+            const cell = uChrRow.getCell(ci + 1)
+            cell.value = h
+            cell.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } }
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6B7280' } }
+            cell.alignment = { horizontal: 'center', vertical: 'middle' }
+          })
+          dr++
+
+          items.forEach((s, idx) => {
+            const itemRow = ws.getRow(dr); itemRow.height = 16
+            const isAlt = idx % 2 === 1
+            ;[s.name, s.unit, s.min_qty ?? '', '', 'Not inspected', '', s.notes || ''].forEach((val, ci) => {
+              const cell = itemRow.getCell(ci + 1)
+              cell.value = val ?? ''
+              cell.font = { size: 9, italic: true, color: { argb: 'FF6B7280' } }
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isAlt ? 'FFF9FAFB' : 'FFFFFFFF' } }
+              cell.alignment = ci >= 2 && ci <= 5 ? { horizontal: 'center', vertical: 'middle' } : { vertical: 'middle' }
+            })
+            dr++
+          })
+          dr++ // gap row
+        })
+      }
+
+      // Footer
+      ws.mergeCells(dr, 1, dr, 7)
+      ws.getRow(dr).height = 16
+      const footerCell = ws.getCell(dr, 1)
+      footerCell.value = `Generated by LabHive  ·  ${new Date().toLocaleString()}${orgName ? '  ·  ' + orgName : ''}`
+      footerCell.font = { size: 8, italic: true, color: { argb: 'FF9CA3AF' } }
+      footerCell.alignment = { horizontal: 'center', vertical: 'middle' }
+
+      const buf  = await wb.xlsx.writeBuffer()
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a'); a.href = url; a.download = fileName + '.xlsx'; a.click()
+      URL.revokeObjectURL(url)
+      toast('Excel exported!')
+    } catch (e) {
+      console.error('Excel export error:', e)
+      toast('Excel export failed: ' + e.message)
+    }
   }
 
   // ── Single room export ──
@@ -608,15 +838,7 @@ function ExportData() {
     if (exportFormat === 'pdf') {
       await exportPDF([rec], `LabHive_${safeRoom}_${dateStr}`, `Inspection Report — ${rec.room_name}`)
     } else {
-      const rows = []
-      rows.push([`Inspection Report — ${rec.room_name}`])
-      rows.push([`Date: ${dateStr}   Time: ${timeStr}`])
-      rows.push([`Inspector: ${rec.inspector}`])
-      rows.push([])
-      rows.push([`ROOM: ${rec.room_name}  —  ${rec.inspector}  —  ${timeStr}`])
-      rows.push(['Item', 'Unit', 'Count', 'Min Qty', 'Status', 'Needs to Order', 'Notes'])
-      ;(rec.results || []).forEach(r => rows.push([r.name, r.unit, r.qty, r.min_qty, r.low ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '']))
-      await exportExcel(rows, `LabHive_${safeRoom}_${dateStr}`, rec.room_name.substring(0, 31))
+      await exportExcelReport([rec], `LabHive_${safeRoom}_${dateStr}`)
     }
   }
 
@@ -634,35 +856,18 @@ function ExportData() {
       return
     }
 
+    // Excel: build uninspected rooms list, then call structured report
     let roomQ = sb.from('rooms').select('*').eq('login_mode', loginMode).order('name')
     if (!isSolo) roomQ = roomQ.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     let supQ  = sb.from('supplies').select('*').eq('login_mode', loginMode)
     if (!isSolo) supQ  = supQ.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
-    const { data: allRooms }    = await roomQ
-    const { data: allSupplies } = await supQ
-    const inspectedRoomNames    = new Set(dateRecs.map(r => r.room_name))
-    const rows = []
-    rows.push([`Inspection Report — ${dateStr}`])
-    rows.push([`Exported: ${new Date().toLocaleString()}`])
-    rows.push([])
-    dateRecs.forEach(rec => {
-      const d = new Date(rec.inspected_at)
-      const t = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      rows.push([`ROOM: ${rec.room_name}  —  ${rec.inspector}  —  ${t}`])
-      rows.push(['Item', 'Unit', 'Count', 'Min Qty', 'Status', 'Needs to Order', 'Notes'])
-      ;(rec.results || []).forEach(r => rows.push([r.name, r.unit, r.qty, r.min_qty, r.low ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '']))
-      rows.push([])
-    })
-    ;(allRooms || []).forEach(room => {
-      if (inspectedRoomNames.has(room.name)) return
-      const items = (allSupplies || []).filter(s => s.room_id === room.id)
-      if (!items.length) return
-      rows.push([`ROOM: ${room.name}  —  NOT INSPECTED ON ${dateStr}`])
-      rows.push(['Item', 'Unit', 'Current Min Qty', '', 'Status', 'Needs to Order', 'Notes'])
-      items.forEach(s => rows.push([s.name, s.unit, s.min_qty, '', 'Not inspected', '', s.notes || '']))
-      rows.push([])
-    })
-    await exportExcel(rows, `LabHive_${dateStr}`, dateStr.substring(0, 31))
+    const [{ data: allRooms }, { data: allSupplies }] = await Promise.all([roomQ, supQ])
+    const inspectedRoomNames = new Set(dateRecs.map(r => r.room_name))
+    const uninspected = (allRooms || [])
+      .filter(room => !inspectedRoomNames.has(room.name))
+      .map(room => ({ room_name: room.name, items: (allSupplies || []).filter(s => s.room_id === room.id) }))
+      .filter(r => r.items.length > 0)
+    await exportExcelReport(dateRecs, `LabHive_${dateStr}`, uninspected)
   }
 
   // ── All-records export ──
@@ -686,13 +891,14 @@ function ExportData() {
 
     function makeSheet(name) {
       const ws = wb.addWorksheet(name.substring(0, 31))
-      if (labhiveB64 || orgB64) {
-        ws.getRow(1).height = 15; ws.getRow(2).height = 40; ws.getRow(3).height = 15; ws.getRow(4).height = 8
-        if (labhiveB64) { const id = wb.addImage({ base64: labhiveB64, extension: 'png' }); ws.addImage(id, { tl: { col: 0, row: 0 }, br: { col: 1, row: 3 } }) }
-        if (orgB64)     { const id = wb.addImage({ base64: orgB64, extension: 'png' }); ws.addImage(id, { tl: { col: 5, row: 0 }, br: { col: 7, row: 3 } }) }
-        const tc = ws.getRow(2).getCell(3); tc.value = name; tc.font = { bold: true, size: 13, color: { argb: 'FF0C1140' } }; tc.alignment = { horizontal: 'center', vertical: 'middle' }; ws.mergeCells(2, 3, 3, 5)
-      }
+      // Column widths first — before any row data
       ws.columns = [{ width: 22 }, { width: 22 }, { width: 16 }, { width: 12 }, { width: 10 }, { width: 14 }]
+      if (labhiveB64 || orgB64) {
+        ws.getRow(1).height = 10; ws.getRow(2).height = 56; ws.getRow(3).height = 10; ws.getRow(4).height = 5
+        if (labhiveB64) { const id = wb.addImage({ base64: labhiveB64, extension: 'png' }); ws.addImage(id, { tl: { col: 0, row: 0 }, ext: { width: 48, height: 60 } }) }
+        if (orgB64)     { const id = wb.addImage({ base64: orgB64, extension: 'png' }); ws.addImage(id, { tl: { col: 4, row: 0 }, ext: { width: 110, height: 55 } }) }
+        const tc = ws.getRow(2).getCell(3); tc.value = name; tc.font = { bold: true, size: 13, color: { argb: 'FF0C1140' } }; tc.alignment = { horizontal: 'center', vertical: 'middle' }; ws.mergeCells(2, 3, 3, 4)
+      }
       return { ws, dataStart: (labhiveB64 || orgB64) ? 5 : 1 }
     }
 
@@ -705,7 +911,7 @@ function ExportData() {
         return [d.toLocaleDateString('en-CA') + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }), rec.room_name, rec.inspector, (rec.results || []).length, rec.flag_count || 0, rec.flag_count > 0 ? 'Has low items' : 'All OK']
       }),
     ]
-    sumRows.forEach((row, ri) => { const r = sumWs.getRow(sumStart + ri); row.forEach((v, ci) => { r.getCell(ci + 1).value = v }); r.commit() })
+    sumRows.forEach((row, ri) => { const r = sumWs.getRow(sumStart + ri); row.forEach((v, ci) => { r.getCell(ci + 1).value = v ?? '' }) })
 
     // One sheet per date
     const byDate = {}
@@ -720,8 +926,7 @@ function ExportData() {
         ;(rec.results || []).forEach(r => rows.push([r.name, r.unit, r.qty, r.min_qty, r.low ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '']))
         rows.push([])
       })
-      rows.forEach((row, ri) => { const wsRow = ws.getRow(dataStart + ri); row.forEach((v, ci) => { wsRow.getCell(ci + 1).value = v }); wsRow.commit() })
-      ws.columns = [{ width: 36 }, { width: 10 }, { width: 10 }, { width: 10 }, { width: 12 }, { width: 16 }, { width: 30 }]
+      rows.forEach((row, ri) => { const wsRow = ws.getRow(dataStart + ri); row.forEach((v, ci) => { wsRow.getCell(ci + 1).value = v ?? '' }) })
     }
 
     const buf  = await wb.xlsx.writeBuffer()
@@ -804,7 +1009,7 @@ function ExportData() {
                         {roomsForDate.length} room{roomsForDate.length !== 1 ? 's' : ''} inspected
                       </div>
                       <button className="btn btn-sm btn-primary" onClick={() => exportByDate(selectedInspDate)}>
-                        {exportFormat === 'pdf' ? '📄' : '📊'} Download full day
+                        {exportFormat === 'pdf' ? '📄 Download Full Day (PDF)' : '📊 Download Full Day (Excel)'}
                       </button>
                     </div>
                     {roomsForDate.map((rec, i) => (
@@ -822,8 +1027,8 @@ function ExportData() {
                           {rec.flag_count > 0
                             ? <span style={{ fontSize: 12, padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#92400e', fontWeight: 600 }}>{rec.flag_count} low</span>
                             : <span style={{ fontSize: 12, padding: '2px 10px', borderRadius: 20, background: '#d1fae5', color: '#065f46', fontWeight: 600 }}>All OK</span>}
-                          <button className="btn btn-sm" title={`Download ${exportFormat === 'pdf' ? 'PDF' : 'Excel'} report`} style={{ flexShrink: 0 }}
-                            onClick={() => exportSingleRecord(rec)}>{exportFormat === 'pdf' ? '📄' : '📊'}</button>
+                          <button className="btn btn-sm" title={`Download ${exportFormat === 'pdf' ? 'PDF' : 'Excel'} report for this room`} style={{ flexShrink: 0 }}
+                            onClick={() => exportSingleRecord(rec)}>{exportFormat === 'pdf' ? '📄 PDF' : '📊 Excel'}</button>
                           {canDelete && (
                             <button className="btn btn-sm btn-danger" title="Delete record" style={{ flexShrink: 0 }}
                               onClick={() => deleteRecord(rec.id)}>🗑️</button>
@@ -852,7 +1057,7 @@ function ExportData() {
               <div>🔢 <strong>{data.length}</strong> total inspections across <strong>{uniqueDates.length}</strong> date{uniqueDates.length !== 1 ? 's' : ''}</div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={exportAll}>
-              {exportFormat === 'pdf' ? '📄' : '📊'} Download all records
+              {exportFormat === 'pdf' ? '📄 Download All Records (PDF)' : '📊 Download All Records (Excel)'}
             </button>
           </div>
         </div>
