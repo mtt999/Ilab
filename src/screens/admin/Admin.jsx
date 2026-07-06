@@ -1356,6 +1356,7 @@ export default function Admin() {
   const [userSubTab, setUserSubTab]             = useState('solo')
   const [maintenanceMode, setMaintenanceMode]   = useState(false)
   const [maintBusy, setMaintBusy]               = useState(false)
+  const [feedbackModal, setFeedbackModal]       = useState(null) // org object
 
   const tabs = isSuperAdmin
     ? [{ key: 'organizations', label: '🏢 Organizations' }, { key: 'useraccounts', label: '👥 User Accounts' }]
@@ -1570,6 +1571,14 @@ export default function Admin() {
     const { error } = await sb.from('organizations').update({ require_equipment_photos: newVal }).eq('id', org.id)
     if (error) { toast('Update failed: ' + error.message); return }
     toast(newVal ? '📸 Before/after photos enabled for this org.' : 'Photos disabled for this org.')
+    loadOrgs()
+  }
+
+  async function toggleFeedbackOrg(org) {
+    const newVal = !org.is_feedback_org
+    const { error } = await sb.from('organizations').update({ is_feedback_org: newVal }).eq('id', org.id)
+    if (error) { toast('Update failed: ' + error.message); return }
+    toast(newVal ? '🎯 Feedback mode enabled for this org.' : '🎯 Feedback mode disabled.')
     loadOrgs()
   }
 
@@ -1815,6 +1824,19 @@ export default function Admin() {
                       <button className="btn btn-sm" title="Remove org logo" onClick={() => removeOrgLogo(o)} style={{ padding: '4px 8px', color: '#ef4444', borderColor: '#fca5a5' }}>✕ Logo</button>
                     )}
                     <button className="btn btn-sm" onClick={() => setOrgModulesModal(o)}>Icons</button>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => toggleFeedbackOrg(o)}
+                      title={o.is_feedback_org ? 'Disable feedback mode for this org' : 'Enable feedback mode — users see a feedback widget on each module page'}
+                      style={o.is_feedback_org ? { background: '#fef3c7', color: '#d97706', borderColor: '#fcd34d', fontWeight: 700 } : {}}
+                    >
+                      🎯 {o.is_feedback_org ? 'Feedback On' : 'Feedback'}
+                    </button>
+                    {o.is_feedback_org && (
+                      <button className="btn btn-sm" onClick={() => setFeedbackModal(o)} style={{ background: '#f0fdf4', color: '#16a34a', borderColor: '#86efac' }}>
+                        📋 Responses
+                      </button>
+                    )}
                     <button className="btn btn-sm" onClick={() => setOrgModal(o)}>Edit</button>
                     <button className="btn btn-sm btn-danger" onClick={() => deleteOrg(o.id)}>Delete</button>
                   </div>
@@ -1980,6 +2002,128 @@ export default function Admin() {
       {soloModulesOpen && (
         <SoloModulesModal onClose={() => setSoloModulesOpen(false)} />
       )}
+      {feedbackModal && (
+        <FeedbackResponsesModal org={feedbackModal} onClose={() => setFeedbackModal(null)} />
+      )}
+    </div>
+  )
+}
+
+// ── Feedback Responses Modal ────────────────────────────────────────────────
+const FEEDBACK_SCREEN_NAMES = {
+  equipment:     'Equipment Inventory',
+  equipmenthub:  'Equipment Hub',
+  booking:       'Equipment Booking',
+  training:      'Training Records',
+  pm:            'Task Board',
+  barcode:       'Material Scanner',
+  barcodeqr:     'QR Labels',
+  remessages:    'Messages',
+  home:          'Inspection',
+  history:       'Inspection History',
+  projects:      'Projects',
+  labmanagement: 'Lab Management',
+}
+
+function FeedbackResponsesModal({ org, onClose }) {
+  const [responses, setResponses] = useState([])
+  const [users, setUsers]         = useState({})
+  const [loading, setLoading]     = useState(true)
+  const [filter, setFilter]       = useState('all')
+
+  useEffect(() => { load() }, [org.id])
+
+  async function load() {
+    setLoading(true)
+    const [{ data: resps }, { data: orgUsers }] = await Promise.all([
+      sb.from('feedback_responses').select('*').eq('organization_id', org.id).order('created_at', { ascending: false }),
+      sb.from('users').select('id, name, last_name, nick_name').eq('organization_id', org.id),
+    ])
+    const userMap = {}
+    ;(orgUsers || []).forEach(u => { userMap[u.id] = u.nick_name?.trim() || [u.name, u.last_name].filter(Boolean).join(' ') || u.name })
+    setUsers(userMap)
+    setResponses(resps || [])
+    setLoading(false)
+  }
+
+  async function exportCSV() {
+    const rows = [['Module', 'User', 'Feedback', 'Date']]
+    responses.forEach(r => {
+      rows.push([
+        FEEDBACK_SCREEN_NAMES[r.module_key] || r.module_key,
+        users[r.user_id] || r.user_id,
+        `"${(r.comment || '').replace(/"/g, '""')}"`,
+        new Date(r.created_at).toLocaleDateString(),
+      ])
+    })
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const a = document.createElement('a')
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
+    a.download = `feedback-${org.name}-${new Date().toISOString().slice(0,10)}.csv`
+    a.click()
+  }
+
+  const moduleKeys = Object.keys(FEEDBACK_SCREEN_NAMES)
+  const filtered = filter === 'all' ? responses : responses.filter(r => r.module_key === filter)
+  const countByModule = {}
+  moduleKeys.forEach(k => { countByModule[k] = responses.filter(r => r.module_key === k).length })
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 680, maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.2)', overflow: 'hidden' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>📋 Feedback Responses</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{org.name} · {responses.length} total response{responses.length !== 1 ? 's' : ''}</div>
+          </div>
+          <button onClick={exportCSV} style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid #d1fae5', background: '#f0fdf4', color: '#16a34a', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⬇ CSV</button>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'var(--surface2)', cursor: 'pointer', fontSize: 18, color: 'var(--text2)' }}>×</button>
+        </div>
+
+        {/* Module filter pills */}
+        <div style={{ padding: '12px 20px 8px', display: 'flex', gap: 6, flexWrap: 'wrap', flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+          {[{ key: 'all', label: `All (${responses.length})` }, ...moduleKeys.map(k => ({ key: k, label: `${FEEDBACK_SCREEN_NAMES[k]} (${countByModule[k]})` }))].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)}
+              style={{ padding: '4px 12px', borderRadius: 99, fontSize: 12, fontWeight: 600, border: `1.5px solid ${filter === f.key ? '#f59e0b' : 'var(--border)'}`, background: filter === f.key ? '#fef3c7' : 'var(--surface)', color: filter === f.key ? '#d97706' : 'var(--text2)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Response list */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px' }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)', fontSize: 14 }}>No feedback yet for this module.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filtered.map((r, i) => (
+                <div key={r.id} style={{ background: i % 2 === 0 ? '#fafaf9' : '#fff', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', background: '#fef3c7', borderRadius: 99, padding: '2px 10px' }}>
+                        {FEEDBACK_SCREEN_NAMES[r.module_key] || r.module_key}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>
+                        {users[r.user_id] || 'Unknown user'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 11, color: 'var(--text3)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {new Date(r.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{r.comment || <em style={{ color: 'var(--text3)' }}>No comment</em>}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

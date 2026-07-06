@@ -7,6 +7,7 @@ import { ALL_MODULES_META } from './DashboardIconPicker'
 import AboutModal from './AboutModal'
 import CustomerServiceModal from './CustomerServiceModal'
 import SaraChat from './SaraChat'
+import FeedbackWidget from './FeedbackWidget'
 
 function ExternalLinkModal({ url, onConfirm, onCancel }) {
   return (
@@ -602,6 +603,7 @@ export default function Layout({ children }) {
 
       {showAbout   && <AboutModal onClose={() => setShowAbout(false)} onContact={() => { setShowAbout(false); setShowContact(true) }} />}
       {showContact && <CustomerServiceModal onClose={() => setShowContact(false)} />}
+      <FeedbackWidget bottomOffset={isMobile ? 80 : 24} />
       <SaraChat bottomOffset={isMobile ? 80 : 24} color={accentColor} onContact={() => setShowContact(true)} />
     </div>
   )
