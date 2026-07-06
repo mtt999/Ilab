@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore'
 import { sb } from '../lib/supabase'
 
 const FEEDBACK_SCREENS = {
+  dashboard:     'Home Page',
   equipment:     'Equipment Inventory',
   equipmenthub:  'Equipment Hub',
   booking:       'Equipment Booking',

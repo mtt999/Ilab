@@ -2011,6 +2011,7 @@ export default function Admin() {
 
 // ── Feedback Responses Modal ────────────────────────────────────────────────
 const FEEDBACK_SCREEN_NAMES = {
+  dashboard:     'Home Page',
   equipment:     'Equipment Inventory',
   equipmenthub:  'Equipment Hub',
   booking:       'Equipment Booking',
