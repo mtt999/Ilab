@@ -173,6 +173,8 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
   const [projects, setProjects] = useState([])
   const [saving, setSaving] = useState(false)
   const [conflict, setConflict] = useState(null)
+  const [specialNote, setSpecialNote] = useState(null)
+  const [confirmedNote, setConfirmedNote] = useState(false)
 
   useEffect(() => {
     if (canEdit(session)) {
@@ -189,6 +191,17 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
       q.then(({ data }) => setProjects(data || []))
     }
   }, [])
+
+  // Fetch special note when equipment selection changes
+  useEffect(() => {
+    if (!form.equipment_id) { setSpecialNote(null); setConfirmedNote(false); return }
+    sb.from('equipment_inventory').select('special_note').eq('id', form.equipment_id).maybeSingle()
+      .then(({ data }) => {
+        const note = data?.special_note?.trim() || null
+        setSpecialNote(note)
+        setConfirmedNote(false) // require re-confirmation on every equipment change
+      })
+  }, [form.equipment_id])
 
   // Sync form times whenever the parent updates the booking draft (re-drag while panel is open)
   useEffect(() => {
@@ -380,6 +393,22 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
           )}
         </div>
 
+        {specialNote && (
+          <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#c2410c', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>⚠️</span> Special Treatment Required
+            </div>
+            <div style={{ fontSize: 13, color: '#7c2d12', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 12 }}>{specialNote}</div>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" checked={confirmedNote} onChange={e => setConfirmedNote(e.target.checked)}
+                style={{ marginTop: 2, flexShrink: 0, accentColor: '#ea580c', width: 15, height: 15 }} />
+              <span style={{ fontSize: 12, color: '#9a3412', fontWeight: 600, lineHeight: 1.4 }}>
+                I have read and understood the special treatment requirements for this equipment.
+              </span>
+            </label>
+          </div>
+        )}
+
         {conflict && (
           <div style={{ background: '#fcebeb', border: '1px solid #f09595', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 13, color: '#a32d2d' }}>
             ⚠️ Conflict with <strong>{conflict.user_name}</strong>'s booking ({fmtDateTime(conflict.start_time)} – {fmtDateTime(conflict.end_time)})
@@ -391,7 +420,9 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-primary" onClick={save} disabled={saving || !!conflict}>{saving ? 'Saving…' : booking ? 'Update' : 'Book'}</button>
+          <button className="btn btn-primary" onClick={save} disabled={saving || !!conflict || (!!specialNote && !confirmedNote)}>
+            {saving ? 'Saving…' : booking ? 'Update' : 'Book'}
+          </button>
           <button className="btn" onClick={() => { setConflict(null); onClose() }}>Cancel</button>
         </div>
       </div>
@@ -3474,6 +3505,109 @@ function BookingSettings({ session }) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// EQUIPMENT NOTES TAB — Special Treatment Instructions
+// ══════════════════════════════════════════════════════════════
+function EquipmentNotesTab({ session }) {
+  const { toast } = useAppStore()
+  const [equipment, setEquipment] = useState([])
+  const [notes, setNotes] = useState({})   // eqId -> current textarea value
+  const [saved, setSaved] = useState({})   // eqId -> saved value (for dirty check)
+  const [saving, setSaving] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
+    setLoading(true)
+    let q = sb.from('equipment_inventory')
+      .select('id, equipment_name, nickname, category, special_note')
+      .eq('is_active', true).eq('login_mode', 'team').order('category').order('nickname')
+    if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
+    const { data } = await q
+    const eq = data || []
+    setEquipment(eq)
+    const map = {}
+    eq.forEach(e => { map[e.id] = e.special_note || '' })
+    setNotes(map)
+    setSaved({ ...map })
+    setLoading(false)
+  }
+
+  async function saveNote(eqId) {
+    setSaving(eqId)
+    const note = notes[eqId]?.trim() || null
+    const { error } = await sb.from('equipment_inventory').update({ special_note: note }).eq('id', eqId)
+    if (error) { toast('Save failed: ' + error.message); setSaving(null); return }
+    setSaved(s => ({ ...s, [eqId]: notes[eqId] }))
+    setSaving(null)
+    toast(note ? 'Note saved ✓' : 'Note cleared ✓')
+  }
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>⚠️ Special Treatment Instructions</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.6 }}>
+          Add notes for equipment that requires special handling. Lab users will see the note and must confirm they have read it before booking.
+        </div>
+      </div>
+      {equipment.length === 0 && (
+        <div className="empty-state"><div className="empty-icon">🔧</div>No equipment found.</div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {equipment.map(e => {
+          const isDirty = notes[e.id] !== saved[e.id]
+          const hasNote = !!saved[e.id]
+          return (
+            <div key={e.id} style={{ background: 'var(--surface)', border: `1px solid ${hasNote ? '#fed7aa' : 'var(--border)'}`, borderLeft: hasNote ? '3px solid #f97316' : undefined, borderRadius: 'var(--radius-lg)', padding: '14px 18px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', marginBottom: 2 }}>
+                    {e.nickname || e.equipment_name}
+                    {hasNote && <span style={{ marginLeft: 8, fontSize: 10, background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa', borderRadius: 99, padding: '2px 8px', fontWeight: 700 }}>⚠️ Note set</span>}
+                  </div>
+                  {e.nickname && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>{e.equipment_name} · {e.category}</div>}
+                  {!e.nickname && e.category && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>{e.category}</div>}
+                  <textarea
+                    value={notes[e.id] || ''}
+                    onChange={ev => setNotes(n => ({ ...n, [e.id]: ev.target.value }))}
+                    placeholder="Add special treatment instructions visible to all lab users who book this equipment…"
+                    rows={3}
+                    style={{ width: '100%', resize: 'vertical', fontSize: 13, borderColor: isDirty ? 'var(--accent)' : 'var(--border)', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => saveNote(e.id)}
+                    disabled={!isDirty || saving === e.id}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    {saving === e.id ? 'Saving…' : 'Save note'}
+                  </button>
+                  {hasNote && (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => { setNotes(n => ({ ...n, [e.id]: '' })) }}
+                      disabled={saving === e.id}
+                      style={{ fontSize: 11, color: 'var(--text3)' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════
 // MAIN
 // ══════════════════════════════════════════════════════════════
 export default function BookingEquipment() {
@@ -3483,6 +3617,7 @@ export default function BookingEquipment() {
   const tabs = [
     { key: 'calendar', label: '📅 Book Equipment' },
     { key: 'history', label: '📋 History & Usage' },
+    ...(canEdit(session) ? [{ key: 'eq_notes', label: '⚠️ Special Treatment' }] : []),
     ...(isAdmin(session) ? [{ key: 'settings', label: '⚙️ Settings' }] : []),
   ]
 
@@ -3502,6 +3637,7 @@ export default function BookingEquipment() {
       </ScrollTabs>
       {tab === 'calendar' && <BookingCalendar session={session} />}
       {tab === 'history' && <BookingHistory session={session} />}
+      {tab === 'eq_notes' && <EquipmentNotesTab session={session} />}
       {tab === 'settings' && <BookingSettings session={session} />}
     </div>
   )
