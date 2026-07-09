@@ -1324,6 +1324,7 @@ export function StudentsPanel({ toast, session }) {
   }
 
   async function toggleActive(s) { await sb.from('users').update({ is_active: !s.is_active }).eq('id', s.id); load(); toast(s.is_active ? 'Deactivated.' : 'Activated.') }
+  async function clearPhotoFlag(s) { await sb.from('users').update({ photo_denial_flagged: false }).eq('id', s.id); load(); toast('Photo flag cleared.') }
   async function deleteStudent(id) {
     setDeleting(true)
     await sb.from('user_screen_access').delete().eq('user_id', id)
@@ -1394,13 +1395,16 @@ export function StudentsPanel({ toast, session }) {
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : filtered.length === 0 ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No lab users match your search.' : 'No lab users yet.'}</div>
         : filtered.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 18px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5 }}>
+          <div key={s.id} className="card" style={{ padding: '12px 18px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: s.photo_denial_flagged ? '#fefce8' : undefined, borderLeft: s.photo_denial_flagged ? '3px solid #f59e0b' : undefined }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <div style={{ fontWeight: 600 }}>
-                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginRight: 6 }}>#{idx+1}</span>
+                <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)' }}>#{idx+1}</span>
                   {sLastName(s)}{sLastName(s) && sFirstName(s) ? ', ' : ''}{sFirstName(s)}
-                  {!s.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)', marginLeft: 6 }}>Inactive</span>}
+                  {!s.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)' }}>Inactive</span>}
+                  {s.photo_denial_flagged && (
+                    <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>⚠️ Declined photo</span>
+                  )}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 3 }}>
                   {sEmail(s) && <span>📧 {sEmail(s)}</span>}
@@ -1409,6 +1413,9 @@ export function StudentsPanel({ toast, session }) {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {s.photo_denial_flagged && (
+                  <button className="btn btn-sm" onClick={() => clearPhotoFlag(s)} title="Clear photo denial flag" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>✕ Clear flag</button>
+                )}
                 <button className="btn btn-sm" onClick={() => setIconStudent(s)} title="Set allowed dashboard icons">🎛️ Icons</button>
                 <button className="btn btn-sm" onClick={() => { setEditStudent(s); setShowModal(true) }}>Edit</button>
                 <button className="btn btn-sm" onClick={() => toggleActive(s)}>{s.is_active ? 'Deactivate' : 'Activate'}</button>

@@ -92,6 +92,7 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
 
   async function submit(key, text) {
     if (!text.trim()) return
+    const isNew = !(key in responses)
     setSaving(true)
     const { error } = await sb.from('feedback_responses').upsert({
       organization_id: session.organizationId,
@@ -101,6 +102,14 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
     }, { onConflict: 'organization_id,user_id,module_key' })
     setSaving(false)
     if (error) return
+    if (isNew) {
+      sb.from('admin_notifications').insert({
+        type: 'feedback_response',
+        title: `Feedback: ${FEEDBACK_SCREENS[key]}`,
+        body: `${session.username}: ${text.trim()}`,
+        read: false,
+      })
+    }
     setResponses(r => ({ ...r, [key]: text.trim() }))
     if (key === screen) { setComment(''); setSaved(true); setTimeout(() => { setSaved(false); setMinimized(true) }, 1800) }
     if (pendingFrom?.key === key) setPendingFrom(null)

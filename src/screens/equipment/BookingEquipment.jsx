@@ -978,6 +978,9 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
   const [showWaiveConfirm, setShowWaiveConfirm] = useState(false)
   const [waiveSent, setWaiveSent] = useState(false)
   const [reviewSent, setReviewSent] = useState(false)
+  const [afterDenied, setAfterDenied] = useState(false)
+  const [showAfterDenyConfirm, setShowAfterDenyConfirm] = useState(false)
+  const [afterDenySent, setAfterDenySent] = useState(false)
 
   const beforeUrlRef = useRef(null) // keeps in sync with beforeUrl for stale-closure safety
   const busyRef = useRef(false)
@@ -994,7 +997,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
   useEffect(() => {
     Promise.all([
       sb.from('equipment_bookings')
-        .select('before_photo_url, after_photo_url, cleanliness_status, cleanliness_findings, before_photo_waived, after_photo_attempt_count')
+        .select('before_photo_url, after_photo_url, cleanliness_status, cleanliness_findings, before_photo_waived, after_photo_attempt_count, after_photo_denied')
         .eq('id', booking.id).single(),
       sb.from('equipment_booking_settings')
         .select('reference_photo_url, photo_instruction')
@@ -1007,6 +1010,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
         setFindings(bk.cleanliness_findings || [])
         setWaived(!!bk.before_photo_waived)
         setAttemptCount(bk.after_photo_attempt_count || 0)
+        setAfterDenied(!!bk.after_photo_denied)
       }
       if (cfg) { setReferenceUrl(cfg.reference_photo_url || null); setReferenceInstruction(cfg.photo_instruction || null) }
       setLoaded(true)
@@ -1090,24 +1094,82 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
     try {
       await sb.from('equipment_bookings').update({ before_photo_waived: true }).eq('id', booking.id)
       setWaived(true)
+      if (session.userId) {
+        await sb.from('users').update({ photo_denial_flagged: true }).eq('id', session.userId).catch(() => {})
+      }
       if (session.organizationId) {
         const { data: managers } = await sb.from('users')
           .select('id').eq('organization_id', session.organizationId)
           .in('role', ['admin', 'user']).eq('is_active', true)
-        const meta = { booking_id: booking.id, booking_user_id: session.userId, user_name: session.username, eq_name: eqName || 'equipment' }
+        const meta = { booking_id: booking.id, booking_user_id: session.userId, user_name: session.username, eq_name: eqName || 'equipment', photo_type: 'before' }
         for (const mgr of (managers || [])) {
           if (mgr.id === session.userId) continue
           await sb.from('booking_notifications').insert({
-            booking_id: booking.id, user_id: mgr.id, type: 'waive_before_photo',
-            message: `⚠️ ${session.username} requested to skip the before photo for ${meta.eq_name}.`,
+            booking_id: booking.id, user_id: mgr.id, type: 'deny_photo',
+            message: `⛔ ${session.username} declined the before photo for ${meta.eq_name}. Please check the equipment condition.`,
             read: false, meta,
           }).catch(() => {})
         }
       }
-      toast('Waive request sent to lab managers.')
+      toast('Lab managers have been notified.')
       setShowWaiveConfirm(false)
       onUpdated?.()
     } catch(e) { toast('Failed: ' + e.message); setWaiveSent(false) }
+  }
+
+  async function handleDenyAfter() {
+    setAfterDenySent(true)
+    try {
+      await sb.from('equipment_bookings').update({ after_photo_denied: true }).eq('id', booking.id)
+      setAfterDenied(true)
+      if (session.userId) {
+        await sb.from('users').update({ photo_denial_flagged: true }).eq('id', session.userId).catch(() => {})
+      }
+      if (session.organizationId) {
+        const { data: managers } = await sb.from('users')
+          .select('id').eq('organization_id', session.organizationId)
+          .in('role', ['admin', 'user']).eq('is_active', true)
+        const meta = { booking_id: booking.id, booking_user_id: session.userId, user_name: session.username, eq_name: eqName || 'equipment', photo_type: 'after' }
+        for (const mgr of (managers || [])) {
+          if (mgr.id === session.userId) continue
+          await sb.from('booking_notifications').insert({
+            booking_id: booking.id, user_id: mgr.id, type: 'deny_photo',
+            message: `⛔ ${session.username} declined the after photo for ${meta.eq_name}. Please inspect the equipment after their booking.`,
+            read: false, meta,
+          }).catch(() => {})
+        }
+      }
+      toast('Lab managers have been notified.')
+      setShowAfterDenyConfirm(false)
+      onUpdated?.()
+    } catch(e) { toast('Failed: ' + e.message); setAfterDenySent(false) }
+  }
+
+  async function handleReconsiderAfter(dataUrl) {
+    if (busyRef.current) return
+    busyRef.current = true; setBusy(true)
+    try {
+      const publicUrl = await uploadPhoto(dataUrl, 'reconsider-after')
+      await sb.from('equipment_bookings').update({ after_photo_url: publicUrl }).eq('id', booking.id)
+      setAfterUrl(publicUrl)
+      if (session.organizationId) {
+        const { data: managers } = await sb.from('users')
+          .select('id').eq('organization_id', session.organizationId)
+          .in('role', ['admin', 'user']).eq('is_active', true)
+        const meta = { booking_id: booking.id, booking_user_id: session.userId, user_name: session.username, eq_name: eqName || 'equipment', after_photo_url: publicUrl }
+        for (const mgr of (managers || [])) {
+          if (mgr.id === session.userId) continue
+          await sb.from('booking_notifications').insert({
+            booking_id: booking.id, user_id: mgr.id, type: 'after_photo_reconsider',
+            message: `📸 ${session.username} changed their mind and submitted an after photo for ${meta.eq_name}. Accept to clear their flag.`,
+            read: false, meta,
+          }).catch(() => {})
+        }
+      }
+      toast('Photo sent to lab managers for review.')
+      onUpdated?.()
+    } catch(e) { toast('Upload failed: ' + e.message) }
+    busyRef.current = false; setBusy(false)
   }
 
   function handleFile(file, type) {
@@ -1193,6 +1255,14 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
   const needsRetake = isOwn && afterUrl && status === 'needs_attention'
   const showAfterWaiveInfo = needsRetake && attemptCount >= 2
 
+  // Cutoff: 11:59 PM on the calendar day the booking ends
+  const endDay = new Date(booking.end_time)
+  const bookingDayCutoff = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate(), 23, 59, 0, 0)
+  const isPastBookingDay = new Date() > bookingDayCutoff
+
+  // Reconsider window: up to 11:59 PM on the booking end day
+  const canReconsider = afterDenied && !afterUrl && isOwn && !isPastBookingDay
+
   return (
     <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 12 }}>
 
@@ -1200,7 +1270,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
       {camera && (
         <CameraOverlay
           referenceUrl={referenceUrl}
-          onCapture={url => { setCamera(null); handleCaptured(url, camera) }}
+          onCapture={url => { const t = camera; setCamera(null); t === 'reconsider-after' ? handleReconsiderAfter(url) : handleCaptured(url, t) }}
           onClose={() => setCamera(null)}
         />
       )}
@@ -1256,6 +1326,8 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
                 {waiveSent ? 'Waive sent — awaiting manager' : 'Before photo waived'}
               </span>
             </div>
+          ) : isPastBookingDay && isOwn ? (
+            <div style={emptyBox()}><span style={{ fontSize: 11, color: 'var(--text3)' }}>No photo taken</span></div>
           ) : isOwn && !canTakeBeforePhoto ? (
             <div style={emptyBox({ border: '1px dashed #f0d070', background: '#fef9e7' })}>
               <span style={{ fontSize: 22 }}>🔒</span>
@@ -1274,24 +1346,24 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
                 <input id={`cleanliness-file-before-${booking.id}`} type="file" accept="image/*" style={{ display: 'none' }} disabled={busy}
                   onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handleFile(f, 'before') }} />
               </label>
-              {/* Waive option */}
-              {!showWaiveConfirm ? (
+              {/* Waive / deny option — hidden once booking day is past */}
+              {!isPastBookingDay && (!showWaiveConfirm ? (
                 <button onClick={() => setShowWaiveConfirm(true)}
                   style={{ fontSize: 10, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline dotted', padding: '2px 0', textAlign: 'left' }}>
-                  Need to waive before photo?
+                  Skip before photo?
                 </button>
               ) : (
-                <div style={{ background: '#fef3c7', border: '1px solid #f0d070', borderRadius: 8, padding: '10px 12px', fontSize: 12 }}>
-                  <div style={{ color: '#92400e', fontWeight: 500, marginBottom: 6 }}>Waive before photo?</div>
-                  <div style={{ color: '#78350f', fontSize: 11, marginBottom: 10, lineHeight: 1.5 }}>
-                    A notification will be sent to lab managers — they can approve or ask you to take one next time.
+                <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '12px 12px', fontSize: 12 }}>
+                  <div style={{ color: '#92400e', fontWeight: 700, marginBottom: 6 }}>⚠️ Skip before photo?</div>
+                  <div style={{ color: '#78350f', fontSize: 11, marginBottom: 10, lineHeight: 1.6 }}>
+                    <strong>A notification will be sent to all lab managers.</strong> They will be asked to inspect the equipment after your booking. Your account may be flagged and future bookings could be cancelled if the equipment is not left in proper condition.
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn btn-sm btn-danger" onClick={handleWaiveBefore} disabled={busy || waiveSent}>Send waive request</button>
+                    <button className="btn btn-sm btn-danger" onClick={handleWaiveBefore} disabled={busy || waiveSent}>Confirm — notify managers</button>
                     <button className="btn btn-sm" onClick={() => setShowWaiveConfirm(false)}>Cancel</button>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           ) : (
             <div style={emptyBox()}><span style={{ fontSize: 11, color: 'var(--text3)' }}>No photo</span></div>
@@ -1301,18 +1373,52 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
         {/* ── After ── */}
         <div style={{ flex: 1 }}>
           <div style={labelStyle}>After</div>
-          {afterUrl ? (
+          {afterDenied && afterUrl ? (
+            /* Reconsider photo submitted — awaiting manager review (always visible) */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <img src={afterUrl} onClick={() => window.open(afterUrl)} title="Tap to enlarge"
+                style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 8, border: '1px solid #bae6fd', cursor: 'zoom-in', display: 'block' }} />
+              <div style={{ fontSize: 10, background: '#e0f2fe', color: '#0369a1', padding: '4px 8px', borderRadius: 99, textAlign: 'center', fontWeight: 600 }}>⏳ Submitted — awaiting manager review</div>
+            </div>
+          ) : afterUrl ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <img src={afterUrl} onClick={() => window.open(afterUrl)} title="Tap to enlarge"
                 style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 8, border: `1px solid ${status === 'needs_attention' ? '#f09595' : 'var(--border)'}`, cursor: 'zoom-in', display: 'block' }} />
-              {/* Retake button when needs_attention */}
-              {isOwn && status === 'needs_attention' && (
+              {/* Retake only available within booking day window */}
+              {isOwn && !isPastBookingDay && status === 'needs_attention' && (
                 <div style={uploadBox(busy || analyzing)} onClick={() => !(busy || analyzing) && openCamera('after')}>
                   {busy || analyzing ? <div className="spinner" style={{ width: 18, height: 18 }} />
                     : <><span style={{ fontSize: 18 }}>🔄</span><span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>Retake after photo</span></>}
                 </div>
               )}
             </div>
+          ) : afterDenied ? (
+            /* Denied — reconsider upload available until 11:59 PM on end day (canReconsider handles the window) */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={emptyBox({ border: '1px dashed #f59e0b', background: '#fffbeb' })}>
+                <span style={{ fontSize: 20 }}>⛔</span>
+                <span style={{ fontSize: 11, color: '#92400e', textAlign: 'center', padding: '0 6px' }}>After photo declined</span>
+              </div>
+              {canReconsider && (
+                <>
+                  <div style={uploadBox(busy)} onClick={() => !busy && setCamera('reconsider-after')}>
+                    {busy ? <div className="spinner" style={{ width: 18, height: 18 }} />
+                      : <><span style={{ fontSize: 18 }}>🔄</span><span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, textAlign: 'center', padding: '0 6px' }}>Changed your mind? Upload now</span></>}
+                  </div>
+                  <label style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', cursor: 'pointer', textDecoration: 'underline dotted' }}>
+                    or upload file
+                    <input type="file" accept="image/*" style={{ display: 'none' }} disabled={busy}
+                      onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) compressImage(f, 1200, 0.78).then(dataUrl => handleReconsiderAfter(dataUrl)) }} />
+                  </label>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center' }}>
+                    Available until 11:59 PM today
+                  </div>
+                </>
+              )}
+            </div>
+          ) : isPastBookingDay && isOwn ? (
+            /* Booking day is over — no longer show upload UI */
+            <div style={emptyBox()}><span style={{ fontSize: 11, color: 'var(--text3)' }}>No photo taken</span></div>
           ) : isOwn && (beforeUrl || waived) ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={uploadBox(busy || analyzing)} onClick={() => !(busy || analyzing) && openCamera('after')}>
@@ -1324,6 +1430,24 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
                 <input id={`cleanliness-file-after-${booking.id}`} type="file" accept="image/*" style={{ display: 'none' }} disabled={busy || analyzing}
                   onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handleFile(f, 'after') }} />
               </label>
+              {/* Deny after photo — hidden once booking day is past */}
+              {!showAfterDenyConfirm ? (
+                <button onClick={() => setShowAfterDenyConfirm(true)}
+                  style={{ fontSize: 10, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline dotted', padding: '2px 0', textAlign: 'left' }}>
+                  Skip after photo?
+                </button>
+              ) : (
+                <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '12px 12px', fontSize: 12 }}>
+                  <div style={{ color: '#92400e', fontWeight: 700, marginBottom: 6 }}>⚠️ Skip after photo?</div>
+                  <div style={{ color: '#78350f', fontSize: 11, marginBottom: 10, lineHeight: 1.6 }}>
+                    <strong>A notification will be sent to all lab managers.</strong> They will be asked to inspect the equipment after your booking. Your account may be flagged and future bookings could be cancelled if the equipment is not left in proper condition.
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="btn btn-sm btn-danger" onClick={handleDenyAfter} disabled={busy || afterDenySent}>Confirm — notify managers</button>
+                    <button className="btn btn-sm" onClick={() => setShowAfterDenyConfirm(false)}>Cancel</button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div style={emptyBox()}>
@@ -1390,8 +1514,8 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
             <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: beforeUrl ? '#e8f2ee' : waived ? '#fef3c7' : '#f3f4f6', color: beforeUrl ? '#1e4d39' : waived ? '#92400e' : '#6b7280', fontWeight: 600 }}>
               Before: {beforeUrl ? '✅ Submitted' : waived ? '✋ Waive requested' : '⏳ Pending'}
             </span>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: afterUrl ? (status === 'pass' ? '#e8f2ee' : '#fcebeb') : '#f3f4f6', color: afterUrl ? (status === 'pass' ? '#1e4d39' : '#a32d2d') : '#6b7280', fontWeight: 600 }}>
-              After: {afterUrl ? (status === 'pass' ? '✅ Pass' : '⚠️ Needs attention') : '⏳ Pending'}
+            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: afterUrl && afterDenied ? '#e0f2fe' : afterUrl ? (status === 'pass' ? '#e8f2ee' : '#fcebeb') : afterDenied ? '#fef3c7' : '#f3f4f6', color: afterUrl && afterDenied ? '#0369a1' : afterUrl ? (status === 'pass' ? '#1e4d39' : '#a32d2d') : afterDenied ? '#92400e' : '#6b7280', fontWeight: 600 }}>
+              After: {afterUrl && afterDenied ? '⏳ Review pending' : afterUrl ? (status === 'pass' ? '✅ Pass' : '⚠️ Needs attention') : afterDenied ? '⛔ Declined' : '⏳ Pending'}
             </span>
           </div>
 
@@ -1873,6 +1997,70 @@ function AfterPhotoReviewModal({ notification, session, onClose, onDone }) {
   )
 }
 
+// ── After Photo Reconsider Modal (managers review late-submitted after photo) ──
+function AfterPhotoReconsiderModal({ notification, session, onClose, onDone }) {
+  const { toast } = useAppStore()
+  const [note, setNote] = useState('')
+  const [saving, setSaving] = useState(false)
+  const meta = notification.meta || {}
+
+  async function respond(accept) {
+    setSaving(true)
+    try {
+      if (accept && meta.booking_user_id) {
+        await sb.from('users').update({ photo_denial_flagged: false }).eq('id', meta.booking_user_id).catch(() => {})
+        await sb.from('equipment_bookings').update({ after_photo_denied: false }).eq('id', notification.booking_id).catch(() => {})
+      }
+      const msg = accept
+        ? `✅ Your after photo for ${meta.eq_name || 'equipment'} was accepted by a lab manager. Your flag has been cleared.${note ? ` Note: ${note}` : ''}`
+        : `⚠️ Lab manager reviewed your after photo for ${meta.eq_name || 'equipment'} — the flag remains on your account.${note ? ` Note: ${note}` : ''}`
+      if (meta.booking_user_id) {
+        await sb.from('booking_notifications').insert({
+          booking_id: notification.booking_id, user_id: meta.booking_user_id,
+          type: 'waive_response', message: msg, read: false,
+          meta: { accept, manager_name: session.username, note },
+        })
+      }
+      await sb.from('booking_notifications').update({ read: true }).eq('id', notification.id)
+      toast(accept ? 'Flag cleared — user notified.' : 'Response sent — flag kept.')
+      onDone(); onClose()
+    } catch(e) { toast('Failed: ' + e.message) }
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 24, maxWidth: 480, width: '100%', border: '1px solid var(--border)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>After Photo — Late Submission</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 14, lineHeight: 1.6 }}>
+          <strong>{meta.user_name || 'A user'}</strong> originally declined the after photo for <strong>{meta.eq_name || 'equipment'}</strong> but has now submitted one. Accept to clear their flag.
+        </div>
+        {meta.after_photo_url && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 6, fontWeight: 600 }}>Submitted after photo</div>
+            <img src={meta.after_photo_url} onClick={() => window.open(meta.after_photo_url)}
+              style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', cursor: 'zoom-in', display: 'block' }} />
+          </div>
+        )}
+        <div className="field">
+          <label>Note to user (optional)</label>
+          <textarea rows={2} value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Equipment looks clean — flag cleared." style={{ resize: 'vertical' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button className="btn btn-sm" onClick={onClose} style={{ flex: 1 }} disabled={saving}>Cancel</button>
+          <button className="btn btn-sm" onClick={() => respond(false)} disabled={saving}
+            style={{ flex: 1, background: '#fef3c7', borderColor: '#f0d070', color: '#92400e', fontWeight: 600 }}>
+            {saving ? '…' : 'Keep flag'}
+          </button>
+          <button className="btn btn-sm btn-primary" onClick={() => respond(true)} disabled={saving} style={{ flex: 1 }}>
+            {saving ? '…' : 'Accept — clear flag'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ══════════════════════════════════════════════════════════════
 // TAB 1 — BOOKING CALENDAR
 // ══════════════════════════════════════════════════════════════
@@ -1906,6 +2094,7 @@ function BookingCalendar({ session }) {
   const [blockingNotif, setBlockingNotif] = useState(null)
   const [waiveModal, setWaiveModal] = useState(null)
   const [reviewModal, setReviewModal] = useState(null)
+  const [reconsiderModal, setReconsiderModal] = useState(null)
 
   useEffect(() => { loadEquipment(); loadNotifications() }, [])
   useEffect(() => { loadBookings() }, [selectedEq, weekStart, monthDate, calView])
@@ -1926,6 +2115,7 @@ function BookingCalendar({ session }) {
     setPendingBookingNotif(null)
     if (n.type === 'waive_before_photo') setWaiveModal(n)
     else if (n.type === 'after_photo_review') setReviewModal(n)
+    else if (n.type === 'after_photo_reconsider') setReconsiderModal(n)
   }, [pendingBookingNotif])
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -2145,7 +2335,27 @@ function BookingCalendar({ session }) {
     if (!session.userId) return
     const { data } = await sb.from('booking_notifications').select('*')
       .eq('user_id', session.userId).eq('read', false)
-    setNotifications(data || [])
+    const all = data || []
+
+    // Photo reminders for bookings whose end-day is past 11:59 PM must NOT appear
+    // inline — they stay unread so the bell still shows them.
+    const reminderTypes = new Set(['before_photo_reminder', 'after_photo_reminder'])
+    const reminderNotifs = all.filter(n => reminderTypes.has(n.type) && n.booking_id)
+    let pastBookingIds = new Set()
+    if (reminderNotifs.length > 0) {
+      const ids = [...new Set(reminderNotifs.map(n => n.booking_id))]
+      const { data: bks } = await sb.from('equipment_bookings').select('id, end_time').in('id', ids)
+      const now = new Date()
+      ;(bks || []).forEach(b => {
+        const d = new Date(b.end_time)
+        const cutoff = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 0, 0)
+        if (now > cutoff) pastBookingIds.add(b.id)
+      })
+    }
+
+    setNotifications(all.filter(n =>
+      !reminderTypes.has(n.type) || !pastBookingIds.has(n.booking_id)
+    ))
   }
 
   async function dismissNotification(id) {
@@ -2366,6 +2576,13 @@ function BookingCalendar({ session }) {
           onDone={() => { setReviewModal(null); loadNotifications() }}
         />
       )}
+      {reconsiderModal && (
+        <AfterPhotoReconsiderModal
+          notification={reconsiderModal} session={session}
+          onClose={() => setReconsiderModal(null)}
+          onDone={() => { setReconsiderModal(null); loadNotifications() }}
+        />
+      )}
 
       {notifications.length > 0 && (
         <div style={{ marginBottom: 12 }}>
@@ -2379,21 +2596,29 @@ function BookingCalendar({ session }) {
             const isWaiveResponse = n.type === 'waive_response'
             const isDenied = n.type === 'denied'
             const isApproved = n.type === 'approved'
+            const isDenyPhoto = n.type === 'deny_photo'
+            const isReconsiderRequest = n.type === 'after_photo_reconsider'
 
-            const isManagerAction = isManagerAlert || isWaiveRequest || isReviewRequest
-            const isPersistent = isBeforeReminder || isWaiveRequest || isReviewRequest // no X button
+            const isManagerAction = isManagerAlert || isWaiveRequest || isReviewRequest || isDenyPhoto || isReconsiderRequest
+            const isPersistent = isBeforeReminder || isWaiveRequest || isReviewRequest || isReconsiderRequest // no X button
 
             const bg = isDenied || isLastWarning ? '#fcebeb'
+              : isDenyPhoto ? '#fff7ed'
+              : isReconsiderRequest ? '#e0f2fe'
               : isPhotoReminder || isManagerAlert || isWaiveRequest ? '#fef3c7'
               : isReviewRequest ? '#fce7f3'
               : isWaiveResponse ? '#e0f2fe'
               : '#e8f2ee'
             const border = isDenied || isLastWarning ? '#f09595'
+              : isDenyPhoto ? '#fed7aa'
+              : isReconsiderRequest ? '#bae6fd'
               : isPhotoReminder || isManagerAlert || isWaiveRequest ? '#f0d070'
               : isReviewRequest ? '#f9a8d4'
               : isWaiveResponse ? '#bae6fd'
               : '#9FE1CB'
             const color = isDenied || isLastWarning ? '#a32d2d'
+              : isDenyPhoto ? '#9a3412'
+              : isReconsiderRequest ? '#0369a1'
               : isPhotoReminder || isManagerAlert || isWaiveRequest ? '#92400e'
               : isReviewRequest ? '#9d174d'
               : isWaiveResponse ? '#0369a1'
@@ -2443,6 +2668,19 @@ function BookingCalendar({ session }) {
                     onClick={() => setReviewModal(n)}>
                     Review photos →
                   </button>
+                )}
+
+                {/* after_photo_reconsider: manager accepts or keeps flag */}
+                {isReconsiderRequest && (isAdmin(session) || canEdit(session)) && (
+                  <button className="btn btn-sm btn-primary" style={{ marginTop: 10, fontSize: 11 }}
+                    onClick={() => setReconsiderModal(n)}>
+                    Review & decide →
+                  </button>
+                )}
+
+                {/* deny_photo: manager sees dismiss button */}
+                {isDenyPhoto && (isAdmin(session) || canEdit(session)) && (
+                  <button className="btn btn-sm" onClick={() => dismissNotification(n.id)} style={{ marginTop: 10, fontSize: 11 }}>Dismiss</button>
                 )}
 
                 {/* missing_photo_manager: block or ignore (lab managers / admins) */}
