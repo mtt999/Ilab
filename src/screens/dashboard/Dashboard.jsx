@@ -148,7 +148,7 @@ function CardGridView({ modules, onNavigate, mileageUrl, labSafetyUrl, isAdmin, 
         <div className="module-icon-grid" style={{ height: '100%', maxHeight: gridMaxHeight(visibleMods.length) }}>
           {visibleMods.map(m => {
             const grantedByAdmin = m.locked && ((m.screen && studentAccess?.has(m.screen)) || studentAllowedPool?.has(m.key))
-            if (m.locked && !grantedByAdmin) return <LockedCard key={m.key} m={m} />
+            if (m.locked && !grantedByAdmin) return null
             return <ModuleCard key={m.key} m={m} imgUrl={moduleImages[m.key]} onClick={() => m.external ? setConfirmExternal({ url: m.key === 'mileage' ? mileageUrl : labSafetyUrl }) : onNavigate(m.screen)} />
           })}
         </div>
