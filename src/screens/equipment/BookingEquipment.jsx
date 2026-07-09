@@ -1101,7 +1101,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
         booking_id: booking.id, user_id: mgr.id, type: 'after_photo_review',
         message: `📸 ${session.username}'s after photo for ${meta.eq_name} needs review — 2nd attempt still failed AI check.`,
         read: false, meta,
-      }).catch(() => {})
+      })
     }
   }
 
@@ -1111,7 +1111,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
       await sb.from('equipment_bookings').update({ before_photo_waived: true }).eq('id', booking.id)
       setWaived(true)
       if (session.userId) {
-        await sb.from('users').update({ photo_denial_flagged: true }).eq('id', session.userId).catch(() => {})
+        await sb.from('users').update({ photo_denial_flagged: true }).eq('id', session.userId)
       }
       if (session.organizationId) {
         const { data: managers } = await sb.from('users')
@@ -1124,7 +1124,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
             booking_id: booking.id, user_id: mgr.id, type: 'deny_photo',
             message: `⛔ ${session.username} declined the before photo for ${meta.eq_name}. Please check the equipment condition.`,
             read: false, meta,
-          }).catch(() => {})
+          })
         }
       }
       toast('Lab managers have been notified.')
@@ -1139,7 +1139,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
       await sb.from('equipment_bookings').update({ after_photo_denied: true }).eq('id', booking.id)
       setAfterDenied(true)
       if (session.userId) {
-        await sb.from('users').update({ photo_denial_flagged: true }).eq('id', session.userId).catch(() => {})
+        await sb.from('users').update({ photo_denial_flagged: true }).eq('id', session.userId)
       }
       if (session.organizationId) {
         const { data: managers } = await sb.from('users')
@@ -1152,7 +1152,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
             booking_id: booking.id, user_id: mgr.id, type: 'deny_photo',
             message: `⛔ ${session.username} declined the after photo for ${meta.eq_name}. Please inspect the equipment after their booking.`,
             read: false, meta,
-          }).catch(() => {})
+          })
         }
       }
       toast('Lab managers have been notified.')
@@ -1179,7 +1179,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
             booking_id: booking.id, user_id: mgr.id, type: 'after_photo_reconsider',
             message: `📸 ${session.username} changed their mind and submitted an after photo for ${meta.eq_name}. Accept to clear their flag.`,
             read: false, meta,
-          }).catch(() => {})
+          })
         }
       }
       toast('Photo sent to lab managers for review.')
@@ -2035,8 +2035,8 @@ function AfterPhotoReconsiderModal({ notification, session, onClose, onDone }) {
     setSaving(true)
     try {
       if (accept && meta.booking_user_id) {
-        await sb.from('users').update({ photo_denial_flagged: false }).eq('id', meta.booking_user_id).catch(() => {})
-        await sb.from('equipment_bookings').update({ after_photo_denied: false }).eq('id', notification.booking_id).catch(() => {})
+        await sb.from('users').update({ photo_denial_flagged: false }).eq('id', meta.booking_user_id)
+        await sb.from('equipment_bookings').update({ after_photo_denied: false }).eq('id', notification.booking_id)
       }
       const msg = accept
         ? `✅ Your after photo for ${meta.eq_name || 'equipment'} was accepted by a lab manager. Your flag has been cleared.${note ? ` Note: ${note}` : ''}`
