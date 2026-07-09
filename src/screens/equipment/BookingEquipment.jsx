@@ -1410,24 +1410,35 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
             </div>
           ) : afterDenied ? (
             /* Denied — reconsider upload available until 11:59 PM on end day (canReconsider handles the window) */
-            <div style={{ border: '1px dashed #f59e0b', background: '#fffbeb', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '10px 8px' }}>
-              <span style={{ fontSize: 20 }}>⛔</span>
-              <span style={{ fontSize: 11, color: '#92400e', textAlign: 'center', padding: '0 6px' }}>After photo declined</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ ...emptyBox({ border: '1px dashed #f59e0b', background: '#fffbeb' }), justifyContent: 'space-evenly', cursor: canReconsider && !busy ? 'pointer' : 'default' }}
+                onClick={() => canReconsider && !busy && setCamera('reconsider-after')}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                  <span style={{ fontSize: 18 }}>⛔</span>
+                  <span style={{ fontSize: 10, color: '#92400e', textAlign: 'center' }}>After photo declined</span>
+                </div>
+                {canReconsider && (
+                  <>
+                    <div style={{ width: '80%', height: 1, background: '#f59e0b', opacity: 0.3 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                      {busy ? <div className="spinner" style={{ width: 16, height: 16 }} /> : (
+                        <>
+                          <span style={{ fontSize: 16 }}>🔄</span>
+                          <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, textAlign: 'center' }}>Changed your mind?</span>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
               {canReconsider && (
                 <>
-                  <div style={{ width: '100%', height: 1, background: '#f59e0b', opacity: 0.25 }} />
-                  <div style={uploadBox(busy)} onClick={() => !busy && setCamera('reconsider-after')}>
-                    {busy ? <div className="spinner" style={{ width: 18, height: 18 }} />
-                      : <><span style={{ fontSize: 18 }}>🔄</span><span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, textAlign: 'center', padding: '0 6px' }}>Changed your mind? Upload now</span></>}
-                  </div>
                   <label style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', cursor: 'pointer', textDecoration: 'underline dotted' }}>
                     or upload file
                     <input type="file" accept="image/*" style={{ display: 'none' }} disabled={busy}
                       onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) compressImage(f, 1200, 0.78).then(dataUrl => handleReconsiderAfter(dataUrl)) }} />
                   </label>
-                  <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center' }}>
-                    Available until 11:59 PM today
-                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center' }}>Available until 11:59 PM today</div>
                 </>
               )}
             </div>
