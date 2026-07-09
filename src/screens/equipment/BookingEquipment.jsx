@@ -146,7 +146,7 @@ const statusColor = { confirmed: '#1e4d39', pending: '#92400e', denied: '#a32d2d
 const statusBg = { confirmed: '#e8f2ee', pending: '#fef3c7', denied: '#fcebeb', cancelled: '#f1efe8' }
 
 // ── Booking Form Modal ────────────────────────────────────────
-function BookingModal({ booking, equipmentList, selectedEquipment, session, onSave, onClose, onAdjustTime, initialSlot, photoRequired, panel }) {
+function BookingModal({ booking, equipmentList, selectedEquipment, session, onSave, onClose, onAdjustTime, initialSlot, photoRequired, panel, defaultBehalfOf = '' }) {
   const { toast } = useAppStore()
 
   // Parse existing booking title to restore purpose type on edit
@@ -164,7 +164,7 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
     start_time: booking?.start_time ? new Date(booking.start_time).toISOString().slice(0,16) : (initialSlot?.start || ''),
     end_time: booking?.end_time ? new Date(booking.end_time).toISOString().slice(0,16) : (initialSlot?.end || ''),
     notes: booking?.notes || '',
-    booked_on_behalf_of: booking?.booked_on_behalf_of || '',
+    booked_on_behalf_of: booking?.booked_on_behalf_of || defaultBehalfOf || '',
     purposeType: saved.type,
     purposeProjectId: saved.projectId,
     purposeOther: saved.other,
@@ -175,7 +175,7 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
   const [conflict, setConflict] = useState(null)
 
   useEffect(() => {
-    if (isAdmin(session)) {
+    if (canEdit(session)) {
       let q = sb.from('users').select('id, name').eq('is_active', true).neq('role', 'admin').order('name')
       if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
       q.then(({ data }) => setStudents(data || []))
@@ -303,10 +303,10 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
           </select>
         </div>
 
-        {isAdmin(session) && (
+        {canEdit(session) && (
           <div className="field"><label>Book on behalf of (optional)</label>
             <select value={form.booked_on_behalf_of} onChange={e => setForm(f => ({ ...f, booked_on_behalf_of: e.target.value }))}>
-              <option value="">— Myself (Admin) —</option>
+              <option value="">— Myself —</option>
               {students.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
             </select>
           </div>
@@ -2124,7 +2124,7 @@ function BookingCalendar({ session }) {
   const [reconsiderModal, setReconsiderModal] = useState(null)
 
   useEffect(() => { loadEquipment(); loadNotifications() }, [])
-  useEffect(() => { loadBookings() }, [selectedEq, weekStart, monthDate, calView])
+  useEffect(() => { loadBookings() }, [selectedEq, weekStart, monthDate, calView, filterStudent])
   useEffect(() => { loadBookings() }, [])
 
   // Auto-select and open booking modal when arriving from a QR scan
@@ -2155,6 +2155,9 @@ function BookingCalendar({ session }) {
     return () => clearInterval(interval)
   }, [])
 
+  const [filterStudent, setFilterStudent] = useState(null) // { id, name } | null — manager-only student filter
+  const [orgStudents, setOrgStudents] = useState([])
+
   const [retrainingBlocked, setRetrainingBlocked] = useState([])
   const [activeBlock, setActiveBlock] = useState(null)
   const [photoRequired, setPhotoRequired] = useState(false)
@@ -2179,6 +2182,12 @@ function BookingCalendar({ session }) {
     await loadActiveBlock()
     await loadPhotoRequired()         // must run before checkPhotoReminders so the ref is set
     await checkPhotoReminders(data || [])
+    // Load org users for manager student-filter dropdown
+    if (canEdit(session) && session?.organizationId) {
+      const { data: users } = await sb.from('users').select('id, name, role')
+        .eq('organization_id', session.organizationId).eq('is_active', true).neq('role', 'admin').order('name')
+      setOrgStudents(users || [])
+    }
   }
 
   async function checkRetrainingStatus(eqList) {
@@ -2339,9 +2348,20 @@ function BookingCalendar({ session }) {
     }
     const scopedIds = orgEqIdsRef.current
     if (scopedIds !== null && scopedIds.length === 0) { setBookings([]); return }
-    let query = sb.from('equipment_bookings').select(BOOKING_COLS)
-      .gte('start_time', start).lt('start_time', end)
-      .order('start_time')
+
+    // Manager viewing a specific student — show all org equipment bookings for that student
+    if (filterStudent) {
+      let q = sb.from('equipment_bookings').select(BOOKING_COLS)
+        .gte('start_time', start).lt('start_time', end)
+        .eq('user_id', filterStudent.id).order('start_time')
+      if (scopedIds && scopedIds.length > 0) q = q.in('equipment_id', scopedIds)
+      if (selectedEq.length > 0) q = q.in('equipment_id', selectedEq)
+      const { data, error } = await q
+      if (error) console.error('[loadBookings] error:', error)
+      setBookings((data || []).filter(b => b.status !== 'cancelled'))
+      return
+    }
+
     if (selectedEq.length > 0) {
       // Show all bookings for the selected equipment so users can see availability
       const { data, error } = await sb.from('equipment_bookings').select(BOOKING_COLS)
@@ -2351,11 +2371,8 @@ function BookingCalendar({ session }) {
       setBookings((data || []).filter(b => b.status !== 'cancelled'))
       return
     }
-    // No equipment selected → empty calendar
-    if (selectedEq.length === 0) {
-      setBookings([])
-      return
-    }
+    // No equipment selected and no student filter → empty calendar
+    setBookings([])
   }
 
   async function loadNotifications() {
@@ -2800,6 +2817,29 @@ function BookingCalendar({ session }) {
       {/* ── Calendar (full width on desktop, below selector on mobile) ── */}
       <div style={{ width: '100%' }}>
 
+        {/* Manager student filter — only for lab managers / org admins */}
+        {canEdit(session) && orgStudents.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, background: filterStudent ? 'var(--accent-light)' : 'var(--surface)', border: `1px solid ${filterStudent ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 8, padding: '7px 12px' }}>
+            <span style={{ fontSize: 12, color: filterStudent ? 'var(--accent)' : 'var(--text3)', fontWeight: 600, whiteSpace: 'nowrap' }}>👤 View student:</span>
+            <select
+              value={filterStudent?.id || ''}
+              onChange={e => {
+                const id = e.target.value
+                if (!id) { setFilterStudent(null); return }
+                const s = orgStudents.find(s => s.id === id)
+                if (s) setFilterStudent(s)
+              }}
+              style={{ flex: 1, fontSize: 12, border: 'none', background: 'transparent', color: filterStudent ? 'var(--accent)' : 'var(--text)', fontWeight: filterStudent ? 600 : 400, outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="">— All students —</option>
+              {orgStudents.map(s => <option key={s.id} value={s.id}>{s.name}{s.role === 'student' ? ' (lab user)' : ''}</option>)}
+            </select>
+            {filterStudent && (
+              <button onClick={() => setFilterStudent(null)} style={{ border: 'none', background: 'none', color: 'var(--accent)', fontSize: 13, cursor: 'pointer', fontWeight: 700, padding: '0 2px', flexShrink: 0 }}>✕</button>
+            )}
+          </div>
+        )}
+
         {/* Calendar toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -2933,6 +2973,7 @@ function BookingCalendar({ session }) {
                   onClose={() => { setShowBookingModal(false); setBookingDraft(null); setEditBooking(null) }}
                   initialSlot={bookingDraft}
                   photoRequired={photoRequired}
+                  defaultBehalfOf={filterStudent?.name || ''}
                   panel
                 />
               </div>
@@ -2980,12 +3021,12 @@ function BookingCalendar({ session }) {
           onClose={() => {
             setShowBookingModal(false)
             setEditBooking(null)
-            // For edit mode clear draft too; for new booking keep draft so user can re-drag
             if (editBooking) setBookingDraft(null)
           }}
           onAdjustTime={!editBooking ? () => { setShowBookingModal(false); setEditBooking(null) } : undefined}
           initialSlot={bookingDraft}
           photoRequired={photoRequired}
+          defaultBehalfOf={filterStudent?.name || ''}
         />
       )}
 
@@ -3017,11 +3058,13 @@ function BookingHistory({ session }) {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
   const [filterEq, setFilterEq] = useState('')
+  const [filterUser, setFilterUser] = useState('')
   const [search, setSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [timeFrom, setTimeFrom] = useState('')
   const [timeTo, setTimeTo] = useState('')
+  const [orgUsers, setOrgUsers] = useState([])
 
   useEffect(() => { load() }, [])
 
@@ -3044,6 +3087,11 @@ function BookingHistory({ session }) {
     setEquipment(eq || [])
     setBookings(bk || [])
     setLoading(false)
+    if (orgId && canEdit(session)) {
+      const { data: users } = await sb.from('users').select('id, name, role')
+        .eq('organization_id', orgId).eq('is_active', true).neq('role', 'admin').order('name')
+      setOrgUsers(users || [])
+    }
   }
 
   const filtered = bookings.filter(b => {
@@ -3061,6 +3109,7 @@ function BookingHistory({ session }) {
     }
     return (!filterStatus || b.status === filterStatus)
       && (!filterEq || b.equipment_id === filterEq)
+      && (!filterUser || b.user_id === filterUser)
       && (!q || [b.user_name, b.title, eq?.nickname, eq?.equipment_name].some(f => f?.toLowerCase().includes(q)))
   })
 
@@ -3142,6 +3191,12 @@ function BookingHistory({ session }) {
             <option value="">All equipment</option>
             {equipment.map(e => <option key={e.id} value={e.id}>{e.nickname || e.equipment_name}</option>)}
           </select>
+          {canEdit(session) && orgUsers.length > 0 && (
+            <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={{ width: 'auto' }}>
+              <option value="">All students</option>
+              {orgUsers.map(u => <option key={u.id} value={u.id}>{u.name}{u.role === 'student' ? ' (lab user)' : ''}</option>)}
+            </select>
+          )}
         </div>
         {/* Date & time range */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
