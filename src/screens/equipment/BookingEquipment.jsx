@@ -217,6 +217,7 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
   async function save() {
     if (!form.equipment_id) { toast('Select equipment.'); return }
     if (!form.start_time || !form.end_time) { toast('Please select a start and end time.'); return }
+    if (new Date(form.start_time) < new Date()) { toast('Cannot book a time in the past.'); return }
     if (new Date(form.end_time) <= new Date(form.start_time)) { toast('End time must be after start time.'); return }
     if (conflict) { toast('This time slot conflicts with an existing booking.'); return }
     if (!form.purposeType) { toast('Select a purpose: Project, Thesis, or Other.'); return }
@@ -689,11 +690,26 @@ function WeekView({ weekStart, bookings, onSlotClick, onBookingClick, canBook, s
         </div>
 
         {/* Day columns */}
-        {days.map((day, di) => (
+        {days.map((day, di) => {
+          const now = new Date()
+          const dayStart = new Date(day); dayStart.setHours(0, 0, 0, 0)
+          const dayEnd   = new Date(day); dayEnd.setHours(23, 59, 59, 999)
+          const isDayPast    = now > dayEnd          // entire day is in the past
+          const isDayToday   = !isDayPast && now >= dayStart
+          // How many px from top to grey out (0 = none, TOTAL_H = full column)
+          const pastPx = isDayPast ? TOTAL_H : isDayToday
+            ? Math.min(TOTAL_H, (now.getHours() * 60 + now.getMinutes()) / 30 * SLOT_H)
+            : 0
+          return (
           <div key={di} ref={el => colRefs.current[di] = el}
-            style={{ position: 'relative', height: TOTAL_H, borderLeft: '1px solid var(--border)', cursor: canBook ? 'crosshair' : 'default' }}
+            style={{ position: 'relative', height: TOTAL_H, borderLeft: '1px solid var(--border)', cursor: (canBook && !isDayPast) ? 'crosshair' : 'default' }}
             onMouseDown={e => handleMouseDown(e, di)}
             onTouchStart={e => handleTouchStart(e, di)}>
+
+            {/* Past-time overlay — grey out slots that cannot be booked */}
+            {pastPx > 0 && (
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: pastPx, background: 'rgba(0,0,0,0.045)', pointerEvents: 'none', zIndex: 3 }} />
+            )}
 
             {/* Hour lines */}
             {HOURS.map(h => (
@@ -833,7 +849,7 @@ function WeekView({ weekStart, bookings, onSlotClick, onBookingClick, canBook, s
               })
             })()}
           </div>
-        ))}
+        )})}
       </div>
     </div>
   )
@@ -1685,6 +1701,7 @@ function MultiBookingModal({ equipmentList, defaultSlot, session, onSave, onClos
     for (const e of equipmentList) {
       const t = times[e.id]
       if (!t.start || !t.end) { toast(`Set time for: ${e.nickname || e.equipment_name}`); return }
+      if (new Date(t.start) < new Date()) { toast(`Cannot book a past time for: ${e.nickname || e.equipment_name}`); return }
       if (new Date(t.start) >= new Date(t.end)) { toast(`End must be after start for: ${e.nickname || e.equipment_name}`); return }
     }
     setSaving(true)
@@ -2369,6 +2386,7 @@ function BookingCalendar({ session }) {
 
   function handleSlotClick(slot) {
     if (selectedEq.length === 0) return
+    if (new Date(slot.start) < new Date()) { toast('Cannot book a time slot in the past.'); return }
     // Check booking block
     if (activeBlock) {
       const unblockDate = new Date(activeBlock.unblock_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -2419,6 +2437,7 @@ function BookingCalendar({ session }) {
 
   async function handleBookingReschedule(booking, newStart, newEnd) {
     if (!newStart || !newEnd || newStart >= newEnd) { toast('Invalid time range.'); return }
+    if (newStart < new Date()) { toast('Cannot reschedule to a time in the past.'); return }
     const { error } = await sb.from('equipment_bookings').update({
       start_time: newStart.toISOString(),
       end_time: newEnd.toISOString(),
@@ -2432,6 +2451,14 @@ function BookingCalendar({ session }) {
   function handleDayClick(day) {
     const start = new Date(day); start.setHours(9, 0, 0, 0)
     const end   = new Date(day); end.setHours(17, 0, 0, 0)
+    if (end < new Date()) { toast('Cannot book a date in the past.'); return }
+    // If today: clamp start to current time (rounded up to next 30 min)
+    if (start < new Date()) {
+      const now = new Date(); now.setSeconds(0, 0)
+      now.setMinutes(now.getMinutes() <= 30 ? 30 : 0)
+      if (now.getMinutes() === 0) now.setHours(now.getHours() + 1)
+      start.setTime(now.getTime())
+    }
     const slot  = { start: start.toISOString().slice(0,16), end: end.toISOString().slice(0,16) }
     if (selectedEq.length > 1) {
       const idx = multiDraftMode ? multiDraftIdx : 0
