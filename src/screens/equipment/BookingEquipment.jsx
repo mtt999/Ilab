@@ -2122,6 +2122,8 @@ function BookingCalendar({ session }) {
   const [waiveModal, setWaiveModal] = useState(null)
   const [reviewModal, setReviewModal] = useState(null)
   const [reconsiderModal, setReconsiderModal] = useState(null)
+  const [filterStudent, setFilterStudent] = useState(null) // { id, name } | null — manager-only student filter
+  const [orgStudents, setOrgStudents] = useState([])
 
   useEffect(() => { loadEquipment(); loadNotifications() }, [])
   useEffect(() => { loadBookings() }, [selectedEq, weekStart, monthDate, calView, filterStudent])
@@ -2154,9 +2156,6 @@ function BookingCalendar({ session }) {
     const interval = setInterval(() => checkPhotoReminders(equipmentRef.current), 60 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
-
-  const [filterStudent, setFilterStudent] = useState(null) // { id, name } | null — manager-only student filter
-  const [orgStudents, setOrgStudents] = useState([])
 
   const [retrainingBlocked, setRetrainingBlocked] = useState([])
   const [activeBlock, setActiveBlock] = useState(null)
