@@ -2637,7 +2637,7 @@ function BookingCalendar({ session }) {
             const isReconsiderRequest = n.type === 'after_photo_reconsider'
 
             const isManagerAction = isManagerAlert || isWaiveRequest || isReviewRequest || isDenyPhoto || isReconsiderRequest
-            const isPersistent = isBeforeReminder || isWaiveRequest || isReviewRequest || isReconsiderRequest // no X button
+            const isPersistent = isWaiveRequest || isReviewRequest || isReconsiderRequest // no X button
 
             const bg = isDenied || isLastWarning ? '#fcebeb'
               : isDenyPhoto ? '#fff7ed'
