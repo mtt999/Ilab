@@ -13,7 +13,7 @@ This file applies to every session working on the `labhive` project. Read it in 
 |-------|-------------------|
 | UI | React 18.3, Vite 5.4 |
 | State | Zustand 4.5 |
-| Backend | Supabase JS v2.45 (no RLS — custom auth via `users` / `solo_users`) |
+| Backend | Supabase JS v2.45 · custom auth via `users` / `solo_users` (Supabase Auth `signInWithPassword`) · **RLS enforced on all tables** (see `rls_phase1.sql`) |
 | Mobile | Capacitor 8.3 (iOS + Android), MLKit barcode scanning, jailbreak detection |
 | Data export | ExcelJS 4.4, xlsx-js-style |
 | Security | bcryptjs (password hashing), vite-plugin-javascript-obfuscator (prod builds) |
@@ -147,10 +147,21 @@ CREATE TABLE IF NOT EXISTS user_out_of_lab (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE user_out_of_lab ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "allow_all" ON user_out_of_lab FOR ALL USING (true) WITH CHECK (true);
-
--- RLS: enable on all tables (run the full ALTER TABLE block from session history)
+-- Real RLS policy applied by rls_phase1.sql (org/owner scoped) — NOT allow_all.
 ```
+
+### Row Level Security (RLS) — July 2026
+
+All ~60 tables enforce real org/owner isolation. The full policy set lives in
+**`rls_phase1.sql`** (repo root) — idempotent, safe to re-run.
+
+- Auth: every query runs as role `authenticated` with `auth.uid()` (app uses `sb.auth.signInWithPassword()`). `users.auth_id` / `solo_users.auth_id` link to Supabase auth.
+- Helper functions (SECURITY DEFINER, permanent — do NOT drop): `is_super_admin()`, `my_user_id()`, `my_org_id()`, `my_solo_id()`, `my_solo_email()`.
+- Super admin = `settings.super_admin_auth_id = auth.uid()::text`.
+- Scoping: team tables by `organization_id = my_org_id()`; solo by `solo_owner_id = my_solo_id()`; child tables via parent FK subquery.
+- Identity columns (`user_id`, `created_by`, `sender_id`, …) are `text` in some tables and `uuid` in others → policies cast BOTH sides `::text`.
+- **To secure a NEW table:** add a `SELECT _apply_rls(...)` call in `rls_phase1.sql` AND add its policy name to the `keep` array in STEP 22 (the legacy-policy pruner), then re-run.
+- `_apply_rls` skips missing tables and, on any error, DISABLES RLS (leaves the table open, never locked) + emits a NOTICE.
 
 ### Key components added (June 2026)
 | File | Purpose |
@@ -601,8 +612,9 @@ ALTER TABLE solo_users ADD COLUMN IF NOT EXISTS terms_accepted_version INTEGER D
 
 -- Out of lab days (Task Board):
 CREATE TABLE IF NOT EXISTS user_out_of_lab (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, user_id UUID, date DATE NOT NULL, note TEXT, organization_id UUID, login_mode TEXT DEFAULT 'team', created_at TIMESTAMPTZ DEFAULT NOW());
-ALTER TABLE user_out_of_lab ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "allow_all" ON user_out_of_lab FOR ALL USING (true) WITH CHECK (true);
+-- RLS policy applied by rls_phase1.sql (org/owner scoped). Do NOT use allow_all.
+
+-- All tables: run rls_phase1.sql for the full org/owner-scoped RLS policy set.
 ```
 
 ---
