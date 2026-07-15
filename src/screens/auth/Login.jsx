@@ -229,7 +229,7 @@ export default function Login() {
     return () => clearInterval(lockTimerRef.current)
   }, [lockUntil])
 
-  const accentColor = mode === 'solo' ? '#534AB7' : '#0d47a1'
+  const accentColor = mode === 'solo' ? '#534AB7' : '#1D9E75'
 
   function handleModeSelect(m) {
     setMode(m); setLoginMode(m); setError('')
@@ -356,7 +356,7 @@ export default function Login() {
 
   return (
     <>
-    <div style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', background: 'var(--bg)', padding: '8px 20px 8px' }}>
+    <div className="login-screen" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', background: 'var(--bg)', padding: '8px 20px 8px' }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
 
         <div style={{ textAlign: 'center', marginBottom: -40 }}>
