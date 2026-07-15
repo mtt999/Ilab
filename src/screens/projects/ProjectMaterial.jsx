@@ -383,7 +383,7 @@ function ResultValueInput({ type, value, onChange }) {
     <div style={{ display: 'flex', gap: 8 }}>
       {['Pass', 'Fail'].map(opt => (
         <button key={opt} type="button" onClick={() => onChange(opt)}
-          style={{ padding: '7px 20px', border: `1.5px solid ${value === opt ? (opt === 'Pass' ? '#2a6049' : '#c84b2f') : 'var(--border)'}`, borderRadius: 8, background: value === opt ? (opt === 'Pass' ? '#e8f2ee' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#2a6049' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
+          style={{ padding: '7px 20px', border: `1.5px solid ${value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--border)'}`, borderRadius: 8, background: value === opt ? (opt === 'Pass' ? '#E1F5EE' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
           {opt}
         </button>
       ))}
@@ -734,7 +734,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                     { label: 'Tests', value: rows.length, color: 'var(--accent)' },
                     avg !== null && { label: 'Average', value: avg.toFixed(2), color: '#0369a1' },
                     std !== null && { label: 'Std Dev', value: std.toFixed(2), color: '#7c4dbd' },
-                    passRate !== null && { label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#2a6049' : '#c84b2f' },
+                    passRate !== null && { label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#1D9E75' : '#c84b2f' },
                   ].filter(Boolean).map(s => (
                     <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 18px', textAlign: 'center', minWidth: 90 }}>
                       <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
@@ -754,7 +754,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                         <span style={{ fontSize: 11, background: 'var(--surface2)', color: 'var(--text2)', borderRadius: 99, padding: '2px 9px' }}>
                           {RESULT_TYPES.find(t => t.value === r.result_type)?.label || r.result_type}
                         </span>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: r.result_value === 'Pass' ? '#2a6049' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--accent)', margin: '6px 0 2px' }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: r.result_value === 'Pass' ? '#1D9E75' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--accent)', margin: '6px 0 2px' }}>
                           {formatResultValue(r.result_type, r.result_value)}
                         </div>
                         {r.explanation && <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5, marginTop: 4 }}>{r.explanation}</div>}
@@ -805,7 +805,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                       <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 8 }}>{equipMap[eid] || 'Unknown Equipment'}</div>
                       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6 }}>{rows.length} test{rows.length !== 1 ? 's' : ''}</div>
                       {avg !== null && <div style={{ fontSize: 12, fontWeight: 600, color: '#0369a1' }}>avg {avg.toFixed(2)}</div>}
-                      {pr !== null && <div style={{ fontSize: 12, fontWeight: 600, color: pr >= 80 ? '#2a6049' : '#c84b2f' }}>{pr}% pass</div>}
+                      {pr !== null && <div style={{ fontSize: 12, fontWeight: 600, color: pr >= 80 ? '#1D9E75' : '#c84b2f' }}>{pr}% pass</div>}
                     </div>
                   )
                 })}
@@ -834,7 +834,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                   <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3, marginBottom: 10, color: 'var(--text)' }}>{projectMap[pid] || 'No Project'}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div style={{ fontSize: 12, color: 'var(--text3)' }}>{isSolo ? `${allRows.length} test${allRows.length !== 1 ? 's' : ''}` : `${equipCnt} equipment · ${allRows.length} tests`}</div>
-                    {pr !== null && <div style={{ fontSize: 12, fontWeight: 600, color: pr >= 80 ? '#2a6049' : '#c84b2f' }}>{pr}% pass rate</div>}
+                    {pr !== null && <div style={{ fontSize: 12, fontWeight: 600, color: pr >= 80 ? '#1D9E75' : '#c84b2f' }}>{pr}% pass rate</div>}
                     {latest && <div style={{ fontSize: 11, color: 'var(--text3)' }}>Latest: {latest}</div>}
                   </div>
                 </div>
@@ -848,7 +848,7 @@ function ResultsTab({ projects, session, allowedNames }) {
 }
 
 // ── Point Chart ───────────────────────────────────────────────
-const PALETTE = ['#0d47a1','#c84b2f','#2a6049','#7c4dbd','#b45309','#0369a1','#be185d','#065f46']
+const PALETTE = ['#0d47a1','#c84b2f','#1D9E75','#7c4dbd','#b45309','#0369a1','#be185d','#065f46']
 function PointChart({ results, isOutlier }) {
   if (!results.length) return null
 
@@ -1004,7 +1004,7 @@ function PointChart({ results, isOutlier }) {
             const y = r.result_value === 'Pass' ? pad.t + cH * 0.12 : pad.t + cH * 0.88
             return (
               <polygon key={i} points={`${x},${y-5} ${x+5},${y} ${x},${y+5} ${x-5},${y}`}
-                fill={r.result_value === 'Pass' ? '#2a6049' : '#c84b2f'} stroke="white" strokeWidth={1.2}>
+                fill={r.result_value === 'Pass' ? '#1D9E75' : '#c84b2f'} stroke="white" strokeWidth={1.2}>
                 <title>{sp}: {r.result_value} ({r.date})</title>
               </polygon>
             )
@@ -1039,7 +1039,7 @@ function PointChart({ results, isOutlier }) {
         ))}
         {hasPassFail && <>
           <span style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 9, height: 9, background: '#2a6049', display: 'inline-block', clipPath: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }} />Pass
+            <span style={{ width: 9, height: 9, background: '#1D9E75', display: 'inline-block', clipPath: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }} />Pass
           </span>
           <span style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 9, height: 9, background: '#c84b2f', display: 'inline-block', clipPath: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }} />Fail
@@ -1396,11 +1396,11 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                   { label: 'Total Results', value: filteredResults.length, color: 'var(--accent3)' },
                   ...(stats ? [
                     { label: 'Average', value: stats.avg.toFixed(2), color: '#0369a1' },
-                    { label: 'Min',     value: stats.min.toFixed(2), color: '#2a6049' },
+                    { label: 'Min',     value: stats.min.toFixed(2), color: '#1D9E75' },
                     { label: 'Max',     value: stats.max.toFixed(2), color: '#c84b2f' },
                     { label: 'Std Dev', value: stats.std.toFixed(2), color: '#7c4dbd' },
                   ] : []),
-                  ...(passRate !== null ? [{ label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#2a6049' : '#c84b2f' }] : []),
+                  ...(passRate !== null ? [{ label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#1D9E75' : '#c84b2f' }] : []),
                 ].map(s => (
                   <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
                     <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
@@ -1435,7 +1435,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                                   <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{r.date}</td>
                                   <td style={{ padding: '8px 12px', fontWeight: 500 }}>{r.test_name || r.sample_name}</td>
                                   <td style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11, textTransform: 'capitalize' }}>{r.result_type?.replace('_', '/')}</td>
-                                  <td style={{ padding: '8px 12px', fontWeight: 600, color: outlier ? '#c84b2f' : r.result_value === 'Pass' ? '#2a6049' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' }}>
+                                  <td style={{ padding: '8px 12px', fontWeight: 600, color: outlier ? '#c84b2f' : r.result_value === 'Pass' ? '#1D9E75' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' }}>
                                     {r.result_type === 'percentage' ? r.result_value + '%' : r.result_value}{outlier ? ' ⚠️' : ''}
                                   </td>
                                   <td style={{ padding: '8px 12px', color: 'var(--text2)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.explanation || '—'}</td>
@@ -1461,7 +1461,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                             { label: 'Date',         value: selectedRow.date },
                             { label: 'Result Type',  value: selectedRow.result_type?.replace('_', ' / ') },
                             { label: 'Result',       value: selectedRow.result_type === 'percentage' ? selectedRow.result_value + '%' : selectedRow.result_value, bold: true,
-                              color: selectedRow.result_value === 'Pass' ? '#2a6049' : selectedRow.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' },
+                              color: selectedRow.result_value === 'Pass' ? '#1D9E75' : selectedRow.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' },
                             { label: 'Equipment',    value: selected?.equipment_name },
                             { label: 'Submitted By', value: selectedRow.created_by },
                             { label: 'Notes',        value: selectedRow.explanation, multiline: true },
@@ -1591,7 +1591,7 @@ function RecordsPanel({ projects, allowedNames, session }) {
     return `${(b / 1024 / 1024).toFixed(1)} MB`
   }
 
-  const resultColor = r => r.result_value === 'Pass' ? '#2a6049' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)'
+  const resultColor = r => r.result_value === 'Pass' ? '#1D9E75' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)'
 
   if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
   if (entries.length === 0) return <div className="empty-state"><div className="empty-icon">📂</div><div>No test results yet. Add results in Data Analysis.</div></div>

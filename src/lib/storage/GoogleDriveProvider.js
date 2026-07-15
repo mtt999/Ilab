@@ -2,7 +2,8 @@
 // Requires a Google Cloud project with Drive API enabled.
 // Set your Client ID in src/lib/storage/config.js
 
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from './config'
+import { GOOGLE_CLIENT_ID } from './config'
+import { sb } from '../supabase'
 
 const REDIRECT_URI = 'https://labhive.app/oauth-callback'
 const SCOPE = 'https://www.googleapis.com/auth/drive.file'
@@ -20,13 +21,12 @@ async function getValidToken() {
   if (!token) return null
   if (Date.now() < token.expires_at - 60_000) return token.access_token
   if (!token.refresh_token) { localStorage.removeItem(TOKEN_KEY); return null }
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET, refresh_token: token.refresh_token, grant_type: 'refresh_token' }),
+  // Token exchange runs server-side (google-oauth edge function) so the Google
+  // client secret never ships in the browser bundle.
+  const { data, error } = await sb.functions.invoke('google-oauth', {
+    body: { action: 'refresh', refresh_token: token.refresh_token },
   })
-  const data = await res.json()
-  if (data.error) { localStorage.removeItem(TOKEN_KEY); return null }
+  if (error || !data || data.error || !data.access_token) { localStorage.removeItem(TOKEN_KEY); return null }
   const updated = { ...token, access_token: data.access_token, expires_at: Date.now() + data.expires_in * 1000 }
   saveToken(updated)
   return updated.access_token
@@ -94,13 +94,13 @@ export class GoogleDriveProvider {
 
   async handleCallback(code) {
     const verifier = localStorage.getItem(VERIFIER_KEY)
-    const res = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ code, client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET, redirect_uri: REDIRECT_URI, grant_type: 'authorization_code', code_verifier: verifier }),
+    // Exchange the auth code via the server-side proxy (holds the client secret).
+    const { data, error } = await sb.functions.invoke('google-oauth', {
+      body: { action: 'exchange', code, code_verifier: verifier, redirect_uri: REDIRECT_URI },
     })
-    const data = await res.json()
-    if (!res.ok || data.error) throw new Error(data.error_description || data.error || `HTTP ${res.status}`)
+    if (error || !data || data.error || !data.access_token) {
+      throw new Error(data?.error_description || data?.error || error?.message || 'Google token exchange failed')
+    }
     saveToken({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at: Date.now() + data.expires_in * 1000 })
     localStorage.removeItem(VERIFIER_KEY)
   }

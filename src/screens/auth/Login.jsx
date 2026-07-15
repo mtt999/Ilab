@@ -356,7 +356,7 @@ export default function Login() {
 
   return (
     <>
-    <div className="login-screen" style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', background: 'var(--bg)', padding: '8px 20px 8px' }}>
+    <div style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', background: 'var(--bg)', padding: '8px 20px 8px' }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
 
         <div style={{ textAlign: 'center', marginBottom: -40 }}>

@@ -142,8 +142,8 @@ const HALF_HOURS = Array.from({ length: 48 }, (_, i) => i) // 0=12:00am, 1=12:30
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
-const statusColor = { confirmed: '#1e4d39', pending: '#92400e', denied: '#a32d2d', cancelled: '#5f5e5a' }
-const statusBg = { confirmed: '#e8f2ee', pending: '#fef3c7', denied: '#fcebeb', cancelled: '#f1efe8' }
+const statusColor = { confirmed: '#085041', pending: '#92400e', denied: '#a32d2d', cancelled: '#5f5e5a' }
+const statusBg = { confirmed: '#E1F5EE', pending: '#fef3c7', denied: '#fcebeb', cancelled: '#f1efe8' }
 
 // ── Booking Form Modal ────────────────────────────────────────
 function BookingModal({ booking, equipmentList, selectedEquipment, session, onSave, onClose, onAdjustTime, initialSlot, photoRequired, panel, defaultBehalfOf = '' }) {
@@ -1525,8 +1525,8 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
       )}
 
       {status && (
-        <div style={{ padding: '10px 14px', background: status === 'pass' ? '#e8f2ee' : '#fcebeb', border: `1px solid ${status === 'pass' ? '#9FE1CB' : '#f09595'}`, borderRadius: 8, fontSize: 13, marginBottom: 6 }}>
-          <div style={{ fontWeight: 600, color: status === 'pass' ? '#1e4d39' : '#a32d2d', marginBottom: findings.length ? 6 : 0 }}>
+        <div style={{ padding: '10px 14px', background: status === 'pass' ? '#E1F5EE' : '#fcebeb', border: `1px solid ${status === 'pass' ? '#9FE1CB' : '#f09595'}`, borderRadius: 8, fontSize: 13, marginBottom: 6 }}>
+          <div style={{ fontWeight: 600, color: status === 'pass' ? '#085041' : '#a32d2d', marginBottom: findings.length ? 6 : 0 }}>
             {status === 'pass' ? '✅ Area clean — great job!' : '⚠️ Needs attention'}
           </div>
           {findings.length > 0 && (
@@ -1568,10 +1568,10 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
 
           {/* Status chips */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: beforeUrl ? '#e8f2ee' : waived ? '#fef3c7' : '#f3f4f6', color: beforeUrl ? '#1e4d39' : waived ? '#92400e' : '#6b7280', fontWeight: 600 }}>
+            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: beforeUrl ? '#E1F5EE' : waived ? '#fef3c7' : '#f3f4f6', color: beforeUrl ? '#085041' : waived ? '#92400e' : '#6b7280', fontWeight: 600 }}>
               Before: {beforeUrl ? '✅ Submitted' : waived ? '✋ Waive requested' : '⏳ Pending'}
             </span>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: afterUrl && afterDenied ? '#e0f2fe' : afterUrl ? (status === 'pass' ? '#e8f2ee' : '#fcebeb') : afterDenied ? '#fef3c7' : '#f3f4f6', color: afterUrl && afterDenied ? '#0369a1' : afterUrl ? (status === 'pass' ? '#1e4d39' : '#a32d2d') : afterDenied ? '#92400e' : '#6b7280', fontWeight: 600 }}>
+            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: afterUrl && afterDenied ? '#e0f2fe' : afterUrl ? (status === 'pass' ? '#E1F5EE' : '#fcebeb') : afterDenied ? '#fef3c7' : '#f3f4f6', color: afterUrl && afterDenied ? '#0369a1' : afterUrl ? (status === 'pass' ? '#085041' : '#a32d2d') : afterDenied ? '#92400e' : '#6b7280', fontWeight: 600 }}>
               After: {afterUrl && afterDenied ? '⏳ Review pending' : afterUrl ? (status === 'pass' ? '✅ Pass' : '⚠️ Needs attention') : afterDenied ? '⛔ Declined' : '⏳ Pending'}
             </span>
           </div>
@@ -2631,7 +2631,7 @@ function BookingCalendar({ session }) {
         <div style={{ width: '100%', marginBottom: 8 }}>
           <button
             onClick={() => setScreen('equipmentscan')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1.5px solid #b2dfcb', background: '#e8f2ee', fontSize: 13, fontWeight: 700, color: '#2a6049', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1.5px solid #b2dfcb', background: '#E1F5EE', fontSize: 13, fontWeight: 700, color: '#1D9E75', cursor: 'pointer' }}
           >
             ← Back to options
           </button>
@@ -2692,7 +2692,7 @@ function BookingCalendar({ session }) {
               : isPhotoReminder || isManagerAlert || isWaiveRequest ? '#fef3c7'
               : isReviewRequest ? '#fce7f3'
               : isWaiveResponse ? '#e0f2fe'
-              : '#e8f2ee'
+              : '#E1F5EE'
             const border = isDenied || isLastWarning ? '#f09595'
               : isDenyPhoto ? '#fed7aa'
               : isReconsiderRequest ? '#bae6fd'
@@ -2706,7 +2706,7 @@ function BookingCalendar({ session }) {
               : isPhotoReminder || isManagerAlert || isWaiveRequest ? '#92400e'
               : isReviewRequest ? '#9d174d'
               : isWaiveResponse ? '#0369a1'
-              : '#1e4d39'
+              : '#085041'
 
             const clickable = (isPhotoReminder || isLastWarning) && n.booking_id && !isBeforeReminder
 
@@ -2933,7 +2933,7 @@ function BookingCalendar({ session }) {
                           const isCurrent = i === multiDraftIdx
                           return (
                             <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600,
-                              background: slot ? '#e8f2ee' : isCurrent ? '#534AB7' : 'rgba(83,74,183,0.12)',
+                              background: slot ? '#E1F5EE' : isCurrent ? '#534AB7' : 'rgba(83,74,183,0.12)',
                               color: slot ? '#0f6e56' : isCurrent ? '#fff' : '#534AB7',
                               border: `1px solid ${slot ? '#0f6e56' : isCurrent ? '#534AB7' : '#C5C2F5'}` }}>
                               {slot ? '✓' : isCurrent ? '→' : '○'} {eq?.nickname || eq?.equipment_name}

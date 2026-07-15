@@ -30,16 +30,16 @@ function getModules(role, loginMode, activeModules) {
 
 function getAllModulesForStudent() {
   return [
-    { key: 'supply',       screen: 'home',          label: 'Supply Inventory',          sub: 'Weekly inspection & export',       icon: '📦', bg: '#e8f2ee', color: '#2a6049' },
+    { key: 'supply',       screen: 'home',          label: 'Supply Inventory',          sub: 'Weekly inspection & export',       icon: '📦', bg: '#E1F5EE', color: '#1D9E75' },
     { key: 'projects',     screen: 'projects',      label: 'Project Workspace',        sub: 'Inventory, results & workspace',   icon: '🧪', bg: '#f3eeff', color: '#7c4dbd' },
     { key: 'training',     screen: 'training',      label: 'Training Records',          sub: 'Certs, equipment & alarm',         icon: '🎓', bg: '#e0f2fe', color: '#0369a1' },
     { key: 'equipment',    screen: 'equipment',     label: 'Equipment List',       sub: 'Lab equipment tracking',           icon: '🔧', bg: '#fef3c7', color: '#92400e', locked: true },
-    { key: 'equipmenthub', screen: 'equipmenthub',  label: 'Equipment',                 sub: 'Info, SOP & standards',            icon: '📚', bg: '#e8f2ee', color: '#1e4d39' },
+    { key: 'equipmenthub', screen: 'equipmenthub',  label: 'Equipment',                 sub: 'Info, SOP & standards',            icon: '📚', bg: '#E1F5EE', color: '#085041' },
     { key: 'booking',      screen: 'booking',       label: 'Reserve Equipment',         sub: 'Reserve lab equipment',            icon: '📅', bg: '#e0f2fe', color: '#0369a1' },
     { key: 'barcode',      screen: 'barcode',       label: 'QR Scan',                   sub: 'Scan & look up lab materials',     icon: '📷', bg: '#e0f7fa', color: '#00796b' },
     { key: 'mileage',      screen: null,            label: 'Mileage Form',              sub: 'Submit mileage reimbursement',     icon: '🚗', bg: '#fdf0ed', color: '#c84b2f', external: true },
     { key: 'labsafety',    screen: null,            label: 'Lab Safety',                sub: 'Safety training & certification',  icon: '🦺', bg: '#fef3c7', color: '#92400e', external: true },
-    { key: 'remessages',   screen: 'remessages',    label: 'Lab Messages', sub: 'Notes, ideas & issue reports',     icon: '💬', bg: '#e8f2ee', color: '#2a6049' },
+    { key: 'remessages',   screen: 'remessages',    label: 'Lab Messages', sub: 'Notes, ideas & issue reports',     icon: '💬', bg: '#E1F5EE', color: '#1D9E75' },
     { key: 'pm',           screen: 'pm',            label: 'Task Board',        sub: 'Tasks, meetings & team chat',      icon: '📋', bg: '#fff3e0', color: '#ff6b00', locked: true },
     { key: 'profile',      screen: 'profile',       label: 'Profile',                   sub: 'Your info & settings',             icon: '👤', bg: '#f3eeff', color: '#7c4dbd' },
     { key: 'barcodeqr',   screen: 'barcodeqr',     label: 'QR Labels',                   sub: 'Equipment QR code management',     icon: '🔲', bg: '#f0f4ff', color: '#1a56db', locked: true },
@@ -218,14 +218,14 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
     setLoading(false)
   }
   const trainingPct = Math.round((data.trainingsComplete/data.trainingsTotal)*100)
-  const trainingColor = trainingPct===100?'#2a6049':trainingPct>=50?'#0369a1':'#c84b2f'
+  const trainingColor = trainingPct===100?'#1D9E75':trainingPct>=50?'#0369a1':'#c84b2f'
   const allQuickLinks = [
     { key:'projects',    icon:'🧪', label:'Project Workspace',   sub:'Inventory, results & workspace', screen:'projects',    color:'#7c4dbd' },
     { key:'training',    icon:'🎓', label:'Training Records',     sub:'Check your certs',               screen:'training',    color:'#0369a1' },
     { key:'booking',     icon:'📅', label:'Book Equipment',       sub:'Reserve lab equipment',          screen:'booking',     color:'#0369a1' },
-    { key:'equipmenthub',icon:'📚', label:'Equipment',            sub:'SOPs & standards',               screen:'equipmenthub',color:'#1e4d39' },
+    { key:'equipmenthub',icon:'📚', label:'Equipment',            sub:'SOPs & standards',               screen:'equipmenthub',color:'#085041' },
     { key:'barcode',     icon:'📷', label:'QR Scan',               sub:'Scan lab materials',             screen:'barcode',     color:'#00796b' },
-    { key:'remessages',  icon:'💬', label:'Lab Messages',  sub:'Ask REs a question',             screen:'remessages',  color:'#2a6049' },
+    { key:'remessages',  icon:'💬', label:'Lab Messages',  sub:'Ask REs a question',             screen:'remessages',  color:'#1D9E75' },
     { key:'mileage',     icon:'🚗', label:'Mileage Form',         sub:'Submit reimbursement',           screen:null,          color:'#c84b2f', external:true },
   ]
   const assignedQuickLinks = (studentAllowedPool && studentAllowedPool.size > 0)
@@ -239,7 +239,7 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 260px', gap:20, alignItems:'start' }}>
         <div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, marginBottom:20 }}>
-            {[{label:'My active projects',val:data.myProjects,color:'#7c4dbd',screen:'projects'},{label:'Trainings complete',val:`${data.trainingsComplete}/${data.trainingsTotal}`,color:trainingColor,screen:'training'},{label:'Upcoming bookings',val:data.upcomingBookings.length,color:'#0369a1',screen:'booking'},{label:data.pendingCert?'Cert pending approval':'Cert up to date',val:loading?'—':data.pendingCert?'⏳':'✅',color:data.pendingCert?'#c84b2f':'#2a6049',screen:'training'}]
+            {[{label:'My active projects',val:data.myProjects,color:'#7c4dbd',screen:'projects'},{label:'Trainings complete',val:`${data.trainingsComplete}/${data.trainingsTotal}`,color:trainingColor,screen:'training'},{label:'Upcoming bookings',val:data.upcomingBookings.length,color:'#0369a1',screen:'booking'},{label:data.pendingCert?'Cert pending approval':'Cert up to date',val:loading?'—':data.pendingCert?'⏳':'✅',color:data.pendingCert?'#c84b2f':'#1D9E75',screen:'training'}]
               .map((s,i) => (
                 <a key={i} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
                   <div style={{ fontSize:28, fontWeight:600, color:s.color, marginBottom:4 }}>{loading?'—':s.val}</div>
@@ -317,7 +317,7 @@ function DashboardView({ modules, onNavigate, mileageUrl, labSafetyUrl, moduleIm
               { label:'Active projects',       value:stats.activeProjects,  color:'#7c4dbd', screen:'projects' },
               { label:'Active lab users',        value:stats.students,        color:'#0369a1', screen:'training' },
               { label:'Pending cert approvals', value:stats.pendingTraining, color:'#c84b2f', screen:'training' },
-              { label:'Supply items tracked',   value:stats.lowSupplies,     color:'#2a6049', screen:'home'     },
+              { label:'Supply items tracked',   value:stats.lowSupplies,     color:'#1D9E75', screen:'home'     },
             ].map(s => (
               <a key={s.label} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
                 <div style={{ fontSize:28, fontWeight:600, color:s.color, marginBottom:4 }}>{loading?'—':s.value}</div>

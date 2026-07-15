@@ -402,7 +402,7 @@ function OrgPoolEditor({ orgId, poolKey, label }) {
               }}
               onDragEnd={() => { dragRef.current = null; setDragKey(null); setDragOver(null) }}
               onClick={() => toggle(m.key)}
-              style={{ borderRadius: 12, border: sel ? `2px solid ${m.color}` : `2px solid ${isOver ? 'var(--accent)' : 'var(--border)'}`, background: sel ? `${m.color}12` : isOver ? '#e8f2ee' : 'var(--surface)', padding: '12px 12px 10px', cursor: 'grab', position: 'relative', transition: 'all 0.15s', opacity: isDragging ? 0.35 : 1, userSelect: 'none' }}>
+              style={{ borderRadius: 12, border: sel ? `2px solid ${m.color}` : `2px solid ${isOver ? 'var(--accent)' : 'var(--border)'}`, background: sel ? `${m.color}12` : isOver ? '#E1F5EE' : 'var(--surface)', padding: '12px 12px 10px', cursor: 'grab', position: 'relative', transition: 'all 0.15s', opacity: isDragging ? 0.35 : 1, userSelect: 'none' }}>
               <div style={{ position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: '50%', background: sel ? m.color : 'var(--surface2)', border: `2px solid ${sel ? m.color : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                 {sel && <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
               </div>

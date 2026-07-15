@@ -314,7 +314,7 @@ export default function LabMessage() {
       <div className={mobileShowThread ? 'msg-header-hide-mobile' : ''} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10, flexShrink: 0 }}>
         <div>
           {fromEquipScan && (
-            <button onClick={() => setScreen('equipmentscan')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, border: '1.5px solid #b2dfcb', background: '#e8f2ee', fontSize: 13, fontWeight: 700, color: '#2a6049', cursor: 'pointer', marginBottom: 8 }}>
+            <button onClick={() => setScreen('equipmentscan')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, border: '1.5px solid #b2dfcb', background: '#E1F5EE', fontSize: 13, fontWeight: 700, color: '#1D9E75', cursor: 'pointer', marginBottom: 8 }}>
               ← Back to options
             </button>
           )}
@@ -435,7 +435,7 @@ export default function LabMessage() {
                             fontSize: 14, lineHeight: 1.6,
                             border: isOwn ? 'none' : '1px solid var(--border)',
                             wordBreak: 'break-word', whiteSpace: 'pre-wrap',
-                            boxShadow: isOwn ? '0 2px 8px rgba(42,96,73,0.18)' : '0 1px 3px rgba(0,0,0,0.06)',
+                            boxShadow: isOwn ? '0 2px 8px rgba(29, 158, 117,0.18)' : '0 1px 3px rgba(0,0,0,0.06)',
                           }}>
                             {m.body}
                           </div>

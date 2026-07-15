@@ -204,7 +204,7 @@ export default function TeamMembersPanel({ session }) {
 
   const statusStyle = (s) => ({
     fontSize: 11, fontWeight: 600, borderRadius: 99, padding: '2px 8px',
-    background: s === 'accepted' ? '#e8f2ee' : s === 'declined' ? '#fde8e8' : '#fef3c7',
+    background: s === 'accepted' ? '#E1F5EE' : s === 'declined' ? '#fde8e8' : '#fef3c7',
     color:      s === 'accepted' ? '#0f6e56' : s === 'declined' ? '#b91c1c' : '#92400e',
   })
 

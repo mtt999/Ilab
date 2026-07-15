@@ -15,7 +15,7 @@ function ResultInput({ type, value, onChange }) {
       <div style={{ display: 'flex', gap: 6 }}>
         {['Pass', 'Fail'].map(opt => (
           <button key={opt} type="button" onClick={() => onChange(opt)}
-            style={{ padding: '5px 16px', border: `1px solid ${value === opt ? (opt === 'Pass' ? '#2a6049' : '#c84b2f') : 'var(--border)'}`, borderRadius: 6, background: value === opt ? (opt === 'Pass' ? '#e8f2ee' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#2a6049' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
+            style={{ padding: '5px 16px', border: `1px solid ${value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--border)'}`, borderRadius: 6, background: value === opt ? (opt === 'Pass' ? '#E1F5EE' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
             {opt}
           </button>
         ))}
@@ -224,7 +224,7 @@ function EquipmentTestResults() {
                             <td style={{ padding: '10px 14px', fontWeight: 500 }}>{r.sample_name}</td>
                             <td style={{ padding: '10px 14px' }}>
                               {r.result_type === 'pass_fail'
-                                ? <span style={{ fontWeight: 700, color: r.result_value === 'Pass' ? '#2a6049' : '#c84b2f', background: r.result_value === 'Pass' ? '#e8f2ee' : '#fdf0ed', padding: '2px 12px', borderRadius: 99, fontSize: 12 }}>{r.result_value}</span>
+                                ? <span style={{ fontWeight: 700, color: r.result_value === 'Pass' ? '#1D9E75' : '#c84b2f', background: r.result_value === 'Pass' ? '#E1F5EE' : '#fdf0ed', padding: '2px 12px', borderRadius: 99, fontSize: 12 }}>{r.result_value}</span>
                                 : <span style={{ fontFamily: r.result_type !== 'text' ? 'var(--mono)' : 'inherit', fontWeight: 600 }}>{formatResult(r.result_type, r.result_value)}</span>
                               }
                             </td>
@@ -713,7 +713,7 @@ function DataAnalysis() {
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Average</div>
                   </div>
                   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#2a6049' }}>{stats.min.toFixed(2)}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#1D9E75' }}>{stats.min.toFixed(2)}</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Min</div>
                   </div>
                   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
@@ -726,8 +726,8 @@ function DataAnalysis() {
                   </div>
                 </>}
                 {passRate !== null && (
-                  <div style={{ background: passRate >= 80 ? '#e8f2ee' : '#fdf0ed', border: `1px solid ${passRate >= 80 ? '#2a6049' : '#c84b2f'}`, borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: passRate >= 80 ? '#2a6049' : '#c84b2f' }}>{passRate}%</div>
+                  <div style={{ background: passRate >= 80 ? '#E1F5EE' : '#fdf0ed', border: `1px solid ${passRate >= 80 ? '#1D9E75' : '#c84b2f'}`, borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: passRate >= 80 ? '#1D9E75' : '#c84b2f' }}>{passRate}%</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Pass Rate</div>
                   </div>
                 )}
@@ -774,7 +774,7 @@ function DataAnalysis() {
                             <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{r.date}</td>
                             <td style={{ padding: '8px 12px' }}>{r.sample_name}</td>
                             <td style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11, textTransform: 'capitalize' }}>{r.result_type?.replace('_', '/')}</td>
-                            <td style={{ padding: '8px 12px', fontWeight: 600, color: outlier ? '#c84b2f' : r.result_value === 'Pass' ? '#2a6049' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' }}>
+                            <td style={{ padding: '8px 12px', fontWeight: 600, color: outlier ? '#c84b2f' : r.result_value === 'Pass' ? '#1D9E75' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' }}>
                               {formatResult(r.result_type, r.result_value)}{outlier ? ' ⚠️' : ''}
                             </td>
                             <td style={{ padding: '8px 12px', color: 'var(--text3)' }}>{r.created_by || '—'}</td>

@@ -65,7 +65,7 @@ export const CATEGORY_DEFAULT_TYPES = {
 const COLOR_PALETTE = [
   { bg: '#fef3c7', color: '#92400e' },
   { bg: '#e0f2fe', color: '#0369a1' },
-  { bg: '#e8f2ee', color: '#1e4d39' },
+  { bg: '#E1F5EE', color: '#085041' },
   { bg: '#f3eeff', color: '#7c4dbd' },
   { bg: '#f0efe9', color: '#6b6860' },
   { bg: '#fce7f3', color: '#9d174d' },
@@ -435,7 +435,7 @@ function MaterialsTab({ typeLabels, typeColors }) {
                         <span style={{ fontSize: 11, fontWeight: 600, borderRadius: 99, padding: '2px 8px', background: tc.bg, color: tc.color }}>
                           {tLabel(m.material_type, typeLabels)}
                         </span>
-                        {m.storage_confirmed && <span style={{ fontSize: 11, color: '#1e4d39', background: '#e8f2ee', borderRadius: 99, padding: '2px 8px' }}>✅ Stored</span>}
+                        {m.storage_confirmed && <span style={{ fontSize: 11, color: '#085041', background: '#E1F5EE', borderRadius: 99, padding: '2px 8px' }}>✅ Stored</span>}
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text2)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                         {m.name && <span style={{ fontWeight: 500 }}>{m.name}</span>}

@@ -40,7 +40,7 @@ function TabContent({ tab }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 15 }}>Lab User Documents</div>
-        <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#e8f2ee', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Upload cert</button>
+        <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Upload cert</button>
       </div>
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -65,7 +65,7 @@ function TabContent({ tab }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 15 }}>Equipment Training Records</div>
-        <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#e8f2ee', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Add equipment</button>
+        <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Add equipment</button>
       </div>
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -129,7 +129,7 @@ function TabContent({ tab }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Badge label={r.status} color={r.status === 'Approved' ? '#2e7d32' : '#92400e'} bg={r.status === 'Approved' ? '#e8f5e9' : '#fef3c7'} />
             {r.status === 'Pending' && <>
-              <button style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid #1D9E75', background: '#e8f2ee', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
+              <button style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
               <button style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid #fee2e2', background: '#fee2e2', color: '#991b1b', cursor: 'pointer', fontWeight: 600 }}>Deny</button>
             </>}
           </div>
@@ -167,7 +167,7 @@ export default function TrainingRecordsProto() {
   ]
 
   const STATS = [
-    { label: 'Lab users', value: 5, color: '#1D9E75', bg: '#e8f2ee' },
+    { label: 'Lab users', value: 5, color: '#1D9E75', bg: '#E1F5EE' },
     { label: 'Docs complete', value: 3, color: '#0369a1', bg: '#e0f2fe' },
     { label: 'Expiring soon', value: 2, color: '#92400e', bg: '#fef3c7' },
     { label: 'Requests', value: 2, color: '#7c3aed', bg: '#f3eeff' },
@@ -193,7 +193,7 @@ export default function TrainingRecordsProto() {
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '9px 12px', borderRadius: 8, border: 'none', marginBottom: 2,
-                  background: active ? '#e8f2ee' : 'transparent',
+                  background: active ? '#E1F5EE' : 'transparent',
                   color: active ? '#1D9E75' : '#4b5563',
                   fontSize: 13, fontWeight: active ? 600 : 400,
                   cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',

@@ -45,7 +45,7 @@ function ProviderRow({ opt, connected, active, onSelect, onDisconnect, connectin
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600, fontSize: 13 }}>{opt.label}</span>
           {active && <span style={{ fontSize: 10, background: opt.color, color: '#fff', borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>Active</span>}
-          {!active && connected && <span style={{ fontSize: 10, background: '#e8f2ee', color: '#1D9E75', borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>Connected</span>}
+          {!active && connected && <span style={{ fontSize: 10, background: '#E1F5EE', color: '#1D9E75', borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>Connected</span>}
           {opt.mobileOnly && <span style={{ fontSize: 10, background: '#f0efe9', color: '#6b6860', borderRadius: 4, padding: '1px 7px', fontWeight: 600 }}>Mobile only</span>}
         </div>
       </div>
@@ -153,7 +153,7 @@ function SoloStorageModal({ onClose, toast }) {
         </div>
 
         {/* Recommended quick option */}
-        <div onClick={setAllWebsite} style={{ border: `2px solid ${isAllWebsite() ? '#1D9E75' : 'var(--border)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', background: isAllWebsite() ? '#e8f2ee' : 'var(--surface2)', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div onClick={setAllWebsite} style={{ border: `2px solid ${isAllWebsite() ? '#1D9E75' : 'var(--border)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', background: isAllWebsite() ? '#E1F5EE' : 'var(--surface2)', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
           <span style={{ fontSize: 28 }}>☁️</span>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -228,7 +228,7 @@ function SoloStorageModal({ onClose, toast }) {
           <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>Where are shared files stored when teammates collaborate in your workspace?</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => setGroupStorage('website')}
-              style={{ flex: 1, minWidth: 160, padding: '10px 12px', border: `2px solid ${groupStorage === 'website' ? '#1D9E75' : 'var(--border)'}`, borderRadius: 8, background: groupStorage === 'website' ? '#e8f2ee' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', fontSize: 12 }}>
+              style={{ flex: 1, minWidth: 160, padding: '10px 12px', border: `2px solid ${groupStorage === 'website' ? '#1D9E75' : 'var(--border)'}`, borderRadius: 8, background: groupStorage === 'website' ? '#E1F5EE' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', fontSize: 12 }}>
               <div style={{ fontWeight: 600, color: groupStorage === 'website' ? '#1D9E75' : 'var(--text)', marginBottom: 2 }}>☁️ LabHive Cloud ⭐</div>
               <div style={{ color: 'var(--text3)', fontSize: 11 }}>Group files on LabHive's servers. New members are informed before accepting.</div>
             </button>
@@ -300,7 +300,7 @@ function OrgStorageModal({ onClose, toast }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
           {MODE_OPTIONS.map(m => (
             <button key={m.key} onClick={() => setMode(m.key)}
-              style={{ padding: '12px 14px', border: `2px solid ${mode === m.key ? '#1D9E75' : 'var(--border)'}`, borderRadius: 10, background: mode === m.key ? '#e8f2ee' : 'var(--surface)', cursor: 'pointer', textAlign: 'left' }}>
+              style={{ padding: '12px 14px', border: `2px solid ${mode === m.key ? '#1D9E75' : 'var(--border)'}`, borderRadius: 10, background: mode === m.key ? '#E1F5EE' : 'var(--surface)', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 20 }}>{m.icon}</span>
                 <div>
@@ -385,7 +385,7 @@ function TeamUserStorageModal({ onClose, toast }) {
         </div>
 
         <button onClick={() => setSecondary('')}
-          style={{ width: '100%', padding: '12px 14px', border: `2px solid ${!secondary ? '#1D9E75' : 'var(--border)'}`, borderRadius: 10, background: !secondary ? '#e8f2ee' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
+          style={{ width: '100%', padding: '12px 14px', border: `2px solid ${!secondary ? '#1D9E75' : 'var(--border)'}`, borderRadius: 10, background: !secondary ? '#E1F5EE' : 'var(--surface)', cursor: 'pointer', textAlign: 'left', marginBottom: 8 }}>
           <div style={{ fontWeight: 600, fontSize: 13, color: !secondary ? '#1D9E75' : 'var(--text)' }}>☁️ No extra copy — use org default ⭐</div>
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Your files follow the organisation's storage setting.</div>
         </button>

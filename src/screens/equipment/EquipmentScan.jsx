@@ -35,7 +35,7 @@ function ILabLogo({ size = 40 }) {
 
 const OPTION_META = [
   { id: 'sop',         icon: '📋', label: 'Standard Operating Procedure',   sub: 'Watch how-to videos, read the SOP, or turn on/off guide',   color: '#0369a1', bg: '#e0f2fe' },
-  { id: 'book',        icon: '📅', label: 'Book this Equipment',            sub: 'Reserve a time slot on the lab calendar',                   color: '#2a6049', bg: '#e8f2ee' },
+  { id: 'book',        icon: '📅', label: 'Book this Equipment',            sub: 'Reserve a time slot on the lab calendar',                   color: '#1D9E75', bg: '#E1F5EE' },
   { id: 'contact',     icon: '💬', label: 'Lab Messages',            sub: 'Questions, chat, or report an issue to the lab manager',    color: '#7c4dbd', bg: '#f3eeff' },
   { id: 'calibration', icon: '🔧', label: 'Calibration',                   sub: 'View calibration schedule and maintenance records',          color: '#92400e', bg: '#fef3c7' },
 ]
@@ -50,7 +50,7 @@ function SectionCard({ title, children, onClose }) {
       {children}
       <button
         onClick={onClose}
-        style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '1.5px solid #b2dfcb', background: '#e8f2ee', fontSize: 13, fontWeight: 700, color: '#2a6049', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
+        style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, border: '1.5px solid #b2dfcb', background: '#E1F5EE', fontSize: 13, fontWeight: 700, color: '#1D9E75', cursor: 'pointer', width: '100%', justifyContent: 'center' }}
       >
         ← Back to options
       </button>
@@ -136,10 +136,10 @@ function HowToSection({ videos, sop, onClose }) {
             <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 14 }}>Follow the SOP steps below to properly start up and shut down this equipment:</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {sop.steps.map((step, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 14px', background: i === 0 ? '#e8f2ee' : i === sop.steps.length - 1 ? '#fef3c7' : 'var(--surface2)', borderRadius: 8, alignItems: 'flex-start', border: i === 0 ? '1px solid #b2dfcb' : i === sop.steps.length - 1 ? '1px solid #fde68a' : '1px solid transparent' }}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: i === 0 ? '#2a6049' : i === sop.steps.length - 1 ? '#92400e' : '#0369a1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 14px', background: i === 0 ? '#E1F5EE' : i === sop.steps.length - 1 ? '#fef3c7' : 'var(--surface2)', borderRadius: 8, alignItems: 'flex-start', border: i === 0 ? '1px solid #b2dfcb' : i === sop.steps.length - 1 ? '1px solid #fde68a' : '1px solid transparent' }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: i === 0 ? '#1D9E75' : i === sop.steps.length - 1 ? '#92400e' : '#0369a1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                   <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
-                    {i === 0 && <span style={{ fontWeight: 700, color: '#2a6049' }}>START: </span>}
+                    {i === 0 && <span style={{ fontWeight: 700, color: '#1D9E75' }}>START: </span>}
                     {i === sop.steps.length - 1 && <span style={{ fontWeight: 700, color: '#92400e' }}>SHUTDOWN: </span>}
                     {step}
                   </div>
@@ -178,7 +178,7 @@ function MaintenanceSection({ equipment, session, onClose, onGoToInventory }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
         {[
           { label: 'Last Maintenance', value: fmt(equipment.last_maintenance_date), color: '#0369a1' },
-          { label: 'Next Maintenance', value: fmt(equipment.next_maintenance_date), color: isOverdue ? '#c84b2f' : '#2a6049' },
+          { label: 'Next Maintenance', value: fmt(equipment.next_maintenance_date), color: isOverdue ? '#c84b2f' : '#1D9E75' },
           { label: 'Interval', value: equipment.maintenance_interval_days ? `${equipment.maintenance_interval_days} days` : '—', color: '#92400e' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)', textAlign: 'center' }}>
@@ -330,7 +330,7 @@ export default function EquipmentScan() {
     </div>
   )
 
-  const conditionColor = { Good: '#2a6049', Fair: '#92400e', Poor: '#a32d2d', 'Out of Service': '#a32d2d' }
+  const conditionColor = { Good: '#1D9E75', Fair: '#92400e', Poor: '#a32d2d', 'Out of Service': '#a32d2d' }
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>

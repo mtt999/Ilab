@@ -370,8 +370,8 @@ function EquipmentList({ session }) {
     grouped[cat].push(i)
   })
 
-  const condColor = { Good: '#1e4d39', Fair: '#92400e', Poor: '#c84b2f', 'Out of Service': '#a32d2d' }
-  const condBg = { Good: '#e8f2ee', Fair: '#fef3c7', Poor: '#fdf0ed', 'Out of Service': '#fcebeb' }
+  const condColor = { Good: '#085041', Fair: '#92400e', Poor: '#c84b2f', 'Out of Service': '#a32d2d' }
+  const condBg = { Good: '#E1F5EE', Fair: '#fef3c7', Poor: '#fdf0ed', 'Out of Service': '#fcebeb' }
 
   // Running counter across all groups
   let rowNum = 0
@@ -1322,7 +1322,7 @@ function MaintenanceRecords({ session }) {
     const pct = (totalHrs / max) * 100
     if (pct >= 100) return { label: 'Exceeded', color: '#a32d2d', bg: '#fcebeb', pct: 100 }
     if (pct >= 80) return { label: `${Math.round(pct)}%`, color: '#92400e', bg: '#fef3c7', pct }
-    return { label: `${Math.round(pct)}%`, color: '#1e4d39', bg: '#e8f2ee', pct }
+    return { label: `${Math.round(pct)}%`, color: '#085041', bg: '#E1F5EE', pct }
   }
 
   const grouped = {}

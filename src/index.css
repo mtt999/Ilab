@@ -8,8 +8,8 @@
   --text: #1a1916;
   --text2: #6b6860;
   --text3: #a09d96;
-  --accent: #2a6049;
-  --accent-light: #e8f2ee;
+  --accent: #1D9E75;
+  --accent-light: #E1F5EE;
   --accent2: #c84b2f;
   --accent2-light: #fdf0ed;
   --accent3: #7c4dbd;
@@ -64,7 +64,7 @@ body {
 .btn-purple:focus-visible { outline-color: var(--accent3); }
 .btn-danger:focus-visible { outline-color: var(--accent2); }
 .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-primary:hover { background: #1e4d39; }
+.btn-primary:hover { background: #178A66; }
 .btn-purple { background: var(--accent3); color: #fff; border-color: var(--accent3); }
 .btn-purple:hover { background: #6a3aab; }
 .btn-danger { color: var(--accent2); border-color: var(--accent2); }
@@ -79,17 +79,10 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(42, 96, 73, 0.1);
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.1);
 }
 label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
 .field { margin-bottom: 16px; }
-
-/* Login screen: teal (#1D9E75) is the canonical brand accent — scoped here
-   until the app-wide palette pass promotes it to the global --accent token. */
-.login-screen input:focus, .login-screen select:focus, .login-screen textarea:focus {
-  border-color: #1D9E75;
-  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.12);
-}
 
 /* ── Cards ── */
 .card {

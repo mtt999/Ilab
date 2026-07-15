@@ -80,7 +80,7 @@ function DashboardContent() {
     { icon: '🔍', label: 'Inspections',        sub: 'Room & supply checks',         color: '#059669', bg: '#d1fae5' },
     { icon: '🔧', label: 'Equipment',           sub: 'Track & manage equipment',     color: '#0369a1', bg: '#e0f2fe' },
     { icon: '📅', label: 'Booking',             sub: 'Reserve equipment time',       color: '#7c3aed', bg: '#ede9fe' },
-    { icon: '📚', label: 'Training Records',    sub: 'Certs, exams & schedules',     color: '#1D9E75', bg: '#e8f2ee' },
+    { icon: '📚', label: 'Training Records',    sub: 'Certs, exams & schedules',     color: '#1D9E75', bg: '#E1F5EE' },
     { icon: '🧪', label: 'Project Workspace',   sub: 'Materials, results & storage', color: '#9333ea', bg: '#f3e8ff' },
     { icon: '💬', label: 'Lab Messages',        sub: 'Notes, ideas & issue reports', color: '#0891b2', bg: '#e0f7fa' },
     { icon: '📋', label: 'Task Board',          sub: 'Tasks, meetings & reminders',  color: '#d97706', bg: '#fef3c7' },
@@ -96,7 +96,7 @@ function DashboardContent() {
       {/* Stat row */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
         {[
-          { label: 'Active equipment', value: 24, color: '#1D9E75', bg: '#e8f2ee' },
+          { label: 'Active equipment', value: 24, color: '#1D9E75', bg: '#E1F5EE' },
           { label: 'Bookings today',   value: 3,  color: '#0369a1', bg: '#e0f2fe' },
           { label: 'Open tasks',       value: 7,  color: '#d97706', bg: '#fef3c7' },
           { label: 'Cert pending',     value: 2,  color: '#dc2626', bg: '#fee2e2' },
@@ -226,7 +226,7 @@ function TrainingContent({ tab }) {
       ].map((r, i) => (
         <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 18px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#e8f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#1D9E75', flexShrink: 0 }}>{r.user[0]}</div>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#1D9E75', flexShrink: 0 }}>{r.user[0]}</div>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14 }}>{r.user}</div>
               <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Requesting: <strong>{r.equip}</strong> · {r.date}</div>
@@ -324,7 +324,7 @@ export default function LayoutProto() {
                   const active = activeTab === t.key
                   return (
                     <button key={t.key} onClick={() => setActiveTab(t.key)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: active ? '#e8f2ee' : 'transparent', color: active ? '#1D9E75' : '#4b5563', fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'all 0.12s' }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: active ? '#E1F5EE' : 'transparent', color: active ? '#1D9E75' : '#4b5563', fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'all 0.12s' }}
                       onMouseEnter={e => { if (!active) { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#111827' } }}
                       onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563' } }}
                     >
@@ -378,7 +378,7 @@ export default function LayoutProto() {
                 {activeModule === 'training' && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[
-                      { label: 'Lab users',     value: 5, color: '#1D9E75', bg: '#e8f2ee' },
+                      { label: 'Lab users',     value: 5, color: '#1D9E75', bg: '#E1F5EE' },
                       { label: 'Docs complete', value: 3, color: '#0369a1', bg: '#e0f2fe' },
                       { label: 'Expiring',      value: 2, color: '#92400e', bg: '#fef3c7' },
                       { label: 'Requests',      value: 2, color: '#7c3aed', bg: '#f3eeff' },

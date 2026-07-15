@@ -151,7 +151,7 @@ export function TrainingRequestsPanel({ session }) {
                         <button className="btn btn-sm btn-primary" style={{ marginTop: 8 }} onClick={() => confirmSchedule(sched)}>✓ Accept user's time</button>
                       </div>
                     )}
-                    {sched.status === 'confirmed' && <div style={{ color: '#1e4d39' }}>✓ Confirmed: <strong>{fmtDT(sched.confirmed_date)}</strong></div>}
+                    {sched.status === 'confirmed' && <div style={{ color: '#085041' }}>✓ Confirmed: <strong>{fmtDT(sched.confirmed_date)}</strong></div>}
                   </div>
                 )}
 
@@ -204,7 +204,7 @@ export function TrainingRequestsPanel({ session }) {
                       <td style={{ fontWeight: 500 }}>{req.user_name}</td>
                       <td>{eq?.nickname || req.equipment_name}</td>
                       <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{new Date(req.requested_at).toLocaleDateString()}</td>
-                      <td><span style={{ background: req.status === 'approved' ? '#e8f2ee' : '#fcebeb', color: req.status === 'approved' ? '#1e4d39' : '#a32d2d', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 600 }}>{req.status}</span></td>
+                      <td><span style={{ background: req.status === 'approved' ? '#E1F5EE' : '#fcebeb', color: req.status === 'approved' ? '#085041' : '#a32d2d', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 600 }}>{req.status}</span></td>
                       <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{sched ? fmtDT(sched.confirmed_date || sched.proposed_date) : '—'}</td>
                       <td style={{ color: 'var(--text3)' }}>{req.reviewed_by || '—'}</td>
                     </tr>
@@ -306,11 +306,11 @@ export function UserTrainingSchedule({ session }) {
       {confirmed.map(sched => {
         const eq = equipment.find(e => e.id === sched.equipment_id)
         return (
-          <div key={sched.id} style={{ background: '#e8f2ee', border: '1px solid #9FE1CB', borderRadius: 'var(--radius-lg)', padding: 16, marginBottom: 12 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, color: '#1e4d39', marginBottom: 4 }}>
+          <div key={sched.id} style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 'var(--radius-lg)', padding: 16, marginBottom: 12 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: '#085041', marginBottom: 4 }}>
               ✓ Training confirmed: {eq?.nickname || eq?.equipment_name}
             </div>
-            <div style={{ fontSize: 13, color: '#1e4d39' }}>
+            <div style={{ fontSize: 13, color: '#085041' }}>
               {fmtDT(sched.confirmed_date)} — Please review the SOP and training videos before your session.
             </div>
             <a href="#" onClick={e => {
@@ -437,7 +437,7 @@ ${fileContent.slice(0, 8000)}` }]
                 <div style={{ fontWeight: 500, fontSize: 12, marginBottom: 4 }}>Q{i+1}: {q.question}</div>
                 <div style={{ fontSize: 11, color: 'var(--text2)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                   {['a','b','c','d'].map(opt => q[`option_${opt}`] && (
-                    <div key={opt} style={{ color: q.correct_answer?.toLowerCase() === opt ? '#1e4d39' : 'inherit', fontWeight: q.correct_answer?.toLowerCase() === opt ? 600 : 400 }}>
+                    <div key={opt} style={{ color: q.correct_answer?.toLowerCase() === opt ? '#085041' : 'inherit', fontWeight: q.correct_answer?.toLowerCase() === opt ? 600 : 400 }}>
                       {opt.toUpperCase()}. {q[`option_${opt}`]} {q.correct_answer?.toLowerCase() === opt && '✓'}
                     </div>
                   ))}
@@ -618,7 +618,7 @@ export function ExamTab({ session }) {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text2)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                     {['a','b','c','d'].map(opt => q[`option_${opt}`] && (
-                      <div key={opt} style={{ color: q.correct_answer === opt ? '#1e4d39' : 'var(--text2)', fontWeight: q.correct_answer === opt ? 600 : 400 }}>
+                      <div key={opt} style={{ color: q.correct_answer === opt ? '#085041' : 'var(--text2)', fontWeight: q.correct_answer === opt ? 600 : 400 }}>
                         {opt.toUpperCase()}. {q[`option_${opt}`]} {q.correct_answer === opt && '✓'}
                       </div>
                     ))}
@@ -638,7 +638,7 @@ export function ExamTab({ session }) {
                           <tr key={r.id}>
                             <td style={{ fontWeight: 500 }}>{r.users?.name || (r.user_id === session.userId ? session.username : '—')}</td>
                             <td style={{ fontFamily: 'var(--mono)' }}>{r.score}/{r.total} ({Math.round(r.score/r.total*100)}%)</td>
-                            <td><span style={{ background: r.passed ? '#e8f2ee' : '#fcebeb', color: r.passed ? '#1e4d39' : '#a32d2d', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 600 }}>{r.passed ? 'Passed' : 'Failed'}</span></td>
+                            <td><span style={{ background: r.passed ? '#E1F5EE' : '#fcebeb', color: r.passed ? '#085041' : '#a32d2d', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 600 }}>{r.passed ? 'Passed' : 'Failed'}</span></td>
                             <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{new Date(r.taken_at).toLocaleDateString()}</td>
                           </tr>
                         ))}
@@ -684,7 +684,7 @@ export function ExamTab({ session }) {
                   {progress?.watched_video && progress?.downloaded_sop ? (
                     questions.length > 0 ? (
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 13, color: '#1e4d39', marginBottom: 12 }}>✓ All materials reviewed — you are ready!</div>
+                        <div style={{ fontSize: 13, color: '#085041', marginBottom: 12 }}>✓ All materials reviewed — you are ready!</div>
                         <button className="btn btn-primary" style={{ fontSize: 15, padding: '10px 32px' }} onClick={() => setExamMode(true)}>
                           📝 Start Exam ({questions.length} questions)
                         </button>
@@ -703,8 +703,8 @@ export function ExamTab({ session }) {
 
               {/* Latest result */}
               {latestResult && !examMode && !submitted && (
-                <div style={{ background: latestResult.passed ? '#e8f2ee' : '#fcebeb', border: `1px solid ${latestResult.passed ? '#9FE1CB' : '#f09595'}`, borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-                  <div style={{ fontWeight: 600, color: latestResult.passed ? '#1e4d39' : '#a32d2d' }}>
+                <div style={{ background: latestResult.passed ? '#E1F5EE' : '#fcebeb', border: `1px solid ${latestResult.passed ? '#9FE1CB' : '#f09595'}`, borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+                  <div style={{ fontWeight: 600, color: latestResult.passed ? '#085041' : '#a32d2d' }}>
                     {latestResult.passed ? '✓ Exam passed' : '✕ Exam not passed'} — {latestResult.score}/{latestResult.total} ({Math.round(latestResult.score/latestResult.total*100)}%)
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>Taken {new Date(latestResult.taken_at).toLocaleDateString()}</div>
@@ -740,12 +740,12 @@ export function ExamTab({ session }) {
               {submitted && (
                 <div style={{ textAlign: 'center', padding: 32 }}>
                   <div style={{ fontSize: 56, marginBottom: 12 }}>{submitted.passed ? '🎉' : '📚'}</div>
-                  <div style={{ fontWeight: 700, fontSize: 24, color: submitted.passed ? '#1e4d39' : '#a32d2d', marginBottom: 12 }}>
+                  <div style={{ fontWeight: 700, fontSize: 24, color: submitted.passed ? '#085041' : '#a32d2d', marginBottom: 12 }}>
                     {submitted.passed ? 'Exam Passed!' : 'Not Passed'}
                   </div>
                   {/* Grade circle */}
-                  <div style={{ width: 100, height: 100, borderRadius: '50%', background: submitted.passed ? '#e8f2ee' : '#fcebeb', border: `4px solid ${submitted.passed ? '#1e4d39' : '#a32d2d'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                    <div style={{ fontWeight: 700, fontSize: 24, color: submitted.passed ? '#1e4d39' : '#a32d2d' }}>{Math.round(submitted.score/submitted.total*100)}%</div>
+                  <div style={{ width: 100, height: 100, borderRadius: '50%', background: submitted.passed ? '#E1F5EE' : '#fcebeb', border: `4px solid ${submitted.passed ? '#085041' : '#a32d2d'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                    <div style={{ fontWeight: 700, fontSize: 24, color: submitted.passed ? '#085041' : '#a32d2d' }}>{Math.round(submitted.score/submitted.total*100)}%</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)' }}>{submitted.score}/{submitted.total}</div>
                   </div>
                   <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 6 }}>

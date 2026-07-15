@@ -245,7 +245,7 @@ function EquipmentBarcodeTab({ equipment, loading }) {
                 <div style={{ flex: 1, fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text2)', background: 'var(--surface2)', borderRadius: 6, padding: '7px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {getScanUrl(selected.id)}
                 </div>
-                <button onClick={copyUrl} className="btn btn-sm" style={{ flexShrink: 0, background: copied ? '#e8f2ee' : undefined, color: copied ? '#2a6049' : undefined }}>
+                <button onClick={copyUrl} className="btn btn-sm" style={{ flexShrink: 0, background: copied ? '#E1F5EE' : undefined, color: copied ? '#1D9E75' : undefined }}>
                   {copied ? '✓ Copied' : 'Copy'}
                 </button>
               </div>
@@ -419,7 +419,7 @@ function RecordsTab({ equipment, loading }) {
                 <div style={{ fontSize: 12, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eq.category || '—'}</div>
                 <div style={{ fontSize: 12, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eq.location || '—'}</div>
                 <div>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#2a6049', background: '#e8f2ee', borderRadius: 6, padding: '2px 8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#1D9E75', background: '#E1F5EE', borderRadius: 6, padding: '2px 8px' }}>
                     ✓ Ready
                   </span>
                 </div>

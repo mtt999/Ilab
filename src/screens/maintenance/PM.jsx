@@ -386,8 +386,8 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
       <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Task Group</div>
 
       {!myGroup && pendingIn.length > 0 && pendingIn.map(inv => (
-        <div key={inv.id} style={{ background: '#e8f2ee', border: '1px solid #a7d4be', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#2a6049', marginBottom: 1 }}>"{inv.groupName}"</div>
+        <div key={inv.id} style={{ background: '#E1F5EE', border: '1px solid #a7d4be', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#1D9E75', marginBottom: 1 }}>"{inv.groupName}"</div>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 7 }}>Invited by {inv.inviterName}</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button className="btn btn-sm btn-primary" onClick={() => accept(inv.id, inv.group_id)} style={{ fontSize: 11 }}>Accept</button>
@@ -420,7 +420,7 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
             ? <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>Only you so far — invite others!</div>
             : <div style={{ marginBottom: 8 }}>{accepted.map(m => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0' }}>
-                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#e8f2ee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#2a6049', flexShrink: 0 }}>{m.name?.slice(0,2).toUpperCase()}</div>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#1D9E75', flexShrink: 0 }}>{m.name?.slice(0,2).toUpperCase()}</div>
                   <span style={{ fontSize: 12, color: 'var(--text)' }}>{m.name}</span>
                 </div>
               ))}</div>
