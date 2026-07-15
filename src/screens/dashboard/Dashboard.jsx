@@ -31,7 +31,7 @@ function getModules(role, loginMode, activeModules) {
 function getAllModulesForStudent() {
   return [
     { key: 'supply',       screen: 'home',          label: 'Supply Inventory',          sub: 'Weekly inspection & export',       icon: '📦', bg: '#E1F5EE', color: '#1D9E75' },
-    { key: 'projects',     screen: 'projects',      label: 'Project Workspace',        sub: 'Inventory, results & workspace',   icon: '🧪', bg: '#f3eeff', color: '#7c4dbd' },
+    { key: 'projects',     screen: 'projects',      label: 'Project Workspace',        sub: 'Inventory, results & workspace',   icon: '🧪', bg: '#EEEDFE', color: '#534AB7' },
     { key: 'training',     screen: 'training',      label: 'Training Records',          sub: 'Certs, equipment & alarm',         icon: '🎓', bg: '#e0f2fe', color: '#0369a1' },
     { key: 'equipment',    screen: 'equipment',     label: 'Equipment List',       sub: 'Lab equipment tracking',           icon: '🔧', bg: '#fef3c7', color: '#92400e', locked: true },
     { key: 'equipmenthub', screen: 'equipmenthub',  label: 'Equipment',                 sub: 'Info, SOP & standards',            icon: '📚', bg: '#E1F5EE', color: '#085041' },
@@ -41,7 +41,7 @@ function getAllModulesForStudent() {
     { key: 'labsafety',    screen: null,            label: 'Lab Safety',                sub: 'Safety training & certification',  icon: '🦺', bg: '#fef3c7', color: '#92400e', external: true },
     { key: 'remessages',   screen: 'remessages',    label: 'Lab Messages', sub: 'Notes, ideas & issue reports',     icon: '💬', bg: '#E1F5EE', color: '#1D9E75' },
     { key: 'pm',           screen: 'pm',            label: 'Task Board',        sub: 'Tasks, meetings & team chat',      icon: '📋', bg: '#fff3e0', color: '#ff6b00', locked: true },
-    { key: 'profile',      screen: 'profile',       label: 'Profile',                   sub: 'Your info & settings',             icon: '👤', bg: '#f3eeff', color: '#7c4dbd' },
+    { key: 'profile',      screen: 'profile',       label: 'Profile',                   sub: 'Your info & settings',             icon: '👤', bg: '#EEEDFE', color: '#534AB7' },
     { key: 'barcodeqr',   screen: 'barcodeqr',     label: 'QR Labels',                   sub: 'Equipment QR code management',     icon: '🔲', bg: '#f0f4ff', color: '#1a56db', locked: true },
   ]
 }
@@ -220,7 +220,7 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
   const trainingPct = Math.round((data.trainingsComplete/data.trainingsTotal)*100)
   const trainingColor = trainingPct===100?'#1D9E75':trainingPct>=50?'#0369a1':'#c84b2f'
   const allQuickLinks = [
-    { key:'projects',    icon:'🧪', label:'Project Workspace',   sub:'Inventory, results & workspace', screen:'projects',    color:'#7c4dbd' },
+    { key:'projects',    icon:'🧪', label:'Project Workspace',   sub:'Inventory, results & workspace', screen:'projects',    color:'#534AB7' },
     { key:'training',    icon:'🎓', label:'Training Records',     sub:'Check your certs',               screen:'training',    color:'#0369a1' },
     { key:'booking',     icon:'📅', label:'Book Equipment',       sub:'Reserve lab equipment',          screen:'booking',     color:'#0369a1' },
     { key:'equipmenthub',icon:'📚', label:'Equipment',            sub:'SOPs & standards',               screen:'equipmenthub',color:'#085041' },
@@ -239,7 +239,7 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
       <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 260px', gap:20, alignItems:'start' }}>
         <div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, marginBottom:20 }}>
-            {[{label:'My active projects',val:data.myProjects,color:'#7c4dbd',screen:'projects'},{label:'Trainings complete',val:`${data.trainingsComplete}/${data.trainingsTotal}`,color:trainingColor,screen:'training'},{label:'Upcoming bookings',val:data.upcomingBookings.length,color:'#0369a1',screen:'booking'},{label:data.pendingCert?'Cert pending approval':'Cert up to date',val:loading?'—':data.pendingCert?'⏳':'✅',color:data.pendingCert?'#c84b2f':'#1D9E75',screen:'training'}]
+            {[{label:'My active projects',val:data.myProjects,color:'#534AB7',screen:'projects'},{label:'Trainings complete',val:`${data.trainingsComplete}/${data.trainingsTotal}`,color:trainingColor,screen:'training'},{label:'Upcoming bookings',val:data.upcomingBookings.length,color:'#0369a1',screen:'booking'},{label:data.pendingCert?'Cert pending approval':'Cert up to date',val:loading?'—':data.pendingCert?'⏳':'✅',color:data.pendingCert?'#c84b2f':'#1D9E75',screen:'training'}]
               .map((s,i) => (
                 <a key={i} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
                   <div style={{ fontSize:28, fontWeight:600, color:s.color, marginBottom:4 }}>{loading?'—':s.val}</div>
@@ -314,7 +314,7 @@ function DashboardView({ modules, onNavigate, mileageUrl, labSafetyUrl, moduleIm
         <div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, marginBottom:20 }}>
             {[
-              { label:'Active projects',       value:stats.activeProjects,  color:'#7c4dbd', screen:'projects' },
+              { label:'Active projects',       value:stats.activeProjects,  color:'#534AB7', screen:'projects' },
               { label:'Active lab users',        value:stats.students,        color:'#0369a1', screen:'training' },
               { label:'Pending cert approvals', value:stats.pendingTraining, color:'#c84b2f', screen:'training' },
               { label:'Supply items tracked',   value:stats.lowSupplies,     color:'#1D9E75', screen:'home'     },

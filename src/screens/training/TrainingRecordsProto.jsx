@@ -170,7 +170,7 @@ export default function TrainingRecordsProto() {
     { label: 'Lab users', value: 5, color: '#1D9E75', bg: '#E1F5EE' },
     { label: 'Docs complete', value: 3, color: '#0369a1', bg: '#e0f2fe' },
     { label: 'Expiring soon', value: 2, color: '#92400e', bg: '#fef3c7' },
-    { label: 'Requests', value: 2, color: '#7c3aed', bg: '#f3eeff' },
+    { label: 'Requests', value: 2, color: '#7c3aed', bg: '#EEEDFE' },
   ]
 
   return (

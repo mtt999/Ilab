@@ -733,7 +733,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                   {[
                     { label: 'Tests', value: rows.length, color: 'var(--accent)' },
                     avg !== null && { label: 'Average', value: avg.toFixed(2), color: '#0369a1' },
-                    std !== null && { label: 'Std Dev', value: std.toFixed(2), color: '#7c4dbd' },
+                    std !== null && { label: 'Std Dev', value: std.toFixed(2), color: '#534AB7' },
                     passRate !== null && { label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#1D9E75' : '#c84b2f' },
                   ].filter(Boolean).map(s => (
                     <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 18px', textAlign: 'center', minWidth: 90 }}>
@@ -848,7 +848,7 @@ function ResultsTab({ projects, session, allowedNames }) {
 }
 
 // ── Point Chart ───────────────────────────────────────────────
-const PALETTE = ['#0d47a1','#c84b2f','#1D9E75','#7c4dbd','#b45309','#0369a1','#be185d','#065f46']
+const PALETTE = ['#0d47a1','#c84b2f','#1D9E75','#534AB7','#b45309','#0369a1','#be185d','#065f46']
 function PointChart({ results, isOutlier }) {
   if (!results.length) return null
 
@@ -1398,7 +1398,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                     { label: 'Average', value: stats.avg.toFixed(2), color: '#0369a1' },
                     { label: 'Min',     value: stats.min.toFixed(2), color: '#1D9E75' },
                     { label: 'Max',     value: stats.max.toFixed(2), color: '#c84b2f' },
-                    { label: 'Std Dev', value: stats.std.toFixed(2), color: '#7c4dbd' },
+                    { label: 'Std Dev', value: stats.std.toFixed(2), color: '#534AB7' },
                   ] : []),
                   ...(passRate !== null ? [{ label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#1D9E75' : '#c84b2f' }] : []),
                 ].map(s => (

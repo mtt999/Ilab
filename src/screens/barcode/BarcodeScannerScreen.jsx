@@ -66,7 +66,7 @@ const COLOR_PALETTE = [
   { bg: '#fef3c7', color: '#92400e' },
   { bg: '#e0f2fe', color: '#0369a1' },
   { bg: '#E1F5EE', color: '#085041' },
-  { bg: '#f3eeff', color: '#7c4dbd' },
+  { bg: '#EEEDFE', color: '#534AB7' },
   { bg: '#f0efe9', color: '#6b6860' },
   { bg: '#fce7f3', color: '#9d174d' },
   { bg: '#ecfdf5', color: '#065f46' },

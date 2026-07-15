@@ -326,7 +326,7 @@ Rules:
           </label>
           {imageUrl && (
             <button onClick={autoDetectZones} disabled={analyzing}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: analyzing ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #7c4dbd, #534AB7)', color: '#fff', opacity: analyzing ? 0.7 : 1 }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: analyzing ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #534AB7, #534AB7)', color: '#fff', opacity: analyzing ? 0.7 : 1 }}>
               {analyzing ? '🔍 Analyzing…' : '✨ Auto-detect zones'}
             </button>
           )}

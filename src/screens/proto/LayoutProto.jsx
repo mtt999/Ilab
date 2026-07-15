@@ -381,7 +381,7 @@ export default function LayoutProto() {
                       { label: 'Lab users',     value: 5, color: '#1D9E75', bg: '#E1F5EE' },
                       { label: 'Docs complete', value: 3, color: '#0369a1', bg: '#e0f2fe' },
                       { label: 'Expiring',      value: 2, color: '#92400e', bg: '#fef3c7' },
-                      { label: 'Requests',      value: 2, color: '#7c3aed', bg: '#f3eeff' },
+                      { label: 'Requests',      value: 2, color: '#7c3aed', bg: '#EEEDFE' },
                     ].map(s => (
                       <div key={s.label} style={{ background: s.bg, borderRadius: 8, padding: '6px 14px', textAlign: 'center' }}>
                         <div style={{ fontSize: 17, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>

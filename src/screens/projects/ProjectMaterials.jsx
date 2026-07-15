@@ -626,11 +626,11 @@ function typeLabel(type) {
 }
 
 function typeColor(type) {
-  return { aggregate: '#92400e', asphalt_binder: '#085041', plant_mix: '#0369a1', cores: '#7c4dbd', other: '#6b6860' }[type] || '#6b6860'
+  return { aggregate: '#92400e', asphalt_binder: '#085041', plant_mix: '#0369a1', cores: '#534AB7', other: '#6b6860' }[type] || '#6b6860'
 }
 
 function typeBg(type) {
-  return { aggregate: '#fef3c7', asphalt_binder: '#E1F5EE', plant_mix: '#e0f2fe', cores: '#f3eeff', other: '#f0efe9' }[type] || '#f0efe9'
+  return { aggregate: '#fef3c7', asphalt_binder: '#E1F5EE', plant_mix: '#e0f2fe', cores: '#EEEDFE', other: '#f0efe9' }[type] || '#f0efe9'
 }
 
 // ── Blank form factory ────────────────────────────────────────

@@ -721,7 +721,7 @@ function DataAnalysis() {
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Max</div>
                   </div>
                   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#7c4dbd' }}>{stats.std.toFixed(2)}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#534AB7' }}>{stats.std.toFixed(2)}</div>
                     <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Std Dev</div>
                   </div>
                 </>}

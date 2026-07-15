@@ -36,7 +36,7 @@ function ILabLogo({ size = 40 }) {
 const OPTION_META = [
   { id: 'sop',         icon: '📋', label: 'Standard Operating Procedure',   sub: 'Watch how-to videos, read the SOP, or turn on/off guide',   color: '#0369a1', bg: '#e0f2fe' },
   { id: 'book',        icon: '📅', label: 'Book this Equipment',            sub: 'Reserve a time slot on the lab calendar',                   color: '#1D9E75', bg: '#E1F5EE' },
-  { id: 'contact',     icon: '💬', label: 'Lab Messages',            sub: 'Questions, chat, or report an issue to the lab manager',    color: '#7c4dbd', bg: '#f3eeff' },
+  { id: 'contact',     icon: '💬', label: 'Lab Messages',            sub: 'Questions, chat, or report an issue to the lab manager',    color: '#534AB7', bg: '#EEEDFE' },
   { id: 'calibration', icon: '🔧', label: 'Calibration',                   sub: 'View calibration schedule and maintenance records',          color: '#92400e', bg: '#fef3c7' },
 ]
 
@@ -232,7 +232,7 @@ function ContactSection({ onClose, onGoToMessages }) {
         </div>
         <button
           onClick={onGoToMessages}
-          style={{ padding: '10px 24px', borderRadius: 9, fontSize: 14, fontWeight: 700, background: '#7c4dbd', color: '#fff', border: 'none', cursor: 'pointer' }}
+          style={{ padding: '10px 24px', borderRadius: 9, fontSize: 14, fontWeight: 700, background: '#534AB7', color: '#fff', border: 'none', cursor: 'pointer' }}
         >
           Open Messages →
         </button>

@@ -12,7 +12,7 @@ import { isSupported as localFolderSupported } from '../lib/storage/LocalFolderP
 export const PROVIDER_OPTIONS = [
   { key: 'gdrive',      icon: '🟢', label: 'Google Drive',       color: '#1a73e8', bg: '#e8f0fe', oauth: true },
   { key: 'onedrive',    icon: '🔵', label: 'Microsoft OneDrive', color: '#0078d4', bg: '#e3f2fd', oauth: true },
-  { key: 'localfolder', icon: '🗂️', label: 'Local Folder',       color: '#7c4dbd', bg: '#f3eeff', localfolder: true },
+  { key: 'localfolder', icon: '🗂️', label: 'Local Folder',       color: '#534AB7', bg: '#EEEDFE', localfolder: true },
   { key: 'filesystem',  icon: '📱', label: 'iCloud / Device',    color: '#0369a1', bg: '#e0f2fe', mobileOnly: true },
 ]
 

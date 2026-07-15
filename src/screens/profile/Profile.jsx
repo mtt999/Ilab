@@ -24,8 +24,8 @@ const DEGREES = ['MS', 'PhD', 'BS', 'Other']
 const SEMESTERS = ['Fall', 'Spring', 'Summer']
 const YEARS = Array.from({ length: 15 }, (_, i) => String(new Date().getFullYear() - i))
 
-const groupColor = { Material: '#92400e', Sustainability: '#085041', GPR: '#0369a1', Mechanic: '#7c4dbd', Other: '#6b6860' }
-const groupBg   = { Material: '#fef3c7', Sustainability: '#E1F5EE', GPR: '#e0f2fe', Mechanic: '#f3eeff', Other: '#f0efe9' }
+const groupColor = { Material: '#92400e', Sustainability: '#085041', GPR: '#0369a1', Mechanic: '#534AB7', Other: '#6b6860' }
+const groupBg   = { Material: '#fef3c7', Sustainability: '#E1F5EE', GPR: '#e0f2fe', Mechanic: '#EEEDFE', Other: '#f0efe9' }
 
 const sFirstName  = s => s?.email  || ''
 const sLastName   = s => s?.name   || ''
@@ -2589,7 +2589,7 @@ function AccessControl({ toast, session }) {
 function IconImageManager({ toast, session }) {
   const ALL_MODULES = [
     { key: 'supply',         label: 'Supply Inventory',    icon: '📦', bg: '#E1F5EE' },
-    { key: 'projects',       label: 'Project Workspace',  icon: '🧪', bg: '#f3eeff' },
+    { key: 'projects',       label: 'Project Workspace',  icon: '🧪', bg: '#EEEDFE' },
     { key: 'training',       label: 'Training Records',    icon: '🎓', bg: '#e0f2fe' },
     { key: 'equipment',      label: 'Equipment List', icon: '🔧', bg: '#fef3c7' },
     { key: 'equipmenthub',   label: 'Equipment',           icon: '📚', bg: '#E1F5EE' },
@@ -2597,7 +2597,7 @@ function IconImageManager({ toast, session }) {
     { key: 'mileage',        label: 'Mileage Form',        icon: '🚗', bg: '#fdf0ed' },
     { key: 'labsafety',      label: 'Lab Safety',          icon: '🦺', bg: '#fef3c7' },
     { key: 'remessages',     label: 'Lab Messages', icon: '💬', bg: '#E1F5EE' },
-    { key: 'profile',        label: 'Profile',             icon: '👤', bg: '#f3eeff' },
+    { key: 'profile',        label: 'Profile',             icon: '👤', bg: '#EEEDFE' },
     { key: 'pm',             label: 'Task Board',  icon: '📋', bg: '#fff3e0' },
     { key: 'barcode',        label: 'Barcode Scanner',     icon: '📷', bg: '#e0f7fa' },
     { key: 'labmanagement',  label: 'Lab Management',      icon: '🏛️', bg: '#E1F5EE' },
