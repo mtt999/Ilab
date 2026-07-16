@@ -527,7 +527,7 @@ function SuperAdminDashboard({ session, setScreen, greeting, dateStr }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginBottom: 4 }}>{greeting()}, {session?.username}</div>
+        <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.6px', lineHeight: 1.2, marginBottom: 4 }}>{greeting()}, {session?.username}</div>
         <div style={{ fontSize: 13, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{dateStr} · LabHive Super Admin</div>
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -772,7 +772,7 @@ export default function Dashboard() {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flexShrink: 0, display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:28, flexWrap:'wrap', gap:12 }}>
         <div>
-          <div style={{ fontSize:22, fontWeight:600, letterSpacing:'-0.4px', marginBottom:4 }}>{greeting()}, {session?.username}</div>
+          <div style={{ fontSize:26, fontWeight:600, letterSpacing:'-0.6px', lineHeight:1.2, marginBottom:4 }}>{greeting()}, {session?.username}</div>
           <div style={{ fontSize:13, color:'var(--text3)', fontFamily:'var(--mono)' }}>{dateStr}{orgName ? ` · LabHive for ${orgName}` : ''}</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>

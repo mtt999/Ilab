@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg: #f4f3ef;
@@ -118,7 +118,7 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); 
 
 /* ── Section header ── */
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.section-title { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+.section-title { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.25; }
 
 /* ── Tables ── */
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
