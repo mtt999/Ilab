@@ -44,9 +44,9 @@ function ProviderRow({ opt, connected, active, onSelect, onDisconnect, connectin
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600, fontSize: 13 }}>{opt.label}</span>
-          {active && <span style={{ fontSize: 10, background: opt.color, color: '#fff', borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>Active</span>}
-          {!active && connected && <span style={{ fontSize: 10, background: '#E1F5EE', color: '#1D9E75', borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>Connected</span>}
-          {opt.mobileOnly && <span style={{ fontSize: 10, background: '#f0efe9', color: '#6b6860', borderRadius: 4, padding: '1px 7px', fontWeight: 600 }}>Mobile only</span>}
+          {active && <span style={{ fontSize: 10, background: opt.color, color: '#fff', borderRadius: 4, padding: '1px 8px', fontWeight: 700 }}>Active</span>}
+          {!active && connected && <span style={{ fontSize: 10, background: '#E1F5EE', color: '#1D9E75', borderRadius: 4, padding: '1px 8px', fontWeight: 700 }}>Connected</span>}
+          {opt.mobileOnly && <span style={{ fontSize: 10, background: '#f0efe9', color: '#6b6860', borderRadius: 4, padding: '1px 8px', fontWeight: 600 }}>Mobile only</span>}
         </div>
       </div>
       {connecting === opt.key && <div className="spinner" style={{ width: 16, height: 16, flexShrink: 0 }} />}
@@ -153,7 +153,7 @@ function SoloStorageModal({ onClose, toast }) {
         </div>
 
         {/* Recommended quick option */}
-        <div onClick={setAllWebsite} style={{ border: `2px solid ${isAllWebsite() ? '#1D9E75' : 'var(--border)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', background: isAllWebsite() ? '#E1F5EE' : 'var(--surface2)', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div onClick={setAllWebsite} style={{ border: `2px solid ${isAllWebsite() ? '#1D9E75' : 'var(--border)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', background: isAllWebsite() ? '#E1F5EE' : 'var(--surface2)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
           <span style={{ fontSize: 28 }}>☁️</span>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -161,7 +161,7 @@ function SoloStorageModal({ onClose, toast }) {
               <span style={{ fontSize: 11, background: '#1D9E75', color: '#fff', borderRadius: 4, padding: '1px 8px', fontWeight: 700 }}>⭐ Recommended</span>
               {isAllWebsite() && <span style={{ fontSize: 11, background: '#1D9E75', color: '#fff', borderRadius: 4, padding: '1px 8px', fontWeight: 700 }}>Active</span>}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 3 }}>Best performance • Always accessible • Full features • You can still delete anytime</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>Best performance • Always accessible • Full features • You can still delete anytime</div>
           </div>
         </div>
 
@@ -182,7 +182,7 @@ function SoloStorageModal({ onClose, toast }) {
         </div>
 
         {/* Category B */}
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>📊 Activity &amp; Workspace Data <span style={{ fontWeight: 400, color: 'var(--text3)' }}>— test results, project files, QR records, inspection results</span></div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {MODE_OPTIONS.map(m => (
@@ -197,7 +197,7 @@ function SoloStorageModal({ onClose, toast }) {
 
         {/* External provider picker */}
         {needsProvider && (
-          <div style={{ marginBottom: 18 }}>
+          <div style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Connect your external provider</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {PROVIDER_OPTIONS.map(opt => (
@@ -297,7 +297,7 @@ function OrgStorageModal({ onClose, toast }) {
           Choose how your organisation's files are stored. This setting applies to all team members. LabHive Cloud is always recommended for the best experience.
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {MODE_OPTIONS.map(m => (
             <button key={m.key} onClick={() => setMode(m.key)}
               style={{ padding: '12px 14px', border: `2px solid ${mode === m.key ? '#1D9E75' : 'var(--border)'}`, borderRadius: 10, background: mode === m.key ? '#E1F5EE' : 'var(--surface)', cursor: 'pointer', textAlign: 'left' }}>

@@ -122,7 +122,7 @@ function MaterialCard({ material, scannedValue, onClose, typeLabels }) {
 
         {material.storage_notes && (
           <div style={{ padding: '10px 12px', background: 'var(--surface)', borderRadius: 'var(--radius)', borderLeft: '3px solid var(--accent)', marginBottom: 10 }}>
-            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Storage notes</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Storage notes</div>
             <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{material.storage_notes}</div>
           </div>
         )}
@@ -130,7 +130,7 @@ function MaterialCard({ material, scannedValue, onClose, typeLabels }) {
         {(material.locations || []).length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {material.locations.map((loc, i) => (
-              <span key={i} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 500 }}>
+              <span key={i} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 500 }}>
                 📍 {loc.detail || loc.location_id || loc.location}
               </span>
             ))}
@@ -396,7 +396,7 @@ function MaterialsTab({ typeLabels, typeColors }) {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
             <div style={{ position: 'relative', flex: '1 1 180px' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'var(--text3)', pointerEvents: 'none' }}>🔍</span>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search barcode, name, project…" style={{ paddingLeft: 30, width: '100%', boxSizing: 'border-box' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search barcode, name, project…" style={{ paddingLeft: 28, width: '100%', boxSizing: 'border-box' }} />
             </div>
             <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ flex: '0 1 160px' }}>
               <option value="">All types</option>
@@ -683,10 +683,10 @@ export function MaterialTypesManager({ session }) {
                 <>
                   <div style={{ flex: 1, fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{type.key}</div>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                    <button className="btn btn-sm" onClick={() => move(i, -1)} disabled={i === 0 || saving} title="Move up" style={{ padding: '3px 8px' }}>↑</button>
-                    <button className="btn btn-sm" onClick={() => move(i, 1)} disabled={i === types.length - 1 || saving} title="Move down" style={{ padding: '3px 8px' }}>↓</button>
-                    <button className="btn btn-sm" onClick={() => setEditing({ key: type.key, label: type.label })} title="Rename" style={{ padding: '3px 8px' }}>✏️</button>
-                    <button className="btn btn-sm" onClick={() => deleteType(type.key)} title="Delete" disabled={saving} style={{ padding: '3px 8px', color: '#c84b2f' }}>🗑</button>
+                    <button className="btn btn-sm" onClick={() => move(i, -1)} disabled={i === 0 || saving} title="Move up" style={{ padding: '4px 8px' }}>↑</button>
+                    <button className="btn btn-sm" onClick={() => move(i, 1)} disabled={i === types.length - 1 || saving} title="Move down" style={{ padding: '4px 8px' }}>↓</button>
+                    <button className="btn btn-sm" onClick={() => setEditing({ key: type.key, label: type.label })} title="Rename" style={{ padding: '4px 8px' }}>✏️</button>
+                    <button className="btn btn-sm" onClick={() => deleteType(type.key)} title="Delete" disabled={saving} style={{ padding: '4px 8px', color: '#c84b2f' }}>🗑</button>
                   </div>
                 </>
               )}
@@ -704,7 +704,7 @@ export function MaterialTypesManager({ session }) {
         </div>
         {newLabel.trim() && (
           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>
-            Key: <code style={{ background: 'var(--surface2)', padding: '1px 5px', borderRadius: 4 }}>{generateKey(newLabel)}</code>
+            Key: <code style={{ background: 'var(--surface2)', padding: '1px 4px', borderRadius: 4 }}>{generateKey(newLabel)}</code>
           </div>
         )}
       </div>

@@ -65,7 +65,7 @@ export default function StudentIconManager({ student, orgId, onClose }) {
       onClick={e => { if (e.target === e.currentTarget) onClose(false) }}>
       <div style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 620, maxHeight: '88vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
 
-        <div style={{ padding: '22px 26px 0' }}>
+        <div style={{ padding: '20px 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
             <div style={{ width: 42, height: 42, borderRadius: 12, background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🎛️</div>
             <div style={{ flex: 1 }}>
@@ -87,7 +87,7 @@ export default function StudentIconManager({ student, orgId, onClose }) {
           </div>
         </div>
 
-        <div style={{ overflowY: 'auto', padding: '0 26px', flex: 1 }}>
+        <div style={{ overflowY: 'auto', padding: '0 24px', flex: 1 }}>
           {poolModules === null || allowed === null ? (
             <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
           ) : (
@@ -112,7 +112,7 @@ export default function StudentIconManager({ student, orgId, onClose }) {
           )}
         </div>
 
-        <div style={{ padding: '14px 26px 22px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ padding: '14px 24px 20px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Student picks their visible icons from this assigned list.</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn" onClick={() => onClose(false)}>Cancel</button>

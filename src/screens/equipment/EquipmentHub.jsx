@@ -245,7 +245,7 @@ function EquipmentInfo({ equipment, session }) {
                         onClick={() => setConfirmVideoUrl(v.video_url)}>▶ Watch video / Open link</button>
                     )}
                   </div>
-                  {canEdit(session) && <button className="btn btn-sm btn-danger" style={{ padding: '3px 8px' }} onClick={() => deleteVideo(v.id)}>✕</button>}
+                  {canEdit(session) && <button className="btn btn-sm btn-danger" style={{ padding: '4px 8px' }} onClick={() => deleteVideo(v.id)}>✕</button>}
                 </div>
               ))
             }
@@ -469,7 +469,7 @@ function TemporaryAccessPanel({ equipment, session }) {
                   <div style={{ fontWeight: 500, fontSize: 13 }}>{student?.name || 'Unknown'}</div>
                   <div style={{ fontSize: 11, color: expired ? 'var(--accent2)' : 'var(--text3)', fontFamily: 'var(--mono)' }}>{expired ? 'EXPIRED' : `${daysLeft}d left`} · Granted by {ta.granted_by} · Expires {new Date(ta.expires_at).toLocaleDateString()}</div>
                 </div>
-                <button className="btn btn-sm btn-danger" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => revokeAccess(ta.user_id)}>Revoke</button>
+                <button className="btn btn-sm btn-danger" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => revokeAccess(ta.user_id)}>Revoke</button>
               </div>
             )
           })}
@@ -565,7 +565,7 @@ function StandardsTab({ equipment, session }) {
             <div key={t} style={{ display: 'flex', alignItems: 'center' }}>
               <button onClick={() => { setActiveType(t); setShowForm(false) }}
                 style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: activeType === t ? (isSolo ? '#534AB7' : 'var(--accent)') : 'var(--text2)', borderBottom: `2px solid ${activeType === t ? (isSolo ? '#534AB7' : 'var(--accent)') : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
-                {t}{cnt > 0 && <span style={{ marginLeft: 5, fontSize: 11, background: isSolo ? '#ede9fe' : 'var(--accent-light)', color: isSolo ? '#534AB7' : 'var(--accent)', borderRadius: 99, padding: '1px 6px' }}>{cnt}</span>}
+                {t}{cnt > 0 && <span style={{ marginLeft: 4, fontSize: 11, background: isSolo ? '#ede9fe' : 'var(--accent-light)', color: isSolo ? '#534AB7' : 'var(--accent)', borderRadius: 99, padding: '1px 6px' }}>{cnt}</span>}
               </button>
               {isCustom && (
                 <button onClick={() => removeCustomType(t)}
@@ -587,7 +587,7 @@ function StandardsTab({ equipment, session }) {
             <input value={newTypeName} onChange={e => setNewTypeName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addCustomType(); if (e.key === 'Escape') { setShowAddType(false); setNewTypeName('') } }}
               placeholder="e.g. ISO, BS, EN…" style={{ fontSize: 13, width: 130 }} autoFocus />
-            <button className="btn btn-sm" style={{ background: '#534AB7', color: '#fff', border: 'none', padding: '3px 10px', fontWeight: 600 }} onClick={addCustomType}>Add</button>
+            <button className="btn btn-sm" style={{ background: '#534AB7', color: '#fff', border: 'none', padding: '4px 10px', fontWeight: 600 }} onClick={addCustomType}>Add</button>
             <button className="btn btn-sm" onClick={() => { setShowAddType(false); setNewTypeName('') }}>✕</button>
           </div>
         )}
@@ -648,12 +648,12 @@ function StandardsTab({ equipment, session }) {
                       <td style={{ fontSize: 13, color: 'var(--text2)' }}>{std.standard_name || '—'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 8 }}>
-                          {std.file_url && <a href={ensureProtocol(std.file_url)} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ fontSize: 11, padding: '3px 8px' }}>📄 File</a>}
-                          {std.link_url && <a href={ensureProtocol(std.link_url)} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ fontSize: 11, padding: '3px 8px' }}>🔗 Link</a>}
+                          {std.file_url && <a href={ensureProtocol(std.file_url)} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }}>📄 File</a>}
+                          {std.link_url && <a href={ensureProtocol(std.link_url)} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }}>🔗 Link</a>}
                           {!std.file_url && !std.link_url && <span style={{ fontSize: 12, color: 'var(--text3)' }}>—</span>}
                         </div>
                       </td>
-                      {canAdd && <td><button className="btn btn-sm" style={{ padding: '3px 8px', fontSize: 11, color: '#c84b2f', border: '1px solid #c84b2f', background: 'transparent' }} onClick={() => deleteStandard(std.id)}>✕</button></td>}
+                      {canAdd && <td><button className="btn btn-sm" style={{ padding: '4px 8px', fontSize: 11, color: '#c84b2f', border: '1px solid #c84b2f', background: 'transparent' }} onClick={() => deleteStandard(std.id)}>✕</button></td>}
                     </tr>
                   ))}
                 </tbody>
@@ -938,7 +938,7 @@ export default function EquipmentHub() {
         <ScrollTabs style={{ borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
           {[{ key: 'equipment', label: '🔧 My Equipment' }, { key: 'categories', label: '🏷️ Categories' }].map(t => (
             <button key={t.key} onClick={() => setHubTab(t.key)}
-              style={{ padding: '12px 22px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: hubTab === t.key ? '#534AB7' : 'var(--text2)', borderBottom: `3px solid ${hubTab === t.key ? '#534AB7' : 'transparent'}`, marginBottom: -2, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+              style={{ padding: '12px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: hubTab === t.key ? '#534AB7' : 'var(--text2)', borderBottom: `3px solid ${hubTab === t.key ? '#534AB7' : 'transparent'}`, marginBottom: -2, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
               {t.label}
             </button>
           ))}

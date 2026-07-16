@@ -477,7 +477,7 @@ function EquipmentList({ session }) {
                             <EquipmentAvatar url={photoMap[item.id]} size={34} />
                             <div>
                               {item.out_of_service && (
-                                <span style={{ marginRight: 6, fontSize: 10, background: '#fcebeb', color: '#a32d2d', borderRadius: 3, padding: '1px 5px', fontWeight: 700 }}>OUT OF SERVICE</span>
+                                <span style={{ marginRight: 6, fontSize: 10, background: '#fcebeb', color: '#a32d2d', borderRadius: 3, padding: '1px 4px', fontWeight: 700 }}>OUT OF SERVICE</span>
                               )}
                               {item.equipment_name}
                             </div>
@@ -496,8 +496,8 @@ function EquipmentList({ session }) {
                         {canEdit(session) && (
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
-                              <button className="btn btn-sm" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => { setEditItem(item); setShowModal(true) }}>Edit</button>
-                              <button className="btn btn-sm btn-danger" style={{ padding: '3px 8px', fontSize: 11 }} onClick={() => deleteItem(item.id)}>✕</button>
+                              <button className="btn btn-sm" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => { setEditItem(item); setShowModal(true) }}>Edit</button>
+                              <button className="btn btn-sm btn-danger" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => deleteItem(item.id)}>✕</button>
                             </div>
                           </td>
                         )}
@@ -1101,11 +1101,11 @@ function CategoriesManager({ toast, session, onChanged }) {
       {loading ? <div className="spinner" style={{ margin: '0 auto' }} /> : categories.length === 0 ? (
         <div style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>No categories yet — add one above.</div>
       ) : categories.map(c => (
-        <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+        <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
           {editingId === c.id ? (
             <>
-              <input value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEdit(c.id); if (e.key === 'Escape') setEditingId(null) }} style={{ flex: 1, fontSize: 13, padding: '3px 8px' }} autoFocus />
+              <input value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEdit(c.id); if (e.key === 'Escape') setEditingId(null) }} style={{ flex: 1, fontSize: 13, padding: '4px 8px' }} autoFocus />
               <button className="btn btn-sm btn-primary" style={{ padding: '2px 10px', fontSize: 11 }} onClick={() => saveEdit(c.id)}>Save</button>
               <button className="btn btn-sm" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setEditingId(null)}>Cancel</button>
             </>
@@ -1174,11 +1174,11 @@ function LocationsManager({ toast, session, onChanged }) {
       {loading ? <div className="spinner" style={{ margin: '0 auto' }} /> : locations.length === 0 ? (
         <div style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>No locations yet — add one above.</div>
       ) : locations.map(l => (
-        <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+        <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent3)', flexShrink: 0 }} />
           {editingId === l.id ? (
             <>
-              <input value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEdit(l.id); if (e.key === 'Escape') setEditingId(null) }} style={{ flex: 1, fontSize: 13, padding: '3px 8px' }} autoFocus />
+              <input value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEdit(l.id); if (e.key === 'Escape') setEditingId(null) }} style={{ flex: 1, fontSize: 13, padding: '4px 8px' }} autoFocus />
               <button className="btn btn-sm btn-primary" style={{ padding: '2px 10px', fontSize: 11 }} onClick={() => saveEdit(l.id)}>Save</button>
               <button className="btn btn-sm" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setEditingId(null)}>Cancel</button>
             </>
@@ -1369,7 +1369,7 @@ function MaintenanceRecords({ session }) {
                           {status ? (
                             <div>
                               <span style={{ fontSize: 11, color: status.color, fontWeight: 600 }}>{status.label}</span>
-                              <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 99, overflow: 'hidden', marginTop: 3 }}>
+                              <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 99, overflow: 'hidden', marginTop: 4 }}>
                                 <div style={{ height: '100%', width: `${Math.min(100, status.pct)}%`, background: status.color, borderRadius: 99 }} />
                               </div>
                             </div>
@@ -1380,9 +1380,9 @@ function MaintenanceRecords({ session }) {
                         {canEdit(session) && (
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setEditHours({ id: item.id, name: item.nickname || item.equipment_name, max_usage_hours: item.max_usage_hours || '', usage_hours_since_maintenance: item.usage_hours_since_maintenance || 0 })}>⚙️ Set</button>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setAssignModal({ id: item.id, name: item.nickname || item.equipment_name, assigned_to: item.assigned_to || '' })}>👤</button>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => resetUsage(item.id)}>↺</button>
+                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setEditHours({ id: item.id, name: item.nickname || item.equipment_name, max_usage_hours: item.max_usage_hours || '', usage_hours_since_maintenance: item.usage_hours_since_maintenance || 0 })}>⚙️ Set</button>
+                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setAssignModal({ id: item.id, name: item.nickname || item.equipment_name, assigned_to: item.assigned_to || '' })}>👤</button>
+                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => resetUsage(item.id)}>↺</button>
                             </div>
                           </td>
                         )}

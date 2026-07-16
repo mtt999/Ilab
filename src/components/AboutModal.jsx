@@ -22,7 +22,7 @@ export default function AboutModal({ onClose, onContact }) {
         onClick={e => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div style={{ background: '#0d47a1', padding: '32px 28px 26px', textAlign: 'center', position: 'relative' }}>
+        <div style={{ background: '#0d47a1', padding: '32px 28px 24px', textAlign: 'center', position: 'relative' }}>
           {/* Top-right action buttons */}
           <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6 }}>
             {onContact && (
@@ -47,17 +47,17 @@ export default function AboutModal({ onClose, onContact }) {
         </div>
 
         {/* ── Body ── */}
-        <div style={{ padding: '24px 26px 26px' }}>
+        <div style={{ padding: '24px 24px 24px' }}>
 
           {/* Tagline */}
-          <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.75, margin: '0 0 22px', textAlign: 'center' }}>
+          <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.75, margin: '0 0 20px', textAlign: 'center' }}>
             Built by a lab researcher, for lab researchers. LabHive helps research teams manage equipment, track compliance, organize projects, and streamline day-to-day lab operations — all in one place.
           </p>
 
           {/* Features grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
             {FEATURES.map(f => (
-              <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '10px 11px', background: '#f8fafc', borderRadius: 10, border: '1px solid #f1f5f9' }}>
+              <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', background: '#f8fafc', borderRadius: 10, border: '1px solid #f1f5f9' }}>
                 <span style={{ fontSize: 19, flexShrink: 0, lineHeight: 1.3 }}>{f.icon}</span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 2 }}>{f.label}</div>
@@ -68,11 +68,11 @@ export default function AboutModal({ onClose, onContact }) {
           </div>
 
           {/* Who it's for */}
-          <div style={{ background: '#e8f5f0', borderRadius: 10, padding: '13px 15px', marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#085041', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 9 }}>Who uses LabHive?</div>
-            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+          <div style={{ background: '#e8f5f0', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#085041', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Who uses LabHive?</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {WHO.map(t => (
-                <span key={t} style={{ fontSize: 12, background: '#fff', border: '1px solid #9FE1CB', borderRadius: 20, padding: '3px 11px', color: '#085041' }}>{t}</span>
+                <span key={t} style={{ fontSize: 12, background: '#fff', border: '1px solid #9FE1CB', borderRadius: 20, padding: '4px 12px', color: '#085041' }}>{t}</span>
               ))}
             </div>
           </div>

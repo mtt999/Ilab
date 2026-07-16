@@ -156,7 +156,7 @@ export default function TeammatesPanel({ session }) {
                     <div style={{ fontSize: 12, color: '#3730a3', marginTop: 2, lineHeight: 1.6 }}>
                       wants to add you as a teammate. You'll be able to view their <strong>Projects, Materials, and test results</strong>. Their personal profile info is not shared.
                     </div>
-                    <div style={{ marginTop: 8, background: gs === 'website' ? '#f0fdf4' : '#fff7ed', border: `1px solid ${gs === 'website' ? '#bbf7d0' : '#fed7aa'}`, borderRadius: 6, padding: '7px 10px', fontSize: 11, color: gs === 'website' ? '#166534' : '#92400e', lineHeight: 1.5 }}>
+                    <div style={{ marginTop: 8, background: gs === 'website' ? '#f0fdf4' : '#fff7ed', border: `1px solid ${gs === 'website' ? '#bbf7d0' : '#fed7aa'}`, borderRadius: 6, padding: '8px 10px', fontSize: 11, color: gs === 'website' ? '#166534' : '#92400e', lineHeight: 1.5 }}>
                       🗄️ <strong>Storage:</strong> {storageNote}
                     </div>
                   </div>
@@ -177,7 +177,7 @@ export default function TeammatesPanel({ session }) {
         {/* Requirements info box */}
         <div style={{ background: '#EEEDFE', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
           <div style={{ fontSize: 13, color: '#3730a3', fontWeight: 600, marginBottom: 6 }}>Before you invite</div>
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#4338ca', lineHeight: 1.8 }}>
+          <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, color: '#4338ca', lineHeight: 1.8 }}>
             <li>The person must already have a <strong>LabHive Solo account</strong>. They cannot accept the invite without one.</li>
             <li>They will receive an <strong>in-app notification</strong> and (if they have an email set) an <strong>email notification</strong> about your invite.</li>
             <li>Once accepted, they can view and collaborate on your <strong>Projects, Materials, and test results</strong>. Your personal profile info (name, email, password) is never shared.</li>

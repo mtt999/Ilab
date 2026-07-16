@@ -187,7 +187,7 @@ function EquipmentBarcodeTab({ equipment, loading }) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: selected?.id === eq.id ? 700 : 500, color: selected?.id === eq.id ? 'var(--accent)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {eq.equipment_name}{eq.nickname && <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text3)', marginLeft: 5 }}>({eq.nickname})</span>}
+                {eq.equipment_name}{eq.nickname && <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text3)', marginLeft: 4 }}>({eq.nickname})</span>}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>{[eq.category, eq.location].filter(Boolean).join(' · ')}</div>
             </div>
@@ -242,7 +242,7 @@ function EquipmentBarcodeTab({ equipment, loading }) {
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Scan URL</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ flex: 1, fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text2)', background: 'var(--surface2)', borderRadius: 6, padding: '7px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ flex: 1, fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text2)', background: 'var(--surface2)', borderRadius: 6, padding: '8px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {getScanUrl(selected.id)}
                 </div>
                 <button onClick={copyUrl} className="btn btn-sm" style={{ flexShrink: 0, background: copied ? '#E1F5EE' : undefined, color: copied ? '#1D9E75' : undefined }}>

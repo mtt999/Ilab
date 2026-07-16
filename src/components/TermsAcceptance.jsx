@@ -39,7 +39,7 @@ export default function TermsAcceptance({ session, onAccept }) {
         <div style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 20 }}>🔒</div>
           <div style={{ fontWeight: 700, fontSize: 22, color: '#fff', marginBottom: 14 }}>Access Denied</div>
-          <div style={{ fontSize: 15, color: '#FF9A4A', lineHeight: 1.7, marginBottom: 32, background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: '18px 22px' }}>
+          <div style={{ fontSize: 15, color: '#FF9A4A', lineHeight: 1.7, marginBottom: 32, background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: '16px 20px' }}>
             You must accept the Privacy Policy and Terms of Service to use LabHive.
             Contact your lab administrator if you have questions.
           </div>
@@ -63,7 +63,7 @@ export default function TermsAcceptance({ session, onAccept }) {
       <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 560, boxShadow: '0 12px 48px rgba(0,0,0,0.35)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
 
         {/* Header */}
-        <div style={{ background: '#0C1140', padding: '22px 28px', flexShrink: 0 }}>
+        <div style={{ background: '#0C1140', padding: '20px 28px', flexShrink: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 19, color: '#fff', marginBottom: 4 }}>
             {session.termsAcceptedVersion ? '📋 Terms Updated' : '👋 Welcome to LabHive'}
           </div>
@@ -77,7 +77,7 @@ export default function TermsAcceptance({ session, onAccept }) {
         {/* Scrollable summary */}
         <div style={{ padding: '20px 28px', overflowY: 'auto', flex: 1, fontSize: 13, color: 'var(--text2)', lineHeight: 1.75, borderBottom: '1px solid var(--border)' }}>
           <p style={{ marginBottom: 12, fontWeight: 600, color: 'var(--text)' }}>Key points you should know:</p>
-          <ul style={{ marginLeft: 18, marginBottom: 16 }}>
+          <ul style={{ marginLeft: 16, marginBottom: 16 }}>
             <li style={{ marginBottom: 8 }}>We collect your name, email, and lab activity data solely to run the platform. We <strong>never</strong> sell your data or use it for advertising.</li>
             <li style={{ marginBottom: 8 }}>Your data is only accessible to you and authorised members of your organisation or workspace.</li>
             <li style={{ marginBottom: 8 }}>Files are stored on LabHive's secure servers by default — the recommended option for best performance. You can optionally connect Google Drive, OneDrive, or other providers as a backup or alternative storage. Your account details always stay on LabHive's servers so the app keeps working.</li>
@@ -86,11 +86,11 @@ export default function TermsAcceptance({ session, onAccept }) {
           </ul>
           <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
             <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: '#f0f4ff', border: '1px solid #c7d7f9', borderRadius: 8, color: '#1a56db', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 14px', background: '#f0f4ff', border: '1px solid #c7d7f9', borderRadius: 8, color: '#1a56db', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
               📄 Read Full Privacy Policy ↗
             </a>
             <a href="/terms.html" target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: '#f0f4ff', border: '1px solid #c7d7f9', borderRadius: 8, color: '#1a56db', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 14px', background: '#f0f4ff', border: '1px solid #c7d7f9', borderRadius: 8, color: '#1a56db', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
               📋 Read Full Terms of Service ↗
             </a>
           </div>

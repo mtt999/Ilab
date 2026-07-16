@@ -332,7 +332,7 @@ export default function LabMessage() {
 
         {/* LEFT — conversation list */}
         <div className={`msg-panel-left${mobileShowThread ? ' msg-hidden' : ''}`} style={{ width: 280, flexShrink: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '11px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface2)', flexShrink: 0 }}>
+          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface2)', flexShrink: 0 }}>
             <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
               Conversations
               {totalUnread > 0 && (
@@ -357,7 +357,7 @@ export default function LabMessage() {
               return (
                 <button key={conv.id} onClick={() => selectConv(conv)} style={{
                   display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%',
-                  padding: '11px 14px', border: 'none', borderBottom: '1px solid var(--border)',
+                  padding: '12px 14px', border: 'none', borderBottom: '1px solid var(--border)',
                   background: selected ? 'var(--accent-light)' : conv.unreadCount > 0 ? 'rgba(29,158,117,0.035)' : 'transparent',
                   cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
                 }}>
@@ -373,7 +373,7 @@ export default function LabMessage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{preview}</span>
                       {conv.unreadCount > 0 && (
-                        <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 10, fontSize: 9, fontWeight: 700, padding: '1px 5px', flexShrink: 0, lineHeight: 1.4 }}>{conv.unreadCount}</span>
+                        <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 10, fontSize: 9, fontWeight: 700, padding: '1px 4px', flexShrink: 0, lineHeight: 1.4 }}>{conv.unreadCount}</span>
                       )}
                     </div>
                   </div>
@@ -407,7 +407,7 @@ export default function LabMessage() {
               </div>
 
               {/* Bubbles */}
-              <div ref={threadRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div ref={threadRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {[selectedConv, ...selectedConv.replies].map((m, i, all) => {
                   const isOwn = m.sender_id === session?.userId
                   const prevSame = i > 0 && all[i - 1].sender_id === m.sender_id
@@ -431,7 +431,7 @@ export default function LabMessage() {
                             borderRadius: isOwn
                               ? (prevSame ? '18px 4px 4px 18px' : nextSame ? '18px 18px 4px 18px' : '18px 4px 18px 18px')
                               : (prevSame ? '4px 18px 18px 4px' : nextSame ? '18px 18px 18px 4px' : '4px 18px 18px 18px'),
-                            padding: '9px 14px',
+                            padding: '8px 14px',
                             fontSize: 14, lineHeight: 1.6,
                             border: isOwn ? 'none' : '1px solid var(--border)',
                             wordBreak: 'break-word', whiteSpace: 'pre-wrap',
@@ -441,15 +441,15 @@ export default function LabMessage() {
                           </div>
                           {m.file_url && (
                             <a href={m.file_url} target="_blank" rel="noopener" style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, marginTop: 4,
+                              display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, marginTop: 4,
                               color: isOwn ? 'var(--accent)' : 'var(--accent)',
-                              background: 'var(--accent-light)', borderRadius: 6, padding: '3px 9px', textDecoration: 'none',
+                              background: 'var(--accent-light)', borderRadius: 6, padding: '4px 8px', textDecoration: 'none',
                             }}>
                               📎 {m.file_name || 'Attachment'}
                             </a>
                           )}
                           {!nextSame && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                               <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{fmtDate(m.created_at)}</span>
                               {canDelete(m) && (
                                 <button onClick={() => setDeleteConfirm(m.id)} title="Delete" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 10, color: 'var(--text3)', padding: 0, opacity: 0.55, lineHeight: 1 }}>✕</button>

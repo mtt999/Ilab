@@ -19,7 +19,7 @@ const PRIORITY = {
 
 function PriorityBadge({ priority }) {
   const p = PRIORITY[priority] || PRIORITY.medium
-  return <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, fontWeight: 600, background: p.bg, color: p.color }}>{p.label}</span>
+  return <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 600, background: p.bg, color: p.color }}>{p.label}</span>
 }
 
 function progressColor(pct) {
@@ -87,7 +87,7 @@ function ProgressTape({ progress }) {
         <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${progress}%`, borderRadius: 99, background: `linear-gradient(to right, #c84b2f, ${ORANGE}, ${BLUE}, #2e7d32)`, backgroundSize: '400% 100%', backgroundPosition: `${100 - progress}% 0`, transition: 'width 0.5s ease' }} />
         {segments.map(s => <div key={s.pct} style={{ position: 'absolute', top: 0, left: `${s.pct}%`, width: 1, height: '100%', background: 'rgba(255,255,255,0.5)' }} />)}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
         {segments.map(s => <span key={s.pct} style={{ fontSize: 9, color: progress >= s.pct ? color : 'var(--text3)', fontWeight: progress >= s.pct ? 600 : 400 }}>{s.label}</span>)}
       </div>
     </div>
@@ -134,7 +134,7 @@ function TaskComments({ taskId, currentUserId, currentUserName, assignedTo }) {
   return (
     <div>
       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-        💬 Comments {comments.length > 0 && <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '1px 7px', fontSize: 11, color: 'var(--text3)' }}>{comments.length}</span>}
+        💬 Comments {comments.length > 0 && <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '1px 8px', fontSize: 11, color: 'var(--text3)' }}>{comments.length}</span>}
       </div>
       {loading ? <div style={{ fontSize: 12, color: 'var(--text3)' }}>Loading…</div> : (
         <div style={{ maxHeight: 220, overflowY: 'auto', marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -146,7 +146,7 @@ function TaskComments({ taskId, currentUserId, currentUserName, assignedTo }) {
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: isMe ? '#e8f0fe' : ORANGE_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: isMe ? BLUE : ORANGE, flexShrink: 0 }}>{c.user_name?.slice(0,2).toUpperCase()}</div>
                 <div style={{ maxWidth: '75%' }}>
                   <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2, textAlign: isMe ? 'right' : 'left' }}>{c.user_name} · {formatTime(c.created_at)}</div>
-                  <div style={{ background: isMe ? '#e8f0fe' : 'var(--surface2)', borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '7px 11px', fontSize: 13, color: 'var(--text)' }}>{c.body}</div>
+                  <div style={{ background: isMe ? '#e8f0fe' : 'var(--surface2)', borderRadius: isMe ? '12px 12px 2px 12px' : '12px 12px 12px 2px', padding: '8px 12px', fontSize: 13, color: 'var(--text)' }}>{c.body}</div>
                 </div>
               </div>
             )
@@ -211,7 +211,7 @@ function MiniCalendar({ tasks, onDayClick, initialCal, outOfLabDays }) {
           const isClickable = count > 0 || isOOL
           return (
             <div key={d} onClick={() => isClickable && onDayClick(cal.year, cal.month, d)}
-              style={{ textAlign: 'center', borderRadius: 6, padding: '3px 0', cursor: isClickable ? 'pointer' : 'default', background: today_ ? BLUE : isOOL && !count ? '#fff5f5' : 'transparent', border: count > 0 && !today_ ? `1px solid ${ORANGE}` : isOOL && !today_ ? '1px solid #fca5a5' : '1px solid transparent', transition: 'background 0.15s' }}
+              style={{ textAlign: 'center', borderRadius: 6, padding: '4px 0', cursor: isClickable ? 'pointer' : 'default', background: today_ ? BLUE : isOOL && !count ? '#fff5f5' : 'transparent', border: count > 0 && !today_ ? `1px solid ${ORANGE}` : isOOL && !today_ ? '1px solid #fca5a5' : '1px solid transparent', transition: 'background 0.15s' }}
               onMouseEnter={e => { if (isClickable && !today_) e.currentTarget.style.background = count > 0 ? ORANGE_LIGHT : '#fee2e2' }}
               onMouseLeave={e => { if (!today_) e.currentTarget.style.background = isOOL && !count ? '#fff5f5' : 'transparent' }}>
               <div style={{ fontSize: 11, fontWeight: today_ ? 700 : 400, color: today_ ? 'white' : 'var(--text)' }}>{d}</div>
@@ -268,22 +268,22 @@ function OutOfLabPanel({ userId, isSolo, orgId, onChanged }) {
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, marginTop: 14 }}>
       <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Out of Lab</div>
       <div style={{ display: 'flex', gap: 6, marginBottom: newDate ? 8 : 0 }}>
-        <input type="date" value={newDate} min={today} onChange={e => setNewDate(e.target.value)} style={{ flex: 1, fontSize: 12, padding: '5px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+        <input type="date" value={newDate} min={today} onChange={e => setNewDate(e.target.value)} style={{ flex: 1, fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
         <button className="btn btn-sm" onClick={add} disabled={saving || !newDate} style={{ fontSize: 11, flexShrink: 0 }}>+ Add</button>
       </div>
       {newDate && (
-        <input value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Reason (optional)" style={{ width: '100%', fontSize: 12, padding: '5px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 8, boxSizing: 'border-box' }} />
+        <input value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Reason (optional)" style={{ width: '100%', fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 8, boxSizing: 'border-box' }} />
       )}
       {entries.length === 0
         ? <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', padding: '8px 0' }}>No upcoming out-of-lab days.</div>
         : <div style={{ marginTop: 8 }}>{entries.map(e => (
-          <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: '1px solid var(--surface2)' }}>
+          <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', borderBottom: '1px solid var(--surface2)' }}>
             <span style={{ fontSize: 11, color: '#c84b2f', fontWeight: 700, flexShrink: 0, lineHeight: 1 }}>✕</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{new Date(e.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
               {e.note && <div style={{ fontSize: 10, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.note}</div>}
             </div>
-            <button onClick={() => remove(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c84b2f', fontSize: 15, padding: '1px 3px', opacity: 0.6, lineHeight: 1, flexShrink: 0 }}
+            <button onClick={() => remove(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c84b2f', fontSize: 15, padding: '1px 4px', opacity: 0.6, lineHeight: 1, flexShrink: 0 }}
               onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}>×</button>
           </div>
         ))}</div>
@@ -388,7 +388,7 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
       {!myGroup && pendingIn.length > 0 && pendingIn.map(inv => (
         <div key={inv.id} style={{ background: '#E1F5EE', border: '1px solid #a7d4be', borderRadius: 8, padding: '8px 10px', marginBottom: 8 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#1D9E75', marginBottom: 1 }}>"{inv.groupName}"</div>
-          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 7 }}>Invited by {inv.inviterName}</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>Invited by {inv.inviterName}</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button className="btn btn-sm btn-primary" onClick={() => accept(inv.id, inv.group_id)} style={{ fontSize: 11 }}>Accept</button>
             <button className="btn btn-sm" onClick={() => decline(inv.id)} style={{ fontSize: 11 }}>Decline</button>
@@ -402,7 +402,7 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
           {showCreate
             ? <div>
                 <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Group name" autoFocus
-                  style={{ width: '100%', fontSize: 12, padding: '5px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 6, boxSizing: 'border-box' }} />
+                  style={{ width: '100%', fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 6, boxSizing: 'border-box' }} />
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn btn-sm btn-primary" onClick={createGroup} disabled={saving} style={{ fontSize: 11 }}>Create</button>
                   <button className="btn btn-sm" onClick={() => { setShowCreate(false); setGroupName('') }} style={{ fontSize: 11 }}>Cancel</button>
@@ -419,7 +419,7 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
           {accepted.length === 0
             ? <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>Only you so far — invite others!</div>
             : <div style={{ marginBottom: 8 }}>{accepted.map(m => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0' }}>
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
                   <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#1D9E75', flexShrink: 0 }}>{m.name?.slice(0,2).toUpperCase()}</div>
                   <span style={{ fontSize: 12, color: 'var(--text)' }}>{m.name}</span>
                 </div>
@@ -427,10 +427,10 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
           }
           {pendingOut.length > 0 && (
             <div style={{ marginBottom: 8 }}>{pendingOut.map(p => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0' }}>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
                 <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff3e0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: ORANGE, flexShrink: 0 }}>{p.name?.slice(0,2).toUpperCase()}</div>
                 <span style={{ fontSize: 12, color: 'var(--text3)', fontStyle: 'italic', flex: 1 }}>{p.name} (pending)</span>
-                <button onClick={() => cancelInvite(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c84b2f', fontSize: 14, padding: '1px 3px', opacity: 0.6, lineHeight: 1 }}
+                <button onClick={() => cancelInvite(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c84b2f', fontSize: 14, padding: '1px 4px', opacity: 0.6, lineHeight: 1 }}
                   onMouseEnter={e => e.currentTarget.style.opacity='1'} onMouseLeave={e => e.currentTarget.style.opacity='0.6'}>×</button>
               </div>
             ))}</div>
@@ -438,7 +438,7 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
           {showInvite
             ? <div style={{ marginBottom: 8 }}>
                 <select value={inviteeId} onChange={e => setInviteeId(e.target.value)}
-                  style={{ width: '100%', fontSize: 12, padding: '5px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 6 }}>
+                  style={{ width: '100%', fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 6 }}>
                   <option value="">— Select lab user —</option>
                   {available.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
@@ -507,10 +507,10 @@ function TaskAttachments({ taskId, userName, refreshToken }) {
   return (
     <div>
       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>📎 Attachments {attachments.length > 0 && <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '1px 7px', fontSize: 11, color: 'var(--text3)' }}>{attachments.length}</span>}</span>
+        <span>📎 Attachments {attachments.length > 0 && <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '1px 8px', fontSize: 11, color: 'var(--text3)' }}>{attachments.length}</span>}</span>
         <label style={{ cursor: uploading ? 'default' : 'pointer' }}>
           <input type="file" style={{ display: 'none' }} onChange={handleUpload} disabled={uploading} />
-          <span className="btn btn-sm" style={{ fontSize: 11, padding: '3px 10px', pointerEvents: 'none', opacity: uploading ? 0.6 : 1 }}>{uploading ? 'Uploading…' : '+ Attach file'}</span>
+          <span className="btn btn-sm" style={{ fontSize: 11, padding: '4px 10px', pointerEvents: 'none', opacity: uploading ? 0.6 : 1 }}>{uploading ? 'Uploading…' : '+ Attach file'}</span>
         </label>
       </div>
       {attachments.length === 0
@@ -525,7 +525,7 @@ function TaskAttachments({ taskId, userName, refreshToken }) {
                   <img src={att.file_url} alt={att.file_name} style={{ width: '100%', maxHeight: 220, objectFit: 'contain', display: 'block', background: '#f8faff', borderBottom: '1px solid var(--border)' }} />
                 </a>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px' }}>
                 <span style={{ fontSize: 15, flexShrink: 0 }}>{isDrawing ? '🎨' : isImage ? '🖼' : '📄'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <a href={att.file_url} target="_blank" rel="noopener" style={{ fontSize: 12, fontWeight: 500, color: BLUE, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -694,7 +694,7 @@ function DrawingBoard({ taskId, taskTitle, currentUserName, onClose, onAttachmen
             ))}
             <input type="color" value={color} onChange={e => { setColor(e.target.value); setTool('pen') }} style={{ width: 24, height: 22, padding: 0, border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer' }} title="Custom color" />
           </div>
-          <select value={lineWidth} onChange={e => setLineWidth(Number(e.target.value))} style={{ fontSize: 12, padding: '3px 6px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
+          <select value={lineWidth} onChange={e => setLineWidth(Number(e.target.value))} style={{ fontSize: 12, padding: '4px 6px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}>
             <option value={2}>Thin</option>
             <option value={4}>Medium</option>
             <option value={8}>Thick</option>
@@ -712,11 +712,11 @@ function DrawingBoard({ taskId, taskTitle, currentUserName, onClose, onAttachmen
         <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderTop: '1px solid var(--border)', alignItems: 'center' }}>
           <span style={{ fontSize: 12, color: 'var(--text3)', flex: 1 }}>Live — all participants see your strokes in real time. Save attaches a PNG to this task permanently.</span>
           <button onClick={onClose} disabled={saving}
-            style={{ fontSize: 13, padding: '7px 16px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fff5f5', color: '#c84b2f', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+            style={{ fontSize: 13, padding: '8px 16px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fff5f5', color: '#c84b2f', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
             🗑 Discard
           </button>
           <button onClick={saveDrawing} disabled={saving}
-            style={{ fontSize: 13, padding: '7px 20px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+            style={{ fontSize: 13, padding: '8px 20px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 600, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}>
             {saving ? 'Saving…' : '💾 Save'}
           </button>
         </div>
@@ -790,8 +790,8 @@ function TaskModal({ task, onClose, onUpdate, onDelete, currentUserId, currentUs
   const pData = PRIORITY[localTask.priority || 'medium']
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 540, maxHeight: '92vh', overflowY: 'auto', padding: 26 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 540, maxHeight: '92vh', overflowY: 'auto', padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flex: 1, paddingRight: 12 }}>
             <label style={{ cursor: 'pointer', flexShrink: 0 }} title={localTask.icon_url ? 'Change icon' : 'Add icon'}>
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { changeIcon(e.target.files[0]); e.target.value = '' }} disabled={iconUploading} />
@@ -811,33 +811,33 @@ function TaskModal({ task, onClose, onUpdate, onDelete, currentUserId, currentUs
           <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 20, background: '#e8f0fe', color: BLUE, fontWeight: 600 }}>{localTask.progress || 0}% complete</span>
         </div>
         {(creatorName || meetingDate) && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
             {creatorName && (
-              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#e3f2fd', color: BLUE, fontWeight: 500 }}>👤 Assigned by {creatorName}</span>
+              <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#e3f2fd', color: BLUE, fontWeight: 500 }}>👤 Assigned by {creatorName}</span>
             )}
             {meetingDate && (
-              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#f3e8ff', color: '#7c3aed', fontWeight: 500 }}>
+              <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#f3e8ff', color: '#7c3aed', fontWeight: 500 }}>
                 📋 Decided in meeting on {new Date(meetingDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             )}
           </div>
         )}
-        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', marginBottom: 18 }}>
+        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
           <ProgressTape progress={localTask.progress || 0} />
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             {[0, 25, 50, 75, 100].map(val => (
               <button key={val} onClick={() => updateProgress(val)}
-                style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, border: `1px solid ${(localTask.progress||0) === val ? color : 'var(--border)'}`, background: (localTask.progress||0) === val ? color : 'transparent', color: (localTask.progress||0) === val ? 'white' : 'var(--text2)', cursor: 'pointer', fontWeight: (localTask.progress||0) === val ? 600 : 400, transition: 'all 0.15s' }}>
+                style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, border: `1px solid ${(localTask.progress||0) === val ? color : 'var(--border)'}`, background: (localTask.progress||0) === val ? color : 'transparent', color: (localTask.progress||0) === val ? 'white' : 'var(--text2)', cursor: 'pointer', fontWeight: (localTask.progress||0) === val ? 600 : 400, transition: 'all 0.15s' }}>
                 {val}%
               </button>
             ))}
           </div>
         </div>
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>📋 Task detail</div>
             <button onClick={() => setShowDrawing(true)}
-              style={{ fontSize: 13, padding: '5px 14px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              style={{ fontSize: 13, padding: '4px 14px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
               🎨 Drawing board
             </button>
           </div>
@@ -864,7 +864,7 @@ function TaskModal({ task, onClose, onUpdate, onDelete, currentUserId, currentUs
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input value={localTask.reference_url || ''} onChange={e => setLocalTask({ ...localTask, reference_url: e.target.value })} placeholder="https://…" style={{ flex: 1, fontSize: 13 }} />
               {localTask.reference_url && (
-                <a href={localTask.reference_url} target="_blank" rel="noopener" style={{ fontSize: 12, padding: '5px 10px', borderRadius: 6, background: '#e0f2fe', color: '#0369a1', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>Open →</a>
+                <a href={localTask.reference_url} target="_blank" rel="noopener" style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: '#e0f2fe', color: '#0369a1', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>Open →</a>
               )}
             </div>
           </div>
@@ -988,7 +988,7 @@ function Overview({ userId, isOwnerAdmin, isSolo, orgId }) {
           {Object.entries(byPriority).map(([key, count]) => {
             const p = PRIORITY[key]
             return (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, background: p.bg, borderRadius: 10, padding: '10px 18px' }}>
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, background: p.bg, borderRadius: 10, padding: '10px 16px' }}>
                 <span style={{ fontSize: 22, fontWeight: 700, color: p.color }}>{count}</span>
                 <span style={{ fontSize: 13, color: p.color, fontWeight: 600 }}>{p.label}</span>
               </div>
@@ -1148,13 +1148,13 @@ function CalendarView({ onTaskClick, userId, isOwnerAdmin, isSolo, orgId }) {
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>Filter:</span>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ fontSize: 13, padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ fontSize: 13, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
           <option value="">All statuses</option>
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
           <option value="done">Done</option>
         </select>
-        <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ fontSize: 13, padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
+        <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ fontSize: 13, padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
           <option value="">All priorities</option>
           <option value="high">High</option>
           <option value="medium">Medium</option>
@@ -1180,7 +1180,7 @@ function CalendarView({ onTaskClick, userId, isOwnerAdmin, isSolo, orgId }) {
             return (
               <div key={task.id}
                 onClick={() => onTaskClick && onTaskClick(task)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderBottom: '1px solid var(--surface2)', background: isOD ? '#fef2f2' : 'transparent', cursor: 'pointer', transition: 'background 0.15s' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--surface2)', background: isOD ? '#fef2f2' : 'transparent', cursor: 'pointer', transition: 'background 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background = isOD ? '#fde8e8' : 'var(--surface2)'}
                 onMouseLeave={e => e.currentTarget.style.background = isOD ? '#fef2f2' : 'transparent'}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: isOD ? '#c84b2f' : progressColor(task.progress||0), flexShrink: 0 }} />
@@ -1379,12 +1379,12 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 0' }}>
               <div style={{ fontWeight: 700, fontSize: 17 }}>Add new task</div>
               <button onClick={() => setShowAddTask(false)} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text3)', lineHeight: 1, padding: '0 2px' }}>×</button>
             </div>
             {/* Body */}
-            <div style={{ padding: '16px 22px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>Task title *</label>
                 <input value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} placeholder="What needs to be done?" autoFocus />
@@ -1419,7 +1419,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
               </label>
             </div>
             {/* Footer */}
-            <div style={{ display: 'flex', gap: 10, padding: '0 22px 20px' }}>
+            <div style={{ display: 'flex', gap: 10, padding: '0 20px 20px' }}>
               <button className="btn btn-primary" onClick={addTask} disabled={saving} style={{ flex: 1 }}>{saving ? 'Adding…' : 'Add task'}</button>
               <button className="btn" onClick={() => setShowAddTask(false)} style={{ flex: 1 }}>Cancel</button>
             </div>
@@ -1469,7 +1469,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
                       </div>
                       {desktop && task.deadline && <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>Due {task.deadline}{task.deadline_time ? ` at ${task.deadline_time}` : ''}</div>}
                       {task.created_by && task.created_by !== (task.assigned_to || userId) && staffMap[task.created_by] && (
-                        <div style={{ fontSize: 10, color: BLUE, marginTop: 1, display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <div style={{ fontSize: 10, color: BLUE, marginTop: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span>👤</span><span>Assigned by {staffMap[task.created_by]}</span>
                         </div>
                       )}
@@ -1504,7 +1504,7 @@ function TaskViewModal({ task, onClose }) {
   const pData = PRIORITY[task.priority || 'medium']
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', padding: 26 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 480, maxHeight: '88vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div style={{ fontWeight: 700, fontSize: 17, flex: 1, paddingRight: 12, lineHeight: 1.3 }}>{task.title}</div>
           <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--text3)', lineHeight: 1 }}>×</button>
@@ -1599,13 +1599,13 @@ function Team({ orgId, isSolo }) {
                   <div style={{ height: '100%', width: `${uPct}%`, background: progressColor(uPct), borderRadius: 99, transition: 'width 0.4s' }} />
                 </div>
               </div>
-              <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 7, background: 'var(--bg)', minHeight: 80 }}>
+              <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--bg)', minHeight: 80 }}>
                 {utasks.length === 0
                   ? <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '24px 8px' }}>No tasks assigned</div>
                   : utasks.map(task => (
                     <div key={task.id}
                       onClick={task.is_private ? undefined : () => setViewTask(task)}
-                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9, padding: '9px 11px', borderLeft: `3px solid ${progressColor(task.progress || 0)}`, cursor: task.is_private ? 'default' : 'pointer', transition: 'background 0.15s' }}
+                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9, padding: '8px 12px', borderLeft: `3px solid ${progressColor(task.progress || 0)}`, cursor: task.is_private ? 'default' : 'pointer', transition: 'background 0.15s' }}
                       onMouseEnter={e => { if (!task.is_private) e.currentTarget.style.background = 'var(--surface2)' }}
                       onMouseLeave={e => { if (!task.is_private) e.currentTarget.style.background = 'var(--surface)' }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: task.is_private ? 'var(--text3)' : task.status === 'done' ? 'var(--text3)' : 'var(--text)', textDecoration: task.status === 'done' && !task.is_private ? 'line-through' : 'none', marginBottom: 6, lineHeight: 1.4, wordBreak: 'break-word', fontStyle: task.is_private ? 'italic' : 'normal' }}>
@@ -1615,14 +1615,14 @@ function Team({ orgId, isSolo }) {
                         <div style={{ height: '100%', width: `${task.progress || 0}%`, background: progressColor(task.progress || 0), borderRadius: 99 }} />
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, fontWeight: 600, ...statusStyle(task.status) }}>{statusLabel(task.status)}</span>
+                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 600, ...statusStyle(task.status) }}>{statusLabel(task.status)}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <PriorityBadge priority={task.priority || 'medium'} />
                           <span style={{ fontSize: 11, fontWeight: 700, color: progressColor(task.progress || 0) }}>{task.progress || 0}%</span>
                         </div>
                       </div>
                       {task.deadline && (
-                        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>
+                        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
                           📅 {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       )}
@@ -1700,12 +1700,12 @@ function StudentTeamView({ userId, groupId, orgId }) {
                     <div style={{ height: '100%', width: `${pct}%`, background: progressColor(pct), borderRadius: 99, transition: 'width 0.4s' }} />
                   </div>
                 </div>
-                <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 7, background: 'var(--bg)', minHeight: 80 }}>
+                <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--bg)', minHeight: 80 }}>
                   {utasks.length === 0
                     ? <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '24px 8px' }}>{isMe ? 'No shared tasks yet' : 'No shared tasks'}</div>
                     : utasks.map(task => (
                       <div key={task.id} onClick={() => setViewTask(task)}
-                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9, padding: '9px 11px', borderLeft: `3px solid ${progressColor(task.progress||0)}`, cursor: 'pointer', transition: 'background 0.15s' }}
+                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9, padding: '8px 12px', borderLeft: `3px solid ${progressColor(task.progress||0)}`, cursor: 'pointer', transition: 'background 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.background='var(--surface2)'}
                         onMouseLeave={e => e.currentTarget.style.background='var(--surface)'}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: task.status==='done' ? 'var(--text3)' : 'var(--text)', textDecoration: task.status==='done' ? 'line-through' : 'none', marginBottom: 6, lineHeight: 1.4, wordBreak: 'break-word' }}>{task.title}</div>
@@ -1713,13 +1713,13 @@ function StudentTeamView({ userId, groupId, orgId }) {
                           <div style={{ height: '100%', width: `${task.progress||0}%`, background: progressColor(task.progress||0), borderRadius: 99 }} />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                          <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, fontWeight: 600, ...statusStyle(task.status) }}>{task.status.replace('_',' ')}</span>
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 600, ...statusStyle(task.status) }}>{task.status.replace('_',' ')}</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <PriorityBadge priority={task.priority||'medium'} />
                             <span style={{ fontSize: 11, fontWeight: 700, color: progressColor(task.progress||0) }}>{task.progress||0}%</span>
                           </div>
                         </div>
-                        {task.deadline && <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5 }}>📅 {new Date(task.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>}
+                        {task.deadline && <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>📅 {new Date(task.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>}
                       </div>
                     ))
                   }
@@ -1756,7 +1756,7 @@ function MultiAssignSelect({ users, selected, onChange }) {
         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 200, maxHeight: 220, overflowY: 'auto', marginTop: 4 }}>
           {users.length === 0 && <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text3)' }}>No staff users.</div>}
           {users.map(u => (
-            <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', cursor: 'pointer', fontSize: 13, background: selected.includes(u.id) ? '#e0f2fe' : 'transparent', marginBottom: 0 }}>
+            <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 13, background: selected.includes(u.id) ? '#e0f2fe' : 'transparent', marginBottom: 0 }}>
               <input type="checkbox" checked={selected.includes(u.id)}
                 onChange={() => onChange(selected.includes(u.id) ? selected.filter(id => id !== u.id) : [...selected, u.id])}
                 style={{ width: 'auto', cursor: 'pointer' }} />
@@ -2025,7 +2025,7 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
               </div>
               {activeMeeting && isAdmin && (
                 <button onClick={() => deleteMeeting(activeMeeting)}
-                  style={{ fontSize: 12, padding: '7px 12px', borderRadius: 8, border: '1.5px solid #f87171', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>
+                  style={{ fontSize: 12, padding: '8px 12px', borderRadius: 8, border: '1.5px solid #f87171', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>
                   🗑 Delete
                 </button>
               )}
@@ -2096,7 +2096,7 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
                         ? <img src={iconPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <span style={{ fontSize: 20 }}>🖼</span>}
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 3 }}>Icon</div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 4 }}>Icon</div>
                   </label>
                   <div style={{ flex: 1 }}>
                     <div className="field" style={{ marginBottom: 8 }}><label>Task title</label><input value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} placeholder="Task title" /></div>
@@ -2114,14 +2114,14 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <label style={{ marginBottom: 0 }}>Date range (start → deadline)</label>
                     <button type="button" onClick={() => setShowCalendar(c => !c)}
-                      style={{ fontSize: 12, background: showCalendar ? 'var(--accent)' : 'var(--surface2)', color: showCalendar ? '#fff' : 'var(--text2)', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}>
+                      style={{ fontSize: 12, background: showCalendar ? 'var(--accent)' : 'var(--surface2)', color: showCalendar ? '#fff' : 'var(--text2)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
                       📅 {showCalendar ? 'Hide calendar' : 'Calendar'}
                     </button>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginBottom: showCalendar ? 12 : 0 }}>
-                    <input type="date" value={newTask.start_date} onChange={e => setNewTask({ ...newTask, start_date: e.target.value })} placeholder="Start date" style={{ flex: 1, padding: '7px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
+                    <input type="date" value={newTask.start_date} onChange={e => setNewTask({ ...newTask, start_date: e.target.value })} placeholder="Start date" style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
                     <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text3)' }}>→</span>
-                    <input type="date" value={newTask.deadline} onChange={e => setNewTask({ ...newTask, deadline: e.target.value })} placeholder="Deadline" style={{ flex: 1, padding: '7px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
+                    <input type="date" value={newTask.deadline} onChange={e => setNewTask({ ...newTask, deadline: e.target.value })} placeholder="Deadline" style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
                   </div>
                   {showCalendar && (
                     <DateRangePicker
@@ -2145,7 +2145,7 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
                   <button className="btn btn-primary" onClick={addTask} disabled={iconUploading}>{iconUploading ? 'Uploading…' : 'Add task'}</button>
                   <button className="btn" onClick={() => { setShowNewTask(false); setShowCalendar(false); setIconFile(null); setIconPreview(null) }}>Cancel</button>
                   <button onClick={addTaskAndDraw} disabled={iconUploading}
-                    style={{ fontSize: 13, padding: '7px 16px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: iconUploading ? 'default' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    style={{ fontSize: 13, padding: '8px 16px', borderRadius: 8, border: '1.5px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', cursor: iconUploading ? 'default' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     🎨 Add &amp; draw
                   </button>
                 </div>
@@ -2154,7 +2154,7 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
             {/* Filter bar */}
             {(() => {
               const pill = (active, activeColor, activeBg) => ({
-                appearance: 'none', fontSize: 12, padding: '5px 26px 5px 10px',
+                appearance: 'none', fontSize: 12, padding: '4px 24px 4px 10px',
                 borderRadius: 20, cursor: 'pointer', outline: 'none', fontWeight: active ? 600 : 400,
                 border: `1.5px solid ${active ? activeColor : 'var(--border)'}`,
                 background: active ? activeBg : 'var(--surface)',
@@ -2202,7 +2202,7 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
                   </Wrap>
                   {activeFilters > 0 && (
                     <button onClick={() => { setFilterPriority('all'); setFilterUser('all'); setFilterDeadline('all'); setSortBy('default') }}
-                      style={{ fontSize: 11, padding: '5px 10px', borderRadius: 20, border: '1.5px solid #f87171', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600 }}>
+                      style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, border: '1.5px solid #f87171', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600 }}>
                       ✕ Clear {activeFilters > 1 ? `(${activeFilters})` : ''}
                     </button>
                   )}
@@ -2235,7 +2235,7 @@ function Meetings({ userId, isAdmin, userName, orgId }) {
                         {task.title}
                         {task.reference_url && (
                           <a href={task.reference_url} target="_blank" rel="noopener" onClick={e => e.stopPropagation()}
-                            style={{ fontSize: 11, padding: '1px 7px', borderRadius: 10, background: '#e0f2fe', color: '#0369a1', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>🔗 Ref</a>
+                            style={{ fontSize: 11, padding: '1px 8px', borderRadius: 10, background: '#e0f2fe', color: '#0369a1', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>🔗 Ref</a>
                         )}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text3)' }}>{allUsersMap[task.assigned_to] || staffMap[task.assigned_to] || 'Unassigned'} · {task.start_date || '—'} → {task.deadline || '—'}</div>
@@ -2329,7 +2329,7 @@ function AssignOthers({ userId, orgId }) {
             <div style={{ width: 48, height: 48, borderRadius: 10, border: '2px dashed var(--border)', background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               {iconPreview ? <img src={iconPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 20 }}>🖼</span>}
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 3 }}>Icon</div>
+            <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 4 }}>Icon</div>
           </label>
           <div style={{ flex: 1 }}>
             <div className="field" style={{ marginBottom: 8 }}><label>Task title</label><input value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} placeholder="Task title" /></div>
@@ -2356,14 +2356,14 @@ function AssignOthers({ userId, orgId }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <label style={{ marginBottom: 0 }}>Date range (start → deadline)</label>
             <button type="button" onClick={() => setShowCalendar(c => !c)}
-              style={{ fontSize: 12, background: showCalendar ? 'var(--accent)' : 'var(--surface2)', color: showCalendar ? '#fff' : 'var(--text2)', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}>
+              style={{ fontSize: 12, background: showCalendar ? 'var(--accent)' : 'var(--surface2)', color: showCalendar ? '#fff' : 'var(--text2)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
               📅 {showCalendar ? 'Hide calendar' : 'Calendar'}
             </button>
           </div>
           <div style={{ display: 'flex', gap: 10, marginBottom: showCalendar ? 12 : 0 }}>
-            <input type="date" value={newTask.start_date} onChange={e => setNewTask({ ...newTask, start_date: e.target.value })} style={{ flex: 1, padding: '7px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
+            <input type="date" value={newTask.start_date} onChange={e => setNewTask({ ...newTask, start_date: e.target.value })} style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
             <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text3)' }}>→</span>
-            <input type="date" value={newTask.deadline} onChange={e => setNewTask({ ...newTask, deadline: e.target.value })} style={{ flex: 1, padding: '7px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
+            <input type="date" value={newTask.deadline} onChange={e => setNewTask({ ...newTask, deadline: e.target.value })} style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }} />
           </div>
           {showCalendar && (
             <DateRangePicker

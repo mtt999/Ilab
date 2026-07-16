@@ -198,7 +198,7 @@ function FileLink({ file }) {
   if (!url) return <span style={{ fontSize: 12, color: 'var(--text3)' }}>{icon} {file.file_name}</span>
   return (
     <a href={url} target="_blank" rel="noopener noreferrer"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
       {icon} {file.file_name}
     </a>
   )
@@ -383,7 +383,7 @@ function ResultValueInput({ type, value, onChange }) {
     <div style={{ display: 'flex', gap: 8 }}>
       {['Pass', 'Fail'].map(opt => (
         <button key={opt} type="button" onClick={() => onChange(opt)}
-          style={{ padding: '7px 20px', border: `1.5px solid ${value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--border)'}`, borderRadius: 8, background: value === opt ? (opt === 'Pass' ? '#E1F5EE' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
+          style={{ padding: '8px 20px', border: `1.5px solid ${value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--border)'}`, borderRadius: 8, background: value === opt ? (opt === 'Pass' ? '#E1F5EE' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
           {opt}
         </button>
       ))}
@@ -614,12 +614,12 @@ function ResultsTab({ projects, session, allowedNames }) {
                   ? <div style={{ padding: 12, fontSize: 13, color: 'var(--text3)' }}>No equipment found.</div>
                   : eqCategories.map(cat => (
                       <div key={cat}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', padding: '5px 12px 2px', background: 'var(--surface2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cat}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', padding: '4px 12px 2px', background: 'var(--surface2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cat}</div>
                         {filteredEq.filter(e => e.category === cat).map(e => {
                           const active = form.equipment_id === e.id
                           return (
                             <div key={e.id} onClick={() => { setForm(f => ({ ...f, equipment_id: e.id })); setSelectedEquip(e) }}
-                              style={{ padding: '7px 12px', cursor: 'pointer', background: active ? 'var(--accent-light, #e8f4ff)' : 'transparent', borderLeft: `3px solid ${active ? 'var(--accent)' : 'transparent'}`, fontSize: 13, color: active ? 'var(--accent)' : 'var(--text)', fontWeight: active ? 600 : 400 }}>
+                              style={{ padding: '8px 12px', cursor: 'pointer', background: active ? 'var(--accent-light, #e8f4ff)' : 'transparent', borderLeft: `3px solid ${active ? 'var(--accent)' : 'transparent'}`, fontSize: 13, color: active ? 'var(--accent)' : 'var(--text)', fontWeight: active ? 600 : 400 }}>
                               {e.equipment_name}
                               {active && <span style={{ marginLeft: 6, fontSize: 11 }}>✓</span>}
                             </div>
@@ -644,7 +644,7 @@ function ResultsTab({ projects, session, allowedNames }) {
               <select value={form.result_type} onChange={e => setForm(f => ({ ...f, result_type: e.target.value, result_value: '' }))}>
                 {RESULT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{RESULT_TYPES.find(t => t.value === form.result_type)?.hint}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{RESULT_TYPES.find(t => t.value === form.result_type)?.hint}</div>
             </div>
             <div className="field">
               <label>Result Value</label>
@@ -736,7 +736,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                     std !== null && { label: 'Std Dev', value: std.toFixed(2), color: '#534AB7' },
                     passRate !== null && { label: 'Pass Rate', value: passRate + '%', color: passRate >= 80 ? '#1D9E75' : '#c84b2f' },
                   ].filter(Boolean).map(s => (
-                    <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 18px', textAlign: 'center', minWidth: 90 }}>
+                    <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 16px', textAlign: 'center', minWidth: 90 }}>
                       <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{s.label}</div>
                     </div>
@@ -749,9 +749,9 @@ function ResultsTab({ projects, session, allowedNames }) {
                   <div key={r.id} className="card" style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{r.test_name || 'Untitled Test'}</div>
-                        {r.specimen_name && <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 5 }}>Specimen: <strong>{r.specimen_name}</strong></div>}
-                        <span style={{ fontSize: 11, background: 'var(--surface2)', color: 'var(--text2)', borderRadius: 99, padding: '2px 9px' }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{r.test_name || 'Untitled Test'}</div>
+                        {r.specimen_name && <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}>Specimen: <strong>{r.specimen_name}</strong></div>}
+                        <span style={{ fontSize: 11, background: 'var(--surface2)', color: 'var(--text2)', borderRadius: 99, padding: '2px 8px' }}>
                           {RESULT_TYPES.find(t => t.value === r.result_type)?.label || r.result_type}
                         </span>
                         <div style={{ fontSize: 20, fontWeight: 700, color: r.result_value === 'Pass' ? '#1D9E75' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--accent)', margin: '6px 0 2px' }}>
@@ -767,8 +767,8 @@ function ResultsTab({ projects, session, allowedNames }) {
                           <div>{new Date(r.created_at).toLocaleDateString()}</div>
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <button onClick={() => openEdit(r)} className="btn btn-sm" style={{ fontSize: 12, padding: '3px 10px' }}>✏️ Edit</button>
-                          <button onClick={() => deleteResult(r.id)} className="btn btn-sm" style={{ fontSize: 12, padding: '3px 10px', color: '#c84b2f' }}>🗑</button>
+                          <button onClick={() => openEdit(r)} className="btn btn-sm" style={{ fontSize: 12, padding: '4px 10px' }}>✏️ Edit</button>
+                          <button onClick={() => deleteResult(r.id)} className="btn btn-sm" style={{ fontSize: 12, padding: '4px 10px', color: '#c84b2f' }}>🗑</button>
                         </div>
                       </div>
                     </div>
@@ -798,7 +798,7 @@ function ResultsTab({ projects, session, allowedNames }) {
                   const pr     = pf.length ? Math.round(pf.filter(r => r.result_value === 'Pass').length / pf.length * 100) : null
                   return (
                     <div key={eid} onClick={() => setDrillEquip(eid)}
-                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s' }}
+                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s' }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none' }}>
                       <div style={{ fontSize: 32, marginBottom: 8 }}>🔧</div>
@@ -827,7 +827,7 @@ function ResultsTab({ projects, session, allowedNames }) {
               const latest   = allRows.map(r => r.date).filter(Boolean).sort().reverse()[0]
               return (
                 <div key={pid} onClick={() => { setDrillProject(pid); if (isSolo) setDrillEquip('__none__') }}
-                  style={{ background: 'var(--surface)', border: '2px solid var(--border)', borderRadius: 16, padding: '22px 18px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s' }}
+                  style={{ background: 'var(--surface)', border: '2px solid var(--border)', borderRadius: 16, padding: '20px 16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#1a56db'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(26,86,219,0.12)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none' }}>
                   <div style={{ fontSize: 38, marginBottom: 10 }}>📁</div>
@@ -1033,20 +1033,20 @@ function PointChart({ results, isOutlier }) {
       {/* Legend */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 16px', marginTop: 8 }}>
         {testNames.map(n => (
-          <span key={n} style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span key={n} style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorOf(n), display: 'inline-block' }} />{n}
           </span>
         ))}
         {hasPassFail && <>
-          <span style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ width: 9, height: 9, background: '#1D9E75', display: 'inline-block', clipPath: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }} />Pass
           </span>
-          <span style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 11, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ width: 9, height: 9, background: '#c84b2f', display: 'inline-block', clipPath: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' }} />Fail
           </span>
         </>}
         {hasStdDev && (
-          <span style={{ fontSize: 11, color: '#0d47a1', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 11, color: '#0d47a1', display: 'flex', alignItems: 'center', gap: 4 }}>
             <svg width={14} height={14} style={{ flexShrink: 0 }}>
               <line x1={7} y1={2} x2={7} y2={12} stroke="#0d47a1" strokeWidth={2} strokeOpacity={0.45} />
               <line x1={3} y1={2} x2={11} y2={2} stroke="#0d47a1" strokeWidth={1.5} strokeOpacity={0.6} />
@@ -1057,7 +1057,7 @@ function PointChart({ results, isOutlier }) {
           </span>
         )}
         {hasMinMax && (
-          <span style={{ fontSize: 11, color: '#0d47a1', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 11, color: '#0d47a1', display: 'flex', alignItems: 'center', gap: 4 }}>
             <svg width={14} height={14} style={{ flexShrink: 0 }}>
               <line x1={7} y1={1} x2={7} y2={13} stroke="#0d47a1" strokeWidth={1} strokeOpacity={0.3} strokeDasharray="2 2" />
               <line x1={2} y1={1} x2={12} y2={1} stroke="#0d47a1" strokeWidth={1.5} strokeOpacity={0.5} />
@@ -1067,7 +1067,7 @@ function PointChart({ results, isOutlier }) {
           </span>
         )}
         {trendLine && (
-          <span style={{ fontSize: 11, color: '#b45309', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 11, color: '#b45309', display: 'flex', alignItems: 'center', gap: 4 }}>
             <svg width={20} height={14} style={{ flexShrink: 0 }}>
               <line x1={1} y1={12} x2={19} y2={2} stroke="#b45309" strokeWidth={1.8} strokeDasharray="5 3" strokeOpacity={0.85} />
             </svg>
@@ -1257,7 +1257,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
               if (!items.length) return null
               return (
                 <div key={cat}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '7px 12px 3px', background: 'var(--surface2)' }}>{cat}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 12px 4px', background: 'var(--surface2)' }}>{cat}</div>
                   {items.map(e => {
                     const active = selected?.id === e.id
                     return (
@@ -1347,7 +1347,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                   <select value={addForm.result_type} onChange={e => setAddForm(f => ({ ...f, result_type: e.target.value, result_value: '' }))}>
                     {RESULT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{RESULT_TYPES.find(t => t.value === addForm.result_type)?.hint}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{RESULT_TYPES.find(t => t.value === addForm.result_type)?.hint}</div>
                 </div>
                 <div className="field">
                   <label>Result Value</label>
@@ -1492,7 +1492,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                         {c.author?.slice(0, 2).toUpperCase()}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                           <span style={{ fontWeight: 600, fontSize: 13 }}>{c.author}</span>
                           <span style={{ fontSize: 11, color: 'var(--text3)' }}>{new Date(c.created_at).toLocaleDateString()}</span>
                           {(session?.username === c.author || session?.name === c.author || session?.email === c.author || session?.role === 'admin') && (
@@ -1662,7 +1662,7 @@ function RecordsPanel({ projects, allowedNames, session }) {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)' }}>
               <div style={{ fontSize: 24, marginBottom: 6 }}>🔧</div>
               <div style={{ fontWeight: 600, fontSize: 13 }}>{eid === '__none__' ? 'No Equipment' : (equipMap[eid] || 'Equipment')}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{rows.length} result{rows.length !== 1 ? 's' : ''}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{rows.length} result{rows.length !== 1 ? 's' : ''}</div>
             </div>
           ))}
         </div>
@@ -1682,7 +1682,7 @@ function RecordsPanel({ projects, allowedNames, session }) {
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)' }}>
             <div style={{ fontSize: 24, marginBottom: 6 }}>📁</div>
             <div style={{ fontWeight: 600, fontSize: 13 }}>{projectMap[pid] || 'Unknown Project'}</div>
-            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{total} result{total !== 1 ? 's' : ''} · {Object.keys(equips).length} equipment</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{total} result{total !== 1 ? 's' : ''} · {Object.keys(equips).length} equipment</div>
           </div>
         )
       })}
@@ -1893,7 +1893,7 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
               <ScrollTabs style={{ borderBottom: '1px solid var(--border)' }} bg='var(--surface)'>
                 {subTabs.map(t => (
                   <button key={t.key} onClick={() => setSubTab(t.key)}
-                    style={{ padding: '11px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                    style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
                     {t.label}
                   </button>
                 ))}

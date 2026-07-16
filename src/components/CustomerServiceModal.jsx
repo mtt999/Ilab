@@ -132,7 +132,7 @@ export default function CustomerServiceModal({ onClose }) {
       <div className="field">
         <label>Attach a file (optional)</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 14px', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13, background: 'var(--surface2)', fontWeight: 500 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13, background: 'var(--surface2)', fontWeight: 500 }}>
             📎 {file ? file.name : 'Choose file'}
             <input type="file" accept="image/*,.pdf,.doc,.docx,.txt" style={{ display: 'none' }} onChange={handleFileChange} />
           </label>

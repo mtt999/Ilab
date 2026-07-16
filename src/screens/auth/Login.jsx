@@ -57,8 +57,8 @@ function SelectorCard({ mode, selected, onSelect }) {
       <div style={{ width: 56, height: 56, borderRadius: 14, background: isTeam ? '#E1F5EE' : '#EEEDFE', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isTeam ? teamIcon : soloIcon}
       </div>
-      <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '2px 9px', marginBottom: 7, background: badgeBg, color: badgeColor }}>{label}</div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 5 }}>{title}</div>
+      <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '2px 8px', marginBottom: 8, background: badgeBg, color: badgeColor }}>{label}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{title}</div>
       <div style={{ fontSize: 11.5, color: 'var(--text3)', lineHeight: 1.5 }}>{desc}</div>
     </div>
   )
@@ -135,7 +135,7 @@ function SignUpForm({ onSuccess, onCancel }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#EEEDFE', border: '1px solid #CECBF6', borderRadius: 99, padding: '5px 14px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#EEEDFE', border: '1px solid #CECBF6', borderRadius: 99, padding: '4px 14px' }}>
           <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="11" r="5" stroke="#534AB7" strokeWidth="2"/>
             <path d="M6 28c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#534AB7" strokeWidth="2" strokeLinecap="round"/>
@@ -164,7 +164,7 @@ function SignUpForm({ onSuccess, onCancel }) {
 
         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, margin: '16px 0', cursor: 'pointer' }}>
           <input type="checkbox" checked={termsAccepted} onChange={e => { setTermsAccepted(e.target.checked); setError('') }}
-            style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: '#534AB7', cursor: 'pointer' }} />
+            style={{ marginTop: 4, width: 16, height: 16, flexShrink: 0, accentColor: '#534AB7', cursor: 'pointer' }} />
           <span style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
             I have read and agree to the{' '}
             <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: '#534AB7', fontWeight: 600, textDecoration: 'underline' }}>Privacy Policy</a>
@@ -373,10 +373,10 @@ export default function Login() {
             <>
               {/* QR scan context banner */}
               {QR_SCAN_EQ && (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: '#fff3e0', border: '1px solid #ffcc80', borderRadius: 10, marginBottom: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', background: '#fff3e0', border: '1px solid #ffcc80', borderRadius: 10, marginBottom: 16 }}>
                   <IconQr size={22} style={{ color: '#e65100', marginTop: 1 }} />
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#e65100', marginBottom: 3 }}>Equipment QR Code Scanned</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#e65100', marginBottom: 4 }}>Equipment QR Code Scanned</div>
                     <div style={{ fontSize: 12, color: '#7c4d00', lineHeight: 1.5 }}>
                       Log in or create a free <strong>LabHive Solo</strong> account to view equipment info, book a session, and more.
                     </div>
@@ -405,7 +405,7 @@ export default function Login() {
               )}
 
               {mode && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
                   <span style={{ fontSize: 12, color: 'var(--text3)' }}>
                     {mode === 'team' ? 'Sign in to LabHive Team' : 'Sign in to LabHive Solo'}
@@ -511,7 +511,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => { setShowSignUp(true); setError('') }}
-                  style={{ width: '100%', marginTop: 12, padding: '11px', background: 'transparent', color: '#534AB7', border: '2px solid #534AB7', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  style={{ width: '100%', marginTop: 12, padding: '12px', background: 'transparent', color: '#534AB7', border: '2px solid #534AB7', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                   onMouseEnter={e => { e.currentTarget.style.background = '#EEEDFE' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                 >
@@ -534,13 +534,13 @@ export default function Login() {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 16, paddingBottom: 8 }}>
           <button
             onClick={() => setShowAbout(true)}
-            style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'var(--text2)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
+            style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'var(--text2)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = '#1D9E75'; e.currentTarget.style.color = '#1D9E75' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text2)' }}
           ><IconInfo size={15} /> About LabHive</button>
           <button
             onClick={() => setShowContact(true)}
-            style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'var(--text2)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
+            style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'var(--text2)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = '#1D9E75'; e.currentTarget.style.color = '#1D9E75' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text2)' }}
           ><IconMail size={15} /> Contact Us</button>

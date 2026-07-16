@@ -14,7 +14,7 @@ const ICONS = {
 
 // ── Tiny badge ─────────────────────────────────────────────────
 function Badge({ label, color = '#2e7d32', bg = '#e8f5e9' }) {
-  return <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 99, background: bg, color }}>{label}</span>
+  return <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: bg, color }}>{label}</span>
 }
 
 // ── Mock content per tab ───────────────────────────────────────
@@ -40,7 +40,7 @@ function TabContent({ tab }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 15 }}>Lab User Documents</div>
-        <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Upload cert</button>
+        <button style={{ fontSize: 12, padding: '4px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Upload cert</button>
       </div>
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -65,7 +65,7 @@ function TabContent({ tab }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 15 }}>Equipment Training Records</div>
-        <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Add equipment</button>
+        <button style={{ fontSize: 12, padding: '4px 12px', borderRadius: 7, border: '1px solid #1D9E75', background: '#E1F5EE', color: '#1D9E75', cursor: 'pointer', fontWeight: 600 }}>+ Add equipment</button>
       </div>
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -121,7 +121,7 @@ function TabContent({ tab }) {
         { user: 'Ethan Park',    equip: 'Rotary Evaporator',  date: '2026-06-20', status: 'Pending' },
         { user: 'Bob Martin',    equip: 'Centrifuge X-200',   date: '2026-06-15', status: 'Approved' },
       ].map((r, i) => (
-        <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 18px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 14 }}>{r.user}</div>
             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{r.equip} · Requested {r.date}</div>
@@ -179,7 +179,7 @@ export default function TrainingRecordsProto() {
       {/* ── Left sidebar ── */}
       <div style={{ width: 220, background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
         {/* Logo */}
-        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #f3f4f6' }}>
           <div style={{ fontWeight: 800, fontSize: 16, color: '#0C1140', letterSpacing: '-0.02em' }}>LabHive</div>
           <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, fontFamily: 'monospace' }}>Training Records</div>
         </div>
@@ -192,7 +192,7 @@ export default function TrainingRecordsProto() {
               <button key={item.key} onClick={() => setTab(item.key)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', borderRadius: 8, border: 'none', marginBottom: 2,
+                  padding: '8px 12px', borderRadius: 8, border: 'none', marginBottom: 2,
                   background: active ? '#E1F5EE' : 'transparent',
                   color: active ? '#1D9E75' : '#4b5563',
                   fontSize: 13, fontWeight: active ? 600 : 400,
@@ -239,7 +239,7 @@ export default function TrainingRecordsProto() {
         </div>
 
         {/* Expiry banner */}
-        <div style={{ background: '#fef3c7', borderBottom: '1px solid #fcd34d', padding: '9px 24px', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <div style={{ background: '#fef3c7', borderBottom: '1px solid #fcd34d', padding: '8px 24px', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <span>⏰</span>
           <span><strong>2 retraining reminders:</strong> Carlos Rivera — Marshall Compactor (expires 2026-08-10) · Bob Martin — Rotary Evaporator (expires 2026-07-15)</span>
         </div>

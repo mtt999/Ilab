@@ -306,7 +306,7 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
             <button onClick={onAdjustTime} style={{ display: 'block', background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer', padding: '0 0 8px 0', fontWeight: 600 }}>← Drag to adjust time</button>
           )}
           {booking ? 'Edit booking' : 'New booking'}
-          {panel && <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400, marginTop: 3 }}>Drag on the calendar to adjust time</div>}
+          {panel && <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400, marginTop: 4 }}>Drag on the calendar to adjust time</div>}
         </div>
 
         <div className="field"><label>Equipment *</label>
@@ -352,7 +352,7 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
                   transition: 'all 0.12s',
                 }}
               >
-                <div style={{ fontSize: 18, marginBottom: 3 }}>{opt.icon}</div>
+                <div style={{ fontSize: 18, marginBottom: 4 }}>{opt.icon}</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: form.purposeType === opt.id ? 'var(--accent)' : 'var(--text)' }}>{opt.label}</div>
               </div>
             ))}
@@ -375,7 +375,7 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
           )}
 
           {form.purposeType === 'thesis' && (
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: 8 }}>
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: 8 }}>
               <span style={{ fontSize: 16 }}>📚</span>
               <span style={{ fontSize: 13, color: '#0369a1', fontWeight: 500 }}>Booking for thesis research.</span>
             </div>
@@ -448,7 +448,7 @@ function BookingDraftBar({ draft, equipmentName, onBook, onDismiss }) {
         </div>
         <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>Drag calendar to adjust ↑</div>
       </div>
-      <button className="btn btn-primary" onClick={onBook} style={{ flexShrink: 0, fontSize: 14, padding: '10px 18px' }}>Book</button>
+      <button className="btn btn-primary" onClick={onBook} style={{ flexShrink: 0, fontSize: 14, padding: '10px 16px' }}>Book</button>
       <button className="btn" onClick={onDismiss} style={{ flexShrink: 0 }}>✕</button>
     </div>
   )
@@ -849,7 +849,7 @@ function WeekView({ weekStart, bookings, onSlotClick, onBookingClick, canBook, s
                       // reschedule click handled by onMouseUp (hasMoved=false)
                     }}
                     title={[b.booked_on_behalf_of || b.user_name, b.title, b.notes].filter(Boolean).join(' · ')}
-                    style={{ position: 'absolute', top: seg.top + 1, left: leftVal, right: rightVal, height: seg.height, background: statusBg[b.status], border: `1px solid ${statusColor[b.status]}50`, borderLeft: `3px solid ${statusColor[b.status]}`, borderRadius: br, padding: '2px 5px', fontSize: 10, overflow: 'hidden', zIndex: isDragging ? 1 : 2, cursor: reschedule ? 'grab' : 'pointer', opacity: isDragging ? 0.35 : 1 }}>
+                    style={{ position: 'absolute', top: seg.top + 1, left: leftVal, right: rightVal, height: seg.height, background: statusBg[b.status], border: `1px solid ${statusColor[b.status]}50`, borderLeft: `3px solid ${statusColor[b.status]}`, borderRadius: br, padding: '2px 4px', fontSize: 10, overflow: 'hidden', zIndex: isDragging ? 1 : 2, cursor: reschedule ? 'grab' : 'pointer', opacity: isDragging ? 0.35 : 1 }}>
                     {/* Resize top handle */}
                     {reschedule && seg.isStart && (
                       <div onMouseDown={e => { e.stopPropagation(); e.preventDefault(); if (!bookingDrag) handleBookingMouseDown(e, b, 'resize-start', di) }}
@@ -975,7 +975,7 @@ function CameraOverlay({ referenceUrl, onCapture, onClose }) {
         {referenceUrl && ready && (
           <>
             <img src={referenceUrl} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 12, padding: '5px 14px', borderRadius: 99, whiteSpace: 'nowrap' }}>
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 12, padding: '4px 14px', borderRadius: 99, whiteSpace: 'nowrap' }}>
               Align with the ghost image
             </div>
           </>
@@ -1295,7 +1295,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
   )
   if (!isOwn && !isManager) return null
 
-  const labelStyle = { fontSize: 10, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 5, fontWeight: 600 }
+  const labelStyle = { fontSize: 10, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 4, fontWeight: 600 }
   const emptyBox = (extra) => ({ width: '100%', aspectRatio: '4/3', border: '1px dashed var(--border)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface2)', gap: 4, ...extra })
   const uploadBox = (disabled) => ({ width: '100%', aspectRatio: '4/3', border: '2px dashed var(--accent)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'var(--accent-light)', opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'pointer' })
 
@@ -1334,14 +1334,14 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
       {showInfo && (
         <div style={{ background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: 8, padding: '12px 14px', marginBottom: 12, fontSize: 12, color: '#0369a1', lineHeight: 1.6 }}>
           <strong>Why we require photos:</strong>
-          <ul style={{ margin: '5px 0 8px', padding: '0 0 0 16px' }}>
+          <ul style={{ margin: '4px 0 8px', padding: '0 0 0 16px' }}>
             <li>Before photo confirms equipment was in good condition when you started.</li>
             <li>After photo confirms you left it clean and ready for the next user.</li>
             <li>Together they protect you and others in case of disputes.</li>
             <li>Lab managers review these if an issue is reported.</li>
           </ul>
           <strong>How to take a good photo:</strong>
-          <ul style={{ margin: '5px 0 0', padding: '0 0 0 16px' }}>
+          <ul style={{ margin: '4px 0 0', padding: '0 0 0 16px' }}>
             <li>Step back enough to show the whole work area and equipment.</li>
             <li>Ensure the photo is well-lit and in focus.</li>
             {referenceInstruction && <li>{referenceInstruction}</li>}
@@ -1444,14 +1444,14 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ ...emptyBox({ border: '1px dashed #f59e0b', background: '#fffbeb' }), justifyContent: 'space-evenly', cursor: canReconsider && !busy ? 'pointer' : 'default' }}
                 onClick={() => canReconsider && !busy && setCamera('reconsider-after')}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontSize: 18 }}>⛔</span>
                   <span style={{ fontSize: 10, color: '#92400e', textAlign: 'center' }}>After photo declined</span>
                 </div>
                 {canReconsider && (
                   <>
                     <div style={{ width: '80%', height: 1, background: '#f59e0b', opacity: 0.3 }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                       {busy ? <div className="spinner" style={{ width: 16, height: 16 }} /> : (
                         <>
                           <span style={{ fontSize: 16 }}>🔄</span>
@@ -1518,7 +1518,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
       </div>
 
       {analyzing && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text2)', padding: '9px 12px', background: 'var(--surface2)', borderRadius: 8, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text2)', padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, marginBottom: 8 }}>
           <div className="spinner" style={{ width: 14, height: 14 }} />
           Analyzing photos with AI…
         </div>
@@ -1568,10 +1568,10 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
 
           {/* Status chips */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: beforeUrl ? '#E1F5EE' : waived ? '#fef3c7' : '#f3f4f6', color: beforeUrl ? '#085041' : waived ? '#92400e' : '#6b7280', fontWeight: 600 }}>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: beforeUrl ? '#E1F5EE' : waived ? '#fef3c7' : '#f3f4f6', color: beforeUrl ? '#085041' : waived ? '#92400e' : '#6b7280', fontWeight: 600 }}>
               Before: {beforeUrl ? '✅ Submitted' : waived ? '✋ Waive requested' : '⏳ Pending'}
             </span>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: afterUrl && afterDenied ? '#e0f2fe' : afterUrl ? (status === 'pass' ? '#E1F5EE' : '#fcebeb') : afterDenied ? '#fef3c7' : '#f3f4f6', color: afterUrl && afterDenied ? '#0369a1' : afterUrl ? (status === 'pass' ? '#085041' : '#a32d2d') : afterDenied ? '#92400e' : '#6b7280', fontWeight: 600 }}>
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: afterUrl && afterDenied ? '#e0f2fe' : afterUrl ? (status === 'pass' ? '#E1F5EE' : '#fcebeb') : afterDenied ? '#fef3c7' : '#f3f4f6', color: afterUrl && afterDenied ? '#0369a1' : afterUrl ? (status === 'pass' ? '#085041' : '#a32d2d') : afterDenied ? '#92400e' : '#6b7280', fontWeight: 600 }}>
               After: {afterUrl && afterDenied ? '⏳ Review pending' : afterUrl ? (status === 'pass' ? '✅ Pass' : '⚠️ Needs attention') : afterDenied ? '⛔ Declined' : '⏳ Pending'}
             </span>
           </div>
@@ -1597,7 +1597,7 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
           {/* Equipment Photo Settings (collapsible) */}
           <div style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
             <button onClick={() => setShowRefSettings(s => !s)}
-              style={{ width: '100%', background: 'var(--surface2)', border: 'none', padding: '9px 14px', textAlign: 'left', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--text)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              style={{ width: '100%', background: 'var(--surface2)', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--text)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>⚙️ Equipment Photo Settings</span>
               <span style={{ fontSize: 10 }}>{showRefSettings ? '▲' : '▼'}</span>
             </button>
@@ -1659,7 +1659,7 @@ function BookingDetail({ booking, equipment, session, onEdit, onDelete, onDeny, 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{eq?.nickname || eq?.equipment_name || 'Equipment'}</div>
-            <span style={{ background: statusBg[booking.status], color: statusColor[booking.status], borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>{booking.status}</span>
+            <span style={{ background: statusBg[booking.status], color: statusColor[booking.status], borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{booking.status}</span>
           </div>
           <button className="btn btn-sm" onClick={onClose}>✕</button>
         </div>
@@ -1891,7 +1891,7 @@ function BlockUserModal({ notification, session, onClose, onDone }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 24, maxWidth: 400, width: '100%', border: '1px solid var(--border)' }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Missing After Photo</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 18 }}>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>
           <strong>{meta.user_name}</strong> did not upload an after photo for <strong>{meta.eq_name}</strong>.
           Choose an action:
         </div>
@@ -1962,7 +1962,7 @@ function WaiveResponseModal({ notification, session, onClose, onDone }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 24, maxWidth: 400, width: '100%', border: '1px solid var(--border)' }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Before Photo Waive Request</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 18, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16, lineHeight: 1.6 }}>
           <strong>{meta.user_name || 'A user'}</strong> wants to skip the before photo for <strong>{meta.eq_name || 'equipment'}</strong>.
         </div>
         <div className="field">
@@ -2800,7 +2800,7 @@ function BookingCalendar({ session }) {
               </select>
             </div>
             <div onClick={() => allSelected ? setSelectedEq([]) : setSelectedEq(prev => [...new Set([...prev, ...allIds])])}
-              style={{ padding: '7px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: allSelected ? 'var(--accent-light)' : 'var(--surface2)', flexShrink: 0 }}>
+              style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: allSelected ? 'var(--accent-light)' : 'var(--surface2)', flexShrink: 0 }}>
               <div style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${allSelected || someSelected ? 'var(--accent)' : 'var(--border)'}`, background: allSelected ? 'var(--accent)' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {allSelected && <span style={{ color: '#fff', fontSize: 9, fontWeight: 700 }}>✓</span>}
                 {someSelected && <span style={{ color: 'var(--accent)', fontSize: 11, fontWeight: 700, lineHeight: 1 }}>—</span>}
@@ -2849,7 +2849,7 @@ function BookingCalendar({ session }) {
 
         {/* Manager student filter — only for lab managers / org admins */}
         {canEdit(session) && orgStudents.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, background: filterStudent ? 'var(--accent-light)' : 'var(--surface)', border: `1px solid ${filterStudent ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 8, padding: '7px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, background: filterStudent ? 'var(--accent-light)' : 'var(--surface)', border: `1px solid ${filterStudent ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 8, padding: '8px 12px' }}>
             <span style={{ fontSize: 12, color: filterStudent ? 'var(--accent)' : 'var(--text3)', fontWeight: 600, whiteSpace: 'nowrap' }}>👤 View student:</span>
             <select
               value={filterStudent?.id || ''}
@@ -2932,7 +2932,7 @@ function BookingCalendar({ session }) {
                           const slot = multiDraftSlots[id]
                           const isCurrent = i === multiDraftIdx
                           return (
-                            <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600,
+                            <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600,
                               background: slot ? '#E1F5EE' : isCurrent ? '#534AB7' : 'rgba(83,74,183,0.12)',
                               color: slot ? '#0f6e56' : isCurrent ? '#fff' : '#534AB7',
                               border: `1px solid ${slot ? '#0f6e56' : isCurrent ? '#534AB7' : '#C5C2F5'}` }}>
@@ -2961,7 +2961,7 @@ function BookingCalendar({ session }) {
                             <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                               {[{ id: 'project', label: '🧪 Project' }, { id: 'thesis', label: '📚 Thesis' }, { id: 'other', label: '📝 Other' }].map(opt => (
                                 <div key={opt.id} onClick={() => setMultiDraftPurpose(opt.id)}
-                                  style={{ padding: '5px 10px', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                                  style={{ padding: '4px 10px', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontWeight: 600,
                                     border: multiDraftPurpose === opt.id ? '2px solid #534AB7' : '1.5px solid var(--border)',
                                     background: multiDraftPurpose === opt.id ? '#EEEDFE' : 'var(--surface)',
                                     color: multiDraftPurpose === opt.id ? '#534AB7' : 'var(--text)' }}>
@@ -3285,7 +3285,7 @@ function BookingHistory({ session }) {
                     <tr key={b.id}>
                       <td style={{ fontWeight: 500 }}>
                         {eq?.nickname || eq?.equipment_name || '—'}
-                        {b.is_retraining && <span style={{ marginLeft: 6, fontSize: 10, background: '#e0f2fe', color: '#0369a1', borderRadius: 3, padding: '1px 5px', fontWeight: 600 }}>Retraining</span>}
+                        {b.is_retraining && <span style={{ marginLeft: 6, fontSize: 10, background: '#e0f2fe', color: '#0369a1', borderRadius: 3, padding: '1px 4px', fontWeight: 600 }}>Retraining</span>}
                       </td>
                       {canEdit(session) && <td style={{ color: 'var(--text2)' }}>{b.booked_on_behalf_of || b.user_name}</td>}
                       <td style={{ color: 'var(--text2)', fontSize: 12 }}>{b.title || '—'}</td>
@@ -3460,7 +3460,7 @@ function BookingSettings({ session }) {
                       }
                       {refUrl && (
                         <button onClick={() => clearReferencePhoto(e.id)}
-                          style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', borderRadius: 6, fontSize: 11, padding: '3px 8px', cursor: 'pointer' }}>
+                          style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', borderRadius: 6, fontSize: 11, padding: '4px 8px', cursor: 'pointer' }}>
                           ✕ Remove
                         </button>
                       )}
@@ -3561,7 +3561,7 @@ function EquipmentNotesTab({ session }) {
           const isDirty = notes[e.id] !== saved[e.id]
           const hasNote = !!saved[e.id]
           return (
-            <div key={e.id} style={{ background: 'var(--surface)', border: `1px solid ${hasNote ? '#fed7aa' : 'var(--border)'}`, borderLeft: hasNote ? '3px solid #f97316' : undefined, borderRadius: 'var(--radius-lg)', padding: '14px 18px' }}>
+            <div key={e.id} style={{ background: 'var(--surface)', border: `1px solid ${hasNote ? '#fed7aa' : 'var(--border)'}`, borderLeft: hasNote ? '3px solid #f97316' : undefined, borderRadius: 'var(--radius-lg)', padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', marginBottom: 2 }}>

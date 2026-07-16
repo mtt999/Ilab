@@ -137,7 +137,7 @@ export default function NotificationBell() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: n.read ? 400 : 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
                     {n.body && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.body}</div>}
-                    <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>{formatTime(n.created_at)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>{formatTime(n.created_at)}</div>
                   </div>
                   {!n.read && <div style={{ width: 7, height: 7, borderRadius: '50%', background: BLUE, flexShrink: 0, alignSelf: 'center' }} />}
                 </div>

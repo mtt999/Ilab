@@ -94,7 +94,7 @@ export default function ForcePasswordChange() {
           )}
 
           <button type="submit" disabled={loading} style={{
-            width: '100%', padding: 13,
+            width: '100%', padding: 12,
             background: loading ? 'var(--border)' : '#1D9E75',
             color: loading ? 'var(--text3)' : '#fff',
             border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 15,

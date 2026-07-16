@@ -42,8 +42,8 @@ function ModuleToggleCard({ module, selected, onToggle, pinned, alwaysOn, restri
         <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface2)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, pointerEvents: 'none' }}>
           🔒
         </div>
-        <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{module.icon}</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{module.label}</div>
+        <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{module.icon}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{module.label}</div>
         <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{module.sub}</div>
         <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text3)', fontWeight: 600, pointerEvents: 'none' }}>{soloLocked ? 'Team accounts only' : 'For lab managers only'}</div>
       </div>
@@ -71,8 +71,8 @@ function ModuleToggleCard({ module, selected, onToggle, pinned, alwaysOn, restri
           </svg>
         )}
       </div>
-      <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{module.icon}</div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: selected ? module.color : 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{module.label}</div>
+      <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{module.icon}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: selected ? module.color : 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{module.label}</div>
       <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{module.sub}</div>
       {(pinned || alwaysOn) && <div style={{ marginTop: 6, fontSize: 10, color: module.color, fontWeight: 600, pointerEvents: 'none' }}>Always visible</div>}
     </div>
@@ -334,7 +334,7 @@ export default function DashboardIconPicker({ session, loginMode, onDone }) {
             </div>
             <button onClick={() => onDone(null)} style={{ marginLeft: 'auto', border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', padding: '4px 8px', borderRadius: 8, lineHeight: 1 }}>✕</button>
           </div>
-          <div style={{ height: 3, background: 'var(--surface2)', borderRadius: 99, margin: '18px 0 0', overflow: 'hidden' }}>
+          <div style={{ height: 3, background: 'var(--surface2)', borderRadius: 99, margin: '16px 0 0', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${Math.min(100, selectableModules.length ? (selectedCount / selectableModules.length) * 100 : 0)}%`, background: loginMode === 'solo' ? '#534AB7' : '#1D9E75', borderRadius: 99, transition: 'width 0.3s' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0 16px' }}>

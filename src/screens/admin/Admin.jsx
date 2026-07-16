@@ -141,7 +141,7 @@ function ModuleImagesPanel({ orgId }) {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 18, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.6 }}>
         Upload background images for your organization's dashboard module cards. Best size: landscape, around 800×500 px.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 14 }}>
@@ -157,7 +157,7 @@ function ModuleImagesPanel({ orgId }) {
                 }
                 {currentUrl && (
                   <button onClick={() => clearImage(def)}
-                    style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', borderRadius: 6, fontSize: 11, padding: '3px 8px', cursor: 'pointer', fontWeight: 500 }}>
+                    style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.55)', border: 'none', color: '#fff', borderRadius: 6, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 500 }}>
                     ✕ Remove
                   </button>
                 )}
@@ -284,20 +284,20 @@ function StudentDefaultIconsPanel({ orgId }) {
   if (!selected) return null
 
   return (
-    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 18 }}>
+    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
       <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>🎛 Default icons for new lab users</div>
       <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>
         These icons are pre-selected when a lab manager creates a new lab user. Profile is always included.
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 20, border: '1.5px solid #1D9E75', background: '#E1F5EE', fontSize: 12, fontWeight: 500, color: '#0F6E56', cursor: 'default' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, border: '1.5px solid #1D9E75', background: '#E1F5EE', fontSize: 12, fontWeight: 500, color: '#0F6E56', cursor: 'default' }}>
           <span>👤</span><span>Profile</span><span style={{ fontSize: 10, opacity: 0.6 }}>🔒</span>
         </div>
         {STUDENT_ICON_OPTIONS.map(m => {
           const on = selected.has(m.key)
           return (
             <button key={m.key} type="button" onClick={() => toggle(m.key)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 20, border: `1.5px solid ${on ? '#1D9E75' : 'var(--border)'}`, background: on ? '#E1F5EE' : 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 500, color: on ? '#0F6E56' : 'var(--text2)', transition: 'all 0.12s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, border: `1.5px solid ${on ? '#1D9E75' : 'var(--border)'}`, background: on ? '#E1F5EE' : 'var(--surface)', cursor: 'pointer', fontSize: 12, fontWeight: 500, color: on ? '#0F6E56' : 'var(--text2)', transition: 'all 0.12s' }}>
               <span>{m.icon}</span><span>{m.label}</span>{on && <span style={{ fontSize: 10, fontWeight: 700 }}>✓</span>}
             </button>
           )
@@ -431,8 +431,8 @@ function OrgIconPoolsPanel({ orgId }) {
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        <button onClick={() => setSubTab('labusers')} style={{ padding: '6px 18px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: subTab === 'labusers' ? 'var(--accent)' : 'var(--surface2)', color: subTab === 'labusers' ? '#fff' : 'var(--text2)' }}>👥 Lab User Icons</button>
-        <button onClick={() => setSubTab('labmanagers')} style={{ padding: '6px 18px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: subTab === 'labmanagers' ? 'var(--accent)' : 'var(--surface2)', color: subTab === 'labmanagers' ? '#fff' : 'var(--text2)' }}>👨‍💼 Lab Manager Icons</button>
+        <button onClick={() => setSubTab('labusers')} style={{ padding: '6px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: subTab === 'labusers' ? 'var(--accent)' : 'var(--surface2)', color: subTab === 'labusers' ? '#fff' : 'var(--text2)' }}>👥 Lab User Icons</button>
+        <button onClick={() => setSubTab('labmanagers')} style={{ padding: '6px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: subTab === 'labmanagers' ? 'var(--accent)' : 'var(--surface2)', color: subTab === 'labmanagers' ? '#fff' : 'var(--text2)' }}>👨‍💼 Lab Manager Icons</button>
       </div>
       {subTab === 'labusers' && <OrgPoolEditor key="labusers" orgId={orgId} poolKey="allowed_modules_labusers" label="Lab user" />}
       {subTab === 'labmanagers' && <OrgPoolEditor key="labmanagers" orgId={orgId} poolKey="allowed_modules_labmanagers" label="Lab manager" />}
@@ -568,7 +568,7 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
         <div style={{ fontWeight: 700, fontSize: 16 }}>User created</div>
         <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>Copy these credentials and send to the user</div>
       </div>
-      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 18px', marginBottom: 16, fontFamily: 'var(--mono)', fontSize: 13 }}>
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', marginBottom: 16, fontFamily: 'var(--mono)', fontSize: 13 }}>
         <div><strong>Email:</strong> {savedCreds.email}</div>
         <div style={{ marginTop: 6 }}><strong>Password:</strong> {savedCreds.password}</div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'var(--text3)' }}>User will be forced to change password on first login.</div>
@@ -782,7 +782,7 @@ function GlobalImageGrid({ modules, imagePrefix, alsoPrefix }) {
             </div>
             <div style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ fontSize: 11, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
-              <button className="btn btn-sm btn-primary" disabled={isUploading} onClick={() => fileRefs.current[m.key]?.click()} style={{ fontSize: 10, padding: '3px 8px', flexShrink: 0 }}>
+              <button className="btn btn-sm btn-primary" disabled={isUploading} onClick={() => fileRefs.current[m.key]?.click()} style={{ fontSize: 10, padding: '4px 8px', flexShrink: 0 }}>
                 {currentUrl ? '↑' : '+'}
               </button>
               <input type="file" ref={el => fileRefs.current[m.key] = el} style={{ display: 'none' }} onChange={e => handleUpload(m, e.target.files[0])} />
@@ -865,11 +865,11 @@ function AppModulesModal({ onClose }) {
       <div style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '92vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ padding: '22px 28px 0' }}>
+        <div style={{ padding: '20px 28px 0' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 17 }}>Dashboard Icons — Main App (Global)</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>
                 Control which icons are available across the entire app, and optionally upload background images for each icon card.
               </div>
             </div>
@@ -926,8 +926,8 @@ function AppModulesModal({ onClose }) {
                           <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: sel ? m.color : 'var(--surface2)', border: `2px solid ${sel ? m.color : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', pointerEvents: 'none' }}>
                             {sel && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                           </div>
-                          <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{m.icon}</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: sel ? m.color : 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{m.label}</div>
+                          <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{m.icon}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: sel ? m.color : 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{m.label}</div>
                           <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{m.sub}</div>
                           {pinned && <div style={{ marginTop: 6, fontSize: 10, color: m.color, fontWeight: 600, pointerEvents: 'none' }}>Always visible</div>}
                         </div>
@@ -1028,11 +1028,11 @@ function SoloModulesModal({ onClose }) {
       <div style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 720, maxHeight: '92vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ padding: '22px 28px 0' }}>
+        <div style={{ padding: '20px 28px 0' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 17 }}>Dashboard Icons — Solo Users (Global)</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>
                 Control which icons solo users can see, and optionally upload background images for each icon card.
               </div>
             </div>
@@ -1088,8 +1088,8 @@ function SoloModulesModal({ onClose }) {
                           <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: sel ? m.color : 'var(--surface2)', border: `2px solid ${sel ? m.color : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', pointerEvents: 'none' }}>
                             {sel && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                           </div>
-                          <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{m.icon}</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: sel ? m.color : 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{m.label}</div>
+                          <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{m.icon}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: sel ? m.color : 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{m.label}</div>
                           <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{m.sub}</div>
                           {pinned && <div style={{ marginTop: 6, fontSize: 10, color: m.color, fontWeight: 600, pointerEvents: 'none' }}>Always visible</div>}
                         </div>
@@ -1601,7 +1601,7 @@ export default function Admin() {
         </div>
         {isSuperAdmin && (
           <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener noreferrer"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, background: '#f97316', color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: 13, flexShrink: 0 }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 8, background: '#f97316', color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: 13, flexShrink: 0 }}>
             📊 View Analytics
           </a>
         )}
@@ -1609,7 +1609,7 @@ export default function Admin() {
 
       {/* Maintenance mode toggle — super admin only */}
       {isSuperAdmin && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 18px', borderRadius: 'var(--radius)', marginBottom: 18, border: `2px solid ${maintenanceMode ? '#ef4444' : 'var(--border)'}`, background: maintenanceMode ? '#FEF2F2' : 'var(--surface2)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 16px', borderRadius: 'var(--radius)', marginBottom: 16, border: `2px solid ${maintenanceMode ? '#ef4444' : 'var(--border)'}`, background: maintenanceMode ? '#FEF2F2' : 'var(--surface2)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 20 }}>{maintenanceMode ? '🔴' : '🟢'}</span>
             <div>
@@ -1634,7 +1634,7 @@ export default function Admin() {
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ padding: '7px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: tab === t.key ? 'var(--accent)' : 'var(--surface2)', color: tab === t.key ? '#fff' : 'var(--text2)' }}>
+            style={{ padding: '8px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: tab === t.key ? 'var(--accent)' : 'var(--surface2)', color: tab === t.key ? '#fff' : 'var(--text2)' }}>
             {t.label}
           </button>
         ))}
@@ -1675,7 +1675,7 @@ export default function Admin() {
             <div className="empty-state"><div className="empty-icon">👤</div>No users found.</div>
           ) : (
             filteredUsers.map(u => (
-              <div key={u.id} className="card" style={{ padding: '12px 18px', marginBottom: 10, opacity: u.is_active ? 1 : 0.55, outline: tab === 'students' && selectedIds.has(u.id) ? '2px solid var(--accent)' : 'none', borderRadius: 12 }}>
+              <div key={u.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: u.is_active ? 1 : 0.55, outline: tab === 'students' && selectedIds.has(u.id) ? '2px solid var(--accent)' : 'none', borderRadius: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {tab === 'students' && (
@@ -1695,7 +1695,7 @@ export default function Admin() {
                       {!u.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 500 }}>Inactive</span>}
                       {u.must_change_password && <span style={{ fontSize: 11, color: '#D97706', fontWeight: 500 }}>⚠ Temp password</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
                       {u.email && <span>{u.email}</span>}
                     </div>
                   </div>
@@ -1733,7 +1733,7 @@ export default function Admin() {
           </div>
 
           {/* Global app-level icon restriction */}
-          <div className="card" style={{ padding: '14px 18px', marginBottom: 10, border: '1.5px solid var(--accent)', background: 'var(--accent-light)' }}>
+          <div className="card" style={{ padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--accent)', background: 'var(--accent-light)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <button onClick={() => setAppModulesOpen(true)} style={{ fontWeight: 700, fontSize: 15, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: 0, textAlign: 'left', textDecoration: 'underline dotted' }}>
@@ -1748,7 +1748,7 @@ export default function Admin() {
           </div>
 
           {/* Global solo users icon restriction */}
-          <div className="card" style={{ padding: '14px 18px', marginBottom: 20, border: '1.5px solid #534AB7', background: '#EEEDFE' }}>
+          <div className="card" style={{ padding: '14px 16px', marginBottom: 20, border: '1.5px solid #534AB7', background: '#EEEDFE' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <button onClick={() => setSoloModulesOpen(true)} style={{ fontWeight: 700, fontSize: 15, background: 'none', border: 'none', cursor: 'pointer', color: '#534AB7', padding: 0, textAlign: 'left', textDecoration: 'underline dotted' }}>
@@ -1758,7 +1758,7 @@ export default function Admin() {
                   Icons available to all solo user accounts across the app
                 </div>
               </div>
-              <button onClick={() => setSoloModulesOpen(true)} style={{ padding: '5px 14px', background: '#534AB7', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Icons</button>
+              <button onClick={() => setSoloModulesOpen(true)} style={{ padding: '4px 14px', background: '#534AB7', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Icons</button>
             </div>
           </div>
 
@@ -1768,7 +1768,7 @@ export default function Admin() {
             const count = orgCounts[o.id] || 0
             const admins = orgAdmins.filter(a => a.organization_id === o.id)
             return (
-              <div key={o.id} className="card" style={{ padding: '14px 18px', marginBottom: 10 }}>
+              <div key={o.id} className="card" style={{ padding: '14px 16px', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -1789,8 +1789,8 @@ export default function Admin() {
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                       {admins.map(a => (
                         <div key={a.id} style={{ position: 'relative' }}>
-                          <button onClick={() => setUserModal(a)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', textAlign: 'left' }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <button onClick={() => setUserModal(a)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', textAlign: 'left' }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 4 }}>
                               <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 99, background: '#FEF3C7', color: '#92400E', fontWeight: 600 }}>👤 Admin</span>
                               {a.name}
                             </span>
@@ -1803,7 +1803,7 @@ export default function Admin() {
                         </div>
                       ))}
                       <button onClick={() => { setAddAdminOrgId(o.id); setUserModal('add') }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--surface2)', border: '1.5px dashed var(--border)', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', color: 'var(--accent)', fontSize: 12, fontWeight: 600, minHeight: 42 }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--surface2)', border: '1.5px dashed var(--border)', borderRadius: 8, padding: '4px 12px', cursor: 'pointer', color: 'var(--accent)', fontSize: 12, fontWeight: 600, minHeight: 42 }}>
                         <span style={{ fontSize: 15 }}>👤</span> + Add Admin
                       </button>
                     </div>
@@ -1816,7 +1816,7 @@ export default function Admin() {
                       📸 {o.require_equipment_photos ? 'Photos On' : 'Photos Off'}
                     </button>
                     {/* Org logo upload */}
-                    <label title="Upload SVG/image logo shown in the header for this org's users" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, border: o.logo_url ? '1.5px solid #1D9E75' : '1px solid var(--border)', background: o.logo_url ? '#e6f7f2' : 'var(--surface)', color: o.logo_url ? '#1D9E75' : 'var(--text2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <label title="Upload SVG/image logo shown in the header for this org's users" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: o.logo_url ? '1.5px solid #1D9E75' : '1px solid var(--border)', background: o.logo_url ? '#e6f7f2' : 'var(--surface)', color: o.logo_url ? '#1D9E75' : 'var(--text2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                       <input type="file" accept=".svg,image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadOrgLogo(o, f); e.target.value = '' }} />
                       🏷 {o.logo_url ? 'Logo ✓' : 'Logo'}
                     </label>
@@ -1854,7 +1854,7 @@ export default function Admin() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
             {[{ key: 'solo', label: '👤 Solo Users' }, { key: 'team', label: '🏢 Team Users' }].map(st => (
               <button key={st.key} onClick={() => setUserSubTab(st.key)}
-                style={{ padding: '6px 18px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: `2px solid ${userSubTab === st.key ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', background: userSubTab === st.key ? 'var(--accent-light)' : 'var(--surface)', color: userSubTab === st.key ? 'var(--accent)' : 'var(--text2)' }}>
+                style={{ padding: '6px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, border: `2px solid ${userSubTab === st.key ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', background: userSubTab === st.key ? 'var(--accent-light)' : 'var(--surface)', color: userSubTab === st.key ? 'var(--accent)' : 'var(--text2)' }}>
                 {st.label}
               </button>
             ))}
@@ -1916,7 +1916,7 @@ export default function Admin() {
                     const cnt = teamUsers.filter(u => u.organization_id === o.id).length
                     if (!cnt) return null
                     return (
-                      <span key={o.id} style={{ fontSize: 12, fontWeight: 600, padding: '3px 12px', borderRadius: 99, background: 'var(--surface2)', color: 'var(--text2)', border: '1px solid var(--border)' }}>
+                      <span key={o.id} style={{ fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 99, background: 'var(--surface2)', color: 'var(--text2)', border: '1px solid var(--border)' }}>
                         {o.name} · {cnt}
                       </span>
                     )
@@ -2076,7 +2076,7 @@ function FeedbackResponsesModal({ org, onClose }) {
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <div style={{ padding: '16px 20px 14px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 16 }}>📋 Feedback Responses</div>
             <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>{org.name} · {responses.length} total response{responses.length !== 1 ? 's' : ''}</div>

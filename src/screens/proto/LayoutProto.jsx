@@ -101,7 +101,7 @@ function DashboardContent() {
           { label: 'Open tasks',       value: 7,  color: '#d97706', bg: '#fef3c7' },
           { label: 'Cert pending',     value: 2,  color: '#dc2626', bg: '#fee2e2' },
         ].map(s => (
-          <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: '12px 18px', minWidth: 110 }}>
+          <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: '12px 16px', minWidth: 110 }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 11, color: s.color, marginTop: 2 }}>{s.label}</div>
           </div>
@@ -110,7 +110,7 @@ function DashboardContent() {
       {/* Module cards grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         {CARDS.map(c => (
-          <div key={c.label} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '18px 16px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}
+          <div key={c.label} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 16px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = c.color; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.transform = 'none' }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{c.icon}</div>
@@ -146,7 +146,7 @@ function TrainingContent({ tab }) {
           <div style={{ fontWeight: 700, fontSize: 17, color: '#0C1140' }}>Lab User Documents</div>
           <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Lab safety certs, WHMIS, first aid & uploaded files</div>
         </div>
-        <button style={{ fontSize: 12, padding: '7px 14px', borderRadius: 8, border: 'none', background: '#1D9E75', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>+ Upload certificate</button>
+        <button style={{ fontSize: 12, padding: '8px 14px', borderRadius: 8, border: 'none', background: '#1D9E75', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>+ Upload certificate</button>
       </div>
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -224,7 +224,7 @@ function TrainingContent({ tab }) {
         { user: 'Ethan Park',    equip: 'Rotary Evaporator',  date: '2026-06-20', status: 'Pending' },
         { user: 'Bob Martin',    equip: 'Centrifuge X-200',   date: '2026-06-15', status: 'Approved' },
       ].map((r, i) => (
-        <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 18px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#1D9E75', flexShrink: 0 }}>{r.user[0]}</div>
             <div>
@@ -235,8 +235,8 @@ function TrainingContent({ tab }) {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
             <Badge label={r.status} color={r.status === 'Approved' ? '#065f46' : '#92400e'} bg={r.status === 'Approved' ? '#d1fae5' : '#fef3c7'} />
             {r.status === 'Pending' && <>
-              <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#1D9E75', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
-              <button style={{ fontSize: 12, padding: '5px 12px', borderRadius: 7, border: 'none', background: '#fee2e2', color: '#991b1b', cursor: 'pointer', fontWeight: 600 }}>Deny</button>
+              <button style={{ fontSize: 12, padding: '4px 12px', borderRadius: 7, border: 'none', background: '#1D9E75', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
+              <button style={{ fontSize: 12, padding: '4px 12px', borderRadius: 7, border: 'none', background: '#fee2e2', color: '#991b1b', cursor: 'pointer', fontWeight: 600 }}>Deny</button>
             </>}
           </div>
         </div>
@@ -286,7 +286,7 @@ export default function LayoutProto() {
               <nav style={{ flex: 1, padding: '8px 8px', overflowY: 'auto' }}>
                 {MODULES.filter(m => m.key !== 'dashboard').map(m => (
                   <button key={m.key} onClick={() => openModule(m.key)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: 'transparent', color: '#4b5563', fontSize: 13, fontWeight: 400, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.12s' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, border: 'none', background: 'transparent', color: '#4b5563', fontSize: 13, fontWeight: 400, cursor: 'pointer', textAlign: 'left', marginBottom: 1, transition: 'all 0.12s' }}
                     onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#111827' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563' }}
                   >
@@ -324,7 +324,7 @@ export default function LayoutProto() {
                   const active = activeTab === t.key
                   return (
                     <button key={t.key} onClick={() => setActiveTab(t.key)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, border: 'none', background: active ? '#E1F5EE' : 'transparent', color: active ? '#1D9E75' : '#4b5563', fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'all 0.12s' }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, border: 'none', background: active ? '#E1F5EE' : 'transparent', color: active ? '#1D9E75' : '#4b5563', fontSize: 13, fontWeight: active ? 600 : 400, cursor: 'pointer', textAlign: 'left', marginBottom: 2, transition: 'all 0.12s' }}
                       onMouseEnter={e => { if (!active) { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#111827' } }}
                       onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4b5563' } }}
                     >
@@ -343,7 +343,7 @@ export default function LayoutProto() {
                 <div style={{ fontSize: 10, color: '#d1d5db', padding: '4px 12px 6px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Other modules</div>
                 {MODULES.filter(m => m.key !== 'dashboard' && m.key !== activeModule).slice(0, 4).map(m => (
                   <button key={m.key} onClick={() => openModule(m.key)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 7, border: 'none', background: 'transparent', color: '#9ca3af', fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 7, border: 'none', background: 'transparent', color: '#9ca3af', fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s' }}
                     onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.color = '#374151' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9ca3af' }}
                   >
@@ -394,7 +394,7 @@ export default function LayoutProto() {
 
               {/* Expiry warning banner (training only) */}
               {activeModule === 'training' && (
-                <div style={{ background: '#fef3c7', borderBottom: '1px solid #fcd34d', padding: '9px 28px', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ background: '#fef3c7', borderBottom: '1px solid #fcd34d', padding: '8px 28px', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>⏰</span>
                   <span><strong>2 retraining reminders:</strong> Carlos Rivera — Marshall Compactor · Bob Martin — Rotary Evaporator</span>
                 </div>

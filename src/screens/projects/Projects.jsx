@@ -15,7 +15,7 @@ function ResultInput({ type, value, onChange }) {
       <div style={{ display: 'flex', gap: 6 }}>
         {['Pass', 'Fail'].map(opt => (
           <button key={opt} type="button" onClick={() => onChange(opt)}
-            style={{ padding: '5px 16px', border: `1px solid ${value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--border)'}`, borderRadius: 6, background: value === opt ? (opt === 'Pass' ? '#E1F5EE' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
+            style={{ padding: '4px 16px', border: `1px solid ${value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--border)'}`, borderRadius: 6, background: value === opt ? (opt === 'Pass' ? '#E1F5EE' : '#fdf0ed') : 'var(--surface)', color: value === opt ? (opt === 'Pass' ? '#1D9E75' : '#c84b2f') : 'var(--text2)', cursor: 'pointer', fontWeight: value === opt ? 700 : 400, fontSize: 13 }}>
             {opt}
           </button>
         ))}
@@ -136,7 +136,7 @@ function EquipmentTestResults() {
                       const isActive = selected?.id === e.id
                       return (
                         <div key={e.id} onClick={() => setSelected(e)}
-                          style={{ padding: '9px 12px', cursor: 'pointer', background: isActive ? 'var(--accent3-light)' : 'transparent', borderLeft: `3px solid ${isActive ? 'var(--accent3)' : 'transparent'}`, transition: 'all 0.15s' }}>
+                          style={{ padding: '8px 12px', cursor: 'pointer', background: isActive ? 'var(--accent3-light)' : 'transparent', borderLeft: `3px solid ${isActive ? 'var(--accent3)' : 'transparent'}`, transition: 'all 0.15s' }}>
                           <div style={{ fontWeight: isActive ? 600 : 400, fontSize: 13, color: isActive ? 'var(--accent3)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.equipment_name}</div>
                         </div>
                       )
@@ -448,7 +448,7 @@ function ProjectInfo({ project, users, onSaved }) {
         {studentUsers.length === 0
           ? <div style={{ color: 'var(--text3)', fontSize: 14 }}>No lab users assigned</div>
           : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {studentUsers.map(u => <span key={u.id} style={{ background: 'var(--accent3-light)', color: 'var(--accent3)', borderRadius: 99, padding: '5px 14px', fontSize: 13, fontWeight: 500 }}>👤 {u.name}</span>)}
+              {studentUsers.map(u => <span key={u.id} style={{ background: 'var(--accent3-light)', color: 'var(--accent3)', borderRadius: 99, padding: '4px 14px', fontSize: 13, fontWeight: 500 }}>👤 {u.name}</span>)}
             </div>
         }
       </div>
@@ -653,7 +653,7 @@ function DataAnalysis() {
               if (!items.length) return null
               return (
                 <div key={cat}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '7px 12px 3px', background: 'var(--surface2)' }}>{cat}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 12px 4px', background: 'var(--surface2)' }}>{cat}</div>
                   {items.map(e => {
                     const active = selected?.id === e.id
                     return (
@@ -801,7 +801,7 @@ function DataAnalysis() {
                         {c.author?.slice(0, 2).toUpperCase()}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                           <span style={{ fontWeight: 600, fontSize: 13 }}>{c.author}</span>
                           <span style={{ fontSize: 11, color: 'var(--text3)' }}>{new Date(c.created_at).toLocaleDateString()}</span>
                           {(session?.username === c.author || session?.email === c.author || session?.role === 'admin') && (
@@ -926,7 +926,7 @@ export default function Projects() {
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
         {mainTabs.map(t => (
           <button key={t.key} onClick={() => setMainTab(t.key)}
-            style={{ padding: '10px 22px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: mainTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${mainTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+            style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: mainTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${mainTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
             {t.label}
           </button>
         ))}
@@ -1000,7 +1000,7 @@ export default function Projects() {
                   <ScrollTabs style={{ borderBottom: '1px solid var(--border)' }} bg='var(--surface)'>
                     {subTabs.map(t => (
                       <button key={t.key} onClick={() => setSubTab(t.key)}
-                        style={{ padding: '11px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                        style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
                         {t.label}
                       </button>
                     ))}
@@ -1029,7 +1029,7 @@ export default function Projects() {
               { key: 'database',  label: '🗄️ Database' },
             ].map(t => (
               <button key={t.key} onClick={() => setResultsTab(t.key)}
-                style={{ padding: '10px 22px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: resultsTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${resultsTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: resultsTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${resultsTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
                 {t.label}
               </button>
             ))}
@@ -1055,7 +1055,7 @@ export default function Projects() {
               { key: 'links',    label: '🔗 Links' },
             ].map(t => (
               <button key={t.key} onClick={() => setWorkspaceTab(t.key)}
-                style={{ padding: '10px 22px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: workspaceTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${workspaceTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: workspaceTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${workspaceTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
                 {t.label}
               </button>
             ))}

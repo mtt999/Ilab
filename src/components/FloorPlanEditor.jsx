@@ -319,14 +319,14 @@ Rules:
       <div className="field">
         <label>Floor plan image (PNG or JPG) *</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 18px', border: '1px solid var(--border)', borderRadius: 8, cursor: uploading ? 'not-allowed' : 'pointer', fontSize: 13, background: 'var(--surface2)', fontWeight: 500 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: '1px solid var(--border)', borderRadius: 8, cursor: uploading ? 'not-allowed' : 'pointer', fontSize: 13, background: 'var(--surface2)', fontWeight: 500 }}>
             {uploading ? '⏳ Processing…' : imageUrl ? '🔄 Replace image' : '📤 Upload image'}
             <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
               onChange={e => e.target.files[0] && uploadImage(e.target.files[0])} disabled={uploading} />
           </label>
           {imageUrl && (
             <button onClick={autoDetectZones} disabled={analyzing}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: analyzing ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #534AB7, #534AB7)', color: '#fff', opacity: analyzing ? 0.7 : 1 }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: analyzing ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #534AB7, #534AB7)', color: '#fff', opacity: analyzing ? 0.7 : 1 }}>
               {analyzing ? '🔍 Analyzing…' : '✨ Auto-detect zones'}
             </button>
           )}
@@ -446,13 +446,13 @@ Rules:
                   <button
                     onMouseDown={e => e.stopPropagation()}
                     onClick={e => { e.stopPropagation(); confirmZone() }}
-                    style={{ padding: '3px 12px', borderRadius: 6, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                     Add
                   </button>
                   <button
                     onMouseDown={e => e.stopPropagation()}
                     onClick={e => { e.stopPropagation(); cancelPending() }}
-                    style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid var(--border)', background: '#fff', fontSize: 11, cursor: 'pointer' }}>
+                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: '#fff', fontSize: 11, cursor: 'pointer' }}>
                     Cancel
                   </button>
                 </div>

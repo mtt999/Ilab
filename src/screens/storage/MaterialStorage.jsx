@@ -18,7 +18,7 @@ function QRCode({ value, size = 180 }) {
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <img src={url} width={size} height={size} style={{ display: 'block', imageRendering: 'pixelated' }} alt="QR Code" />
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-        <div style={{ background: '#fff', borderRadius: 4, padding: 3, lineHeight: 0 }}>
+        <div style={{ background: '#fff', borderRadius: 4, padding: 4, lineHeight: 0 }}>
           <LabHiveLogo size={logoSize} />
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function MaterialStorage({ project }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {materials.map(m => (
             <button key={m.id} onClick={() => setSelectedId(m.id)}
-              style={{ padding: '7px 14px', borderRadius: 99, border: `2px solid ${selectedId === m.id ? 'var(--accent3)' : 'var(--border)'}`, background: selectedId === m.id ? 'var(--accent3-light)' : 'var(--surface)', color: selectedId === m.id ? 'var(--accent3)' : 'var(--text2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.12s', display: 'flex', alignItems: 'center', gap: 6 }}>
+              style={{ padding: '8px 14px', borderRadius: 99, border: `2px solid ${selectedId === m.id ? 'var(--accent3)' : 'var(--border)'}`, background: selectedId === m.id ? 'var(--accent3-light)' : 'var(--surface)', color: selectedId === m.id ? 'var(--accent3)' : 'var(--text2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.12s', display: 'flex', alignItems: 'center', gap: 6 }}>
               {m.storage_confirmed && <span style={{ color: 'var(--accent)', fontSize: 12 }}>✓</span>}
               {m.name || typeLabel(m.material_type)}
               {m.barcode_id && <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text3)' }}>· {m.barcode_id}</span>}

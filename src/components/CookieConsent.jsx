@@ -59,7 +59,7 @@ export default function CookieConsent() {
         border: '1px solid #e0ddd4',
         borderRadius: 14,
         boxShadow: '0 4px 32px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)',
-        padding: '14px 18px',
+        padding: '14px 16px',
         display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
         animation: 'cc-rise 0.3s cubic-bezier(0.4,0,0.2,1)',
       }}>

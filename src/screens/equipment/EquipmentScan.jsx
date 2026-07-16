@@ -42,7 +42,7 @@ const OPTION_META = [
 
 function SectionCard({ title, children, onClose }) {
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 22px', marginTop: 20 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 20px', marginTop: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
         <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text3)', padding: '2px 6px', lineHeight: 1 }}>✕</button>
@@ -65,7 +65,7 @@ function HowToSection({ videos, sop, onClose }) {
     <SectionCard title="📖 How to work with this equipment" onClose={onClose}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {[{ k: 'video', label: '🎥 Watch Video' }, { k: 'sop', label: '📄 Read SOP' }, { k: 'onoff', label: '💡 Turn On/Off' }].map(t => (
-          <button key={t.k} onClick={() => setTab(t.k)} style={{ padding: '7px 14px', borderRadius: 8, border: tab === t.k ? '2px solid #0369a1' : '1px solid var(--border)', background: tab === t.k ? '#e0f2fe' : 'var(--surface)', color: tab === t.k ? '#0369a1' : 'var(--text2)', fontWeight: tab === t.k ? 700 : 500, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--sans)' }}>
+          <button key={t.k} onClick={() => setTab(t.k)} style={{ padding: '8px 14px', borderRadius: 8, border: tab === t.k ? '2px solid #0369a1' : '1px solid var(--border)', background: tab === t.k ? '#e0f2fe' : 'var(--surface)', color: tab === t.k ? '#0369a1' : 'var(--text2)', fontWeight: tab === t.k ? 700 : 500, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--sans)' }}>
             {t.label}
           </button>
         ))}
@@ -87,7 +87,7 @@ function HowToSection({ videos, sop, onClose }) {
                 <div style={{ fontSize: 28, flexShrink: 0 }}>▶️</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{v.title}</div>
-                  {v.description && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{v.description}</div>}
+                  {v.description && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>{v.description}</div>}
                   <div style={{ fontSize: 11, color: '#0369a1', marginTop: 4 }}>↗ Open video</div>
                 </div>
               </a>
@@ -107,7 +107,7 @@ function HowToSection({ videos, sop, onClose }) {
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>{sop.title}</div>
             {sop.pdf_url && (
               <a href={sop.pdf_url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: '#e0f2fe', color: '#0369a1', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 13, marginBottom: 16 }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#e0f2fe', color: '#0369a1', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 13, marginBottom: 16 }}>
                 📄 Download PDF SOP ↗
               </a>
             )}
@@ -182,7 +182,7 @@ function MaintenanceSection({ equipment, session, onClose, onGoToInventory }) {
           { label: 'Interval', value: equipment.maintenance_interval_days ? `${equipment.maintenance_interval_days} days` : '—', color: '#92400e' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)', textAlign: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: s.color, marginBottom: 3 }}>{s.value}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: s.color, marginBottom: 4 }}>{s.value}</div>
             <div style={{ fontSize: 11, color: 'var(--text3)' }}>{s.label}</div>
           </div>
         ))}
@@ -210,7 +210,7 @@ function MaintenanceSection({ equipment, session, onClose, onGoToInventory }) {
       {isStaff && (
         <button
           onClick={onGoToInventory}
-          style={{ width: '100%', padding: '11px', borderRadius: 9, fontSize: 13, fontWeight: 700, background: '#fef3c7', color: '#92400e', border: '1.5px solid #fde68a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          style={{ width: '100%', padding: '12px', borderRadius: 9, fontSize: 13, fontWeight: 700, background: '#fef3c7', color: '#92400e', border: '1.5px solid #fde68a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           🔧 Edit / Explore in Equipment List →
         </button>
@@ -335,7 +335,7 @@ export default function EquipmentScan() {
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
       {/* Equipment header */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 22px', marginBottom: 20 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '20px 20px', marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
           <ILabLogo size={48} />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -348,16 +348,16 @@ export default function EquipmentScan() {
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {equipment.category && (
-                <span style={{ fontSize: 12, padding: '3px 10px', background: '#e0f2fe', color: '#0369a1', borderRadius: 20, fontWeight: 500 }}>{equipment.category}</span>
+                <span style={{ fontSize: 12, padding: '4px 10px', background: '#e0f2fe', color: '#0369a1', borderRadius: 20, fontWeight: 500 }}>{equipment.category}</span>
               )}
               {equipment.location && (
-                <span style={{ fontSize: 12, padding: '3px 10px', background: 'var(--surface2)', color: 'var(--text2)', borderRadius: 20 }}>📍 {equipment.location}</span>
+                <span style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface2)', color: 'var(--text2)', borderRadius: 20 }}>📍 {equipment.location}</span>
               )}
               {equipment.condition && (
-                <span style={{ fontSize: 12, padding: '3px 10px', background: `${conditionColor[equipment.condition]}18`, color: conditionColor[equipment.condition], borderRadius: 20, fontWeight: 500 }}>{equipment.condition}</span>
+                <span style={{ fontSize: 12, padding: '4px 10px', background: `${conditionColor[equipment.condition]}18`, color: conditionColor[equipment.condition], borderRadius: 20, fontWeight: 500 }}>{equipment.condition}</span>
               )}
               {equipment.out_of_service && (
-                <span style={{ fontSize: 12, padding: '3px 10px', background: '#fcebeb', color: '#a32d2d', borderRadius: 20, fontWeight: 700 }}>🚫 Out of Service</span>
+                <span style={{ fontSize: 12, padding: '4px 10px', background: '#fcebeb', color: '#a32d2d', borderRadius: 20, fontWeight: 700 }}>🚫 Out of Service</span>
               )}
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function EquipmentScan() {
                 onClick={() => handleOption(opt.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '16px 18px',
+                  padding: '16px 16px',
                   background: isActive ? opt.bg : 'var(--surface)',
                   border: isActive ? `2px solid ${opt.color}` : '1px solid var(--border)',
                   borderRadius: 'var(--radius-lg)',

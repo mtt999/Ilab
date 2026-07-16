@@ -99,7 +99,7 @@ function CheckList({ options, selected, onChange, required }) {
         const on = selected.includes(opt)
         return (
           <button key={opt} type="button" onClick={() => toggle(opt)}
-            style={{ padding: '5px 12px', borderRadius: 99, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-light)' : 'var(--surface)', color: on ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.12s' }}>
+            style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-light)' : 'var(--surface)', color: on ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.12s' }}>
             {opt}
           </button>
         )
@@ -138,7 +138,7 @@ function MaterialTypeForm({ form, setForm, orgTypes }) {
           const on = form.material_type === t.key
           return (
             <button key={t.key} type="button" onClick={() => setForm(f => ({ ...f, material_type: t.key }))}
-              style={{ padding: '7px 16px', borderRadius: 99, border: `2px solid ${on ? 'var(--accent3)' : 'var(--border)'}`, background: on ? 'var(--accent3-light)' : 'var(--surface)', color: on ? 'var(--accent3)' : 'var(--text2)', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.12s' }}>
+              style={{ padding: '8px 16px', borderRadius: 99, border: `2px solid ${on ? 'var(--accent3)' : 'var(--border)'}`, background: on ? 'var(--accent3-light)' : 'var(--surface)', color: on ? 'var(--accent3)' : 'var(--text2)', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.12s' }}>
               {t.label}
             </button>
           )
@@ -310,7 +310,7 @@ function QtyForm({ form, setForm }) {
             const on = form.container_type === opt
             return (
               <button key={opt} type="button" onClick={() => setForm(f => ({ ...f, container_type: opt }))}
-                style={{ padding: '5px 14px', borderRadius: 99, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-light)' : 'var(--surface)', color: on ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.12s' }}>
+                style={{ padding: '4px 14px', borderRadius: 99, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-light)' : 'var(--surface)', color: on ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.12s' }}>
                 {opt}
               </button>
             )
@@ -602,7 +602,7 @@ function SoloQtyForm({ form, setForm }) {
             const on = form.container_type === opt
             return (
               <button key={opt} type="button" onClick={() => setForm(f => ({ ...f, container_type: opt, container_other: '' }))}
-                style={{ padding: '5px 14px', borderRadius: 99, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-light)' : 'var(--surface)', color: on ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.12s' }}>
+                style={{ padding: '4px 14px', borderRadius: 99, border: `1px solid ${on ? 'var(--accent)' : 'var(--border)'}`, background: on ? 'var(--accent-light)' : 'var(--surface)', color: on ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.12s' }}>
                 {opt}
               </button>
             )
@@ -844,7 +844,7 @@ export default function ProjectMaterials({ project }) {
           return (
             <div key={m.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 12, overflow: 'hidden' }}>
               {/* Material card header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', cursor: 'pointer', background: 'var(--surface)' }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', cursor: 'pointer', background: 'var(--surface)' }}
                 onClick={() => setExpanded(isOpen ? null : m.id)}>
                 {/* Thumbnail */}
                 <div style={{ width: 52, height: 52, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -861,7 +861,7 @@ export default function ProjectMaterials({ project }) {
                       {typeLabel(m.material_type)}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {m.material_type === 'asphalt_binder' && m.ab_binder_pg && <span>PG: {m.ab_binder_pg}</span>}
                     {m.material_type === 'plant_mix' && m.pm_binder_pg && <span>PG: {m.pm_binder_pg}</span>}
                     {m.source_name && <span>📍 {m.source_name}</span>}
@@ -885,7 +885,7 @@ export default function ProjectMaterials({ project }) {
                 const soloSubEntries = Object.entries(soloSub).filter(([, v]) => v)
                 const subDefs = SOLO_SUBFIELDS[m.material_type] || []
                 return (
-                <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px', background: 'var(--surface2)' }}>
+                <div style={{ borderTop: '1px solid var(--border)', padding: '16px 16px', background: 'var(--surface2)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: m.photos?.length ? 16 : 0 }}>
                     {isSoloMat ? <>
                       {/* Solo sub-fields */}
@@ -930,7 +930,7 @@ export default function ProjectMaterials({ project }) {
                       {/* QTY */}
                       {m.qty_total && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Quantity</div><div style={{ fontWeight: 500 }}>{m.qty_total} {m.qty_unit} · {m.container_count} {m.container_type}{m.container_color ? ` (${m.container_color})` : ''}</div></div>}
                       {/* Locations */}
-                      {m.locations?.length > 0 && <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Locations</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{m.locations.map((l, i) => <span key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 99, padding: '3px 12px', fontSize: 12 }}>{l.location}{l.detail ? ` · ${l.detail}` : ''}</span>)}</div></div>}
+                      {m.locations?.length > 0 && <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Locations</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{m.locations.map((l, i) => <span key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 99, padding: '4px 12px', fontSize: 12 }}>{l.location}{l.detail ? ` · ${l.detail}` : ''}</span>)}</div></div>}
                     </>}
                   </div>
 

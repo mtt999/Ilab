@@ -222,7 +222,7 @@ export default function SaraChat({ bottomOffset = 24, onContact, color = '#1D9E7
           animation: 'sara-slide-up 0.22s ease',
         }}>
           {/* Header */}
-          <div style={{ background: ACCENT, padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ background: ACCENT, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span style={{ fontSize: 17, fontWeight: 900, color: '#fff', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>S</span>
             </div>
@@ -244,13 +244,13 @@ export default function SaraChat({ bottomOffset = 24, onContact, color = '#1D9E7
               <div key={i}>
                 {msg.from === 'user' ? (
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ background: ACCENT, color: '#fff', borderRadius: '14px 14px 3px 14px', padding: '9px 13px', fontSize: 13, maxWidth: '80%', lineHeight: 1.55, whiteSpace: 'pre-line' }}>{msg.text}</div>
+                    <div style={{ background: ACCENT, color: '#fff', borderRadius: '14px 14px 3px 14px', padding: '8px 12px', fontSize: 13, maxWidth: '80%', lineHeight: 1.55, whiteSpace: 'pre-line' }}>{msg.text}</div>
                   </div>
                 ) : (
                   <div>
-                    <div style={{ background: '#f4f6f8', borderRadius: '3px 14px 14px 14px', padding: '9px 13px', fontSize: 13, maxWidth: '90%', lineHeight: 1.65, color: '#1f2937', whiteSpace: 'pre-line' }}>{msg.text}</div>
+                    <div style={{ background: '#f4f6f8', borderRadius: '3px 14px 14px 14px', padding: '8px 12px', fontSize: 13, maxWidth: '90%', lineHeight: 1.65, color: '#1f2937', whiteSpace: 'pre-line' }}>{msg.text}</div>
                     {msg.followups?.length > 0 && (
-                      <div style={{ marginTop: 7, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         {msg.followups.map(id => {
                           const item = FAQ.find(f => f.id === id)
                           if (!item) return null
@@ -269,7 +269,7 @@ export default function SaraChat({ bottomOffset = 24, onContact, color = '#1D9E7
               </div>
             ))}
             {typing && (
-              <div style={{ display: 'flex', gap: 5, padding: '4px 2px' }}>
+              <div style={{ display: 'flex', gap: 4, padding: '4px 2px' }}>
                 {[0, 1, 2].map(i => (
                   <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#9ca3af', animation: `sara-dot 1.2s ease-in-out ${i * 0.2}s infinite` }} />
                 ))}
@@ -298,7 +298,7 @@ export default function SaraChat({ bottomOffset = 24, onContact, color = '#1D9E7
 
           {/* Contact footer */}
           {onContact && (
-            <div style={{ padding: '3px 14px 11px', textAlign: 'center', flexShrink: 0 }}>
+            <div style={{ padding: '4px 14px 12px', textAlign: 'center', flexShrink: 0 }}>
               <button onClick={() => { setOpen(false); onContact() }} style={{ fontSize: 11, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Talk to a real person →</button>
             </div>
           )}

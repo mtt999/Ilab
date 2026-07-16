@@ -619,6 +619,36 @@ CREATE TABLE IF NOT EXISTS user_out_of_lab (id UUID DEFAULT gen_random_uuid() PR
 
 ---
 
+## Design system standards (July 2026)
+
+### Brand palette — canonical values, use ONLY these
+| Role | Hex | Usage |
+|------|-----|-------|
+| Teal (brand / Team) | `#1D9E75` | `--accent`; buttons, links, focus rings, Team UI |
+| Teal light | `#E1F5EE` | `--accent-light`; tinted backgrounds |
+| Teal dark (text on light teal) | `#085041` | status text, badges on `#E1F5EE` |
+| Teal hover | `#178A66` | `.btn-primary:hover` |
+| Purple (Solo) | `#534AB7` | `--accent3`; Solo UI, Sara chat |
+| Purple light | `#EEEDFE` | `--accent3-light` |
+| Purple hover | `#463D9E` | `.btn-purple:hover` |
+
+Never reintroduce the retired greens/purples: `#2a6049`, `#e8f2ee`, `#1e4d39`, `#0d47a1`, `#7c4dbd`, `#f3eeff`, `#6a3aab`. Semantic colors (role badges `#5B21B6`/`#7e22ce`, status red `#c84b2f`, blue `#0369a1`) are separate and intentional.
+
+### Spacing standard — enforced
+Allowed `padding` / `margin` / `gap` values: **even numbers 0–16** (0, 2, 4, 6, 8, 10, 12, 14, 16), then **multiples of 4** (20, 24, 28, 32, 36, 40, 44, 48). No odd values; no 18, 22, 26, 30.
+
+- Audit with `node scripts/normalize-spacing.mjs` (dry run) — must report **0 line changes**; `--write` applies fixes
+- Exempt: negative margins (artwork compensation), values coupled to positioned elements, `calc()`, print CSS (`@page`), values > 48 (e.g. the 72px bottom-nav clearance)
+- Run the audit after adding any new screen or large UI change
+
+### UI icons — line icons, not emoji
+New UI chrome (buttons, banners, toggles) must use the shared line-icon set in `src/components/Icons.jsx` (1.7px stroke, rounded caps, inherits `currentColor`) — not raw emoji, which render inconsistently across platforms. Add new icons to that file in the same style. (Module-card emoji in `ALL_MODULES_META` are content, not chrome — they stay until the app-wide icon rollout.)
+
+### Typography scale
+26px page greeting / 24px `.section-title` screen headings / 15px body / 13px labels-captions. DM Sans is loaded in weights 300–700 (700 was added July 2026 — do not remove it; `fontWeight: 700` is used app-wide).
+
+---
+
 ## Common mistakes to avoid
 
 - **Do not** re-introduce `const [activeModules, setActiveModules] = useState(null)` in Dashboard.jsx

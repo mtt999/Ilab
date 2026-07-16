@@ -548,13 +548,13 @@ export default function FloorPlanPicker({ projectId, projectName, materialId, ma
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
           {customPlans.map(plan => (
             <button key={plan.id} onClick={() => setFacility(`custom_${plan.id}`)}
-              style={{ padding: '10px 18px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: facility === `custom_${plan.id}` ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${facility === `custom_${plan.id}` ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
+              style={{ padding: '10px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: facility === `custom_${plan.id}` ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${facility === `custom_${plan.id}` ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
               🗺️ {plan.name}
             </button>
           ))}
           {isICTOrg && ['ICT', 'MPF'].map(f => (
             <button key={f} onClick={() => setFacility(f)}
-              style={{ padding: '10px 18px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: facility === f ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${facility === f ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
+              style={{ padding: '10px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: facility === f ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${facility === f ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
               {f === 'ICT' ? 'ICT Building' : 'MPF'}
             </button>
           ))}
@@ -593,7 +593,7 @@ export default function FloorPlanPicker({ projectId, projectName, materialId, ma
             : selected.map(id => {
                 const det = getLocationDetail(id)
                 return (
-                  <span key={id} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px 3px 12px', fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <span key={id} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '4px 10px 4px 12px', fontSize: 12, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     📍 {det.detail !== id ? det.detail : id.replace('ICT-', '').replace('MPF-', 'MPF ')}
                     {canEdit && <button onClick={() => toggleLocation(id, '', '')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--accent)', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>}
                   </span>

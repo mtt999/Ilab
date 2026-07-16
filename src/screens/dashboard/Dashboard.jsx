@@ -241,7 +241,7 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
           <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, marginBottom:20 }}>
             {[{label:'My active projects',val:data.myProjects,color:'#534AB7',screen:'projects'},{label:'Trainings complete',val:`${data.trainingsComplete}/${data.trainingsTotal}`,color:trainingColor,screen:'training'},{label:'Upcoming bookings',val:data.upcomingBookings.length,color:'#0369a1',screen:'booking'},{label:data.pendingCert?'Cert pending approval':'Cert up to date',val:loading?'—':data.pendingCert?'⏳':'✅',color:data.pendingCert?'#c84b2f':'#1D9E75',screen:'training'}]
               .map((s,i) => (
-                <a key={i} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+                <a key={i} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'16px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
                   <div style={{ fontSize:28, fontWeight:600, color:s.color, marginBottom:4 }}>{loading?'—':s.val}</div>
                   <div style={{ fontSize:13, color:'var(--text2)' }}>{s.label}</div>
                 </a>
@@ -319,13 +319,13 @@ function DashboardView({ modules, onNavigate, mileageUrl, labSafetyUrl, moduleIm
               { label:'Pending cert approvals', value:stats.pendingTraining, color:'#c84b2f', screen:'training' },
               { label:'Supply items tracked',   value:stats.lowSupplies,     color:'#1D9E75', screen:'home'     },
             ].map(s => (
-              <a key={s.label} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+              <a key={s.label} href="#" onClick={e=>{e.preventDefault();onNavigate(s.screen)}} onTouchEnd={e=>{e.preventDefault();onNavigate(s.screen)}} style={{ display:'block', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'16px 20px', cursor:'pointer', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.borderColor=s.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
                 <div style={{ fontSize:28, fontWeight:600, color:s.color, marginBottom:4 }}>{loading?'—':s.value}</div>
                 <div style={{ fontSize:13, color:'var(--text2)' }}>{s.label}</div>
               </a>
             ))}
           </div>
-          <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px' }}>
+          <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'16px 20px' }}>
             <div style={{ fontSize:12, fontWeight:500, color:'var(--text3)', fontFamily:'var(--mono)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:14 }}>Recent inspections</div>
             {loading?<div style={{ textAlign:'center',padding:16 }}><div className="spinner" style={{ margin:'0 auto' }} /></div>
               :recentInspections.length===0?<div style={{ fontSize:13,color:'var(--text3)',textAlign:'center',padding:16 }}>No inspections yet.</div>
@@ -407,7 +407,7 @@ function SupportInbox({ onClose, onRead }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {['open','read','resolved','all'].map(f => (
               <button key={f} onClick={() => { setFilter(f); setSelected(null) }}
-                style={{ padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', background: filter === f ? 'var(--accent)' : 'var(--surface2)', color: filter === f ? '#fff' : 'var(--text2)' }}>
+                style={{ padding: '4px 14px', borderRadius: 99, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', background: filter === f ? 'var(--accent)' : 'var(--surface2)', color: filter === f ? '#fff' : 'var(--text2)' }}>
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
             ))}
@@ -426,8 +426,8 @@ function SupportInbox({ onClose, onRead }) {
                 ? <div style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 13, marginTop: 60 }}>No messages</div>
                 : messages.map(m => (
                   <div key={m.id} onClick={() => { setSelected(m); if (m.status === 'open') setStatus(m.id, 'read') }}
-                    style={{ padding: '11px 13px', borderRadius: 10, border: `1.5px solid ${selected?.id === m.id ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', background: selected?.id === m.id ? 'var(--accent-light)' : 'var(--surface)', transition: 'all 0.12s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+                    style={{ padding: '12px 12px', borderRadius: 10, border: `1.5px solid ${selected?.id === m.id ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', background: selected?.id === m.id ? 'var(--accent-light)' : 'var(--surface)', transition: 'all 0.12s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor[m.status] || '#ccc', flexShrink: 0 }} />
                       <div style={{ fontSize: 13, fontWeight: 700, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.subject}</div>
                     </div>
@@ -451,7 +451,7 @@ function SupportInbox({ onClose, onRead }) {
                 <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                     <div style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.3 }}>{selected.subject}</div>
-                    <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: selected.status === 'open' ? '#FEE2E2' : selected.status === 'resolved' ? '#D1FAE5' : '#FEF3C7', color: selected.status === 'open' ? '#991B1B' : selected.status === 'resolved' ? '#065F46' : '#92400E' }}>
+                    <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 99, background: selected.status === 'open' ? '#FEE2E2' : selected.status === 'resolved' ? '#D1FAE5' : '#FEF3C7', color: selected.status === 'open' ? '#991B1B' : selected.status === 'resolved' ? '#065F46' : '#92400E' }}>
                       {selected.status.charAt(0).toUpperCase() + selected.status.slice(1)}
                     </span>
                   </div>
@@ -470,7 +470,7 @@ function SupportInbox({ onClose, onRead }) {
                   {selected.attachment_url && (
                     <div style={{ marginTop: 16 }}>
                       <a href={selected.attachment_url} target="_blank" rel="noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 16px', border: '1px solid var(--accent)', borderRadius: 8, fontSize: 13, color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: '1px solid var(--accent)', borderRadius: 8, fontSize: 13, color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
                         📎 View attachment
                       </a>
                     </div>
@@ -480,14 +480,14 @@ function SupportInbox({ onClose, onRead }) {
                 {/* Actions */}
                 <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 10, alignItems: 'center', background: 'var(--surface)', flexShrink: 0 }}>
                   <a href={`mailto:${selected.user_email}?subject=Re: ${encodeURIComponent(selected.subject)}`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 20px', background: 'var(--accent)', color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 20px', background: 'var(--accent)', color: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                     ✉️ Reply by email
                   </a>
                   {selected.status !== 'resolved'
-                    ? <button onClick={() => setStatus(selected.id, 'resolved')} style={{ padding: '9px 18px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>✓ Mark resolved</button>
-                    : <button onClick={() => setStatus(selected.id, 'open')} className="btn" style={{ fontSize: 14, padding: '9px 18px' }}>Reopen</button>
+                    ? <button onClick={() => setStatus(selected.id, 'resolved')} style={{ padding: '8px 16px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>✓ Mark resolved</button>
+                    : <button onClick={() => setStatus(selected.id, 'open')} className="btn" style={{ fontSize: 14, padding: '8px 16px' }}>Reopen</button>
                   }
-                  <button onClick={() => deleteMsg(selected.id)} style={{ marginLeft: 'auto', padding: '9px 18px', background: 'none', color: '#ef4444', border: '1px solid #ef4444', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                  <button onClick={() => deleteMsg(selected.id)} style={{ marginLeft: 'auto', padding: '8px 16px', background: 'none', color: '#ef4444', border: '1px solid #ef4444', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
             )}
@@ -517,7 +517,7 @@ function SuperAdminDashboard({ session, setScreen, greeting, dateStr }) {
       <span style={{ fontSize: 20 }}>{icon}</span>
       {label}
       {badge > 0 && (
-        <span style={{ position: 'absolute', top: -8, right: -8, minWidth: 20, height: 20, borderRadius: 99, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', border: '2px solid var(--bg)' }}>
+        <span style={{ position: 'absolute', top: -8, right: -8, minWidth: 20, height: 20, borderRadius: 99, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: '2px solid var(--bg)' }}>
           {badge}
         </span>
       )}
@@ -777,13 +777,13 @@ export default function Dashboard() {
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           {!isStudent && (
-            <div style={{ display:'flex', background:'var(--surface2)', borderRadius:'var(--radius)', padding:3, gap:2 }}>
+            <div style={{ display:'flex', background:'var(--surface2)', borderRadius:'var(--radius)', padding:4, gap:2 }}>
               <button onClick={() => switchView('grid')} style={{ padding:'6px 14px', border:'none', borderRadius:8, fontFamily:'var(--sans)', fontSize:13, fontWeight:500, cursor:'pointer', background:view==='grid'?'var(--surface)':'transparent', color:view==='grid'?'var(--text)':'var(--text2)', transition:'all 0.15s' }}>⊞ Cards</button>
               <button onClick={() => switchView('dashboard')} style={{ padding:'6px 14px', border:'none', borderRadius:8, fontFamily:'var(--sans)', fontSize:13, fontWeight:500, cursor:'pointer', background:view==='dashboard'?'var(--surface)':'transparent', color:view==='dashboard'?'var(--text)':'var(--text2)', transition:'all 0.15s' }}>☰ Dashboard</button>
             </div>
           )}
           {isStudent && (
-            <div style={{ display:'flex', background:'var(--surface2)', borderRadius:'var(--radius)', padding:3, gap:2 }}>
+            <div style={{ display:'flex', background:'var(--surface2)', borderRadius:'var(--radius)', padding:4, gap:2 }}>
               <button onClick={() => switchView('grid')} style={{ padding:'6px 14px', border:'none', borderRadius:8, fontFamily:'var(--sans)', fontSize:13, fontWeight:500, cursor:'pointer', background:view==='grid'?'var(--surface)':'transparent', color:view==='grid'?'var(--text)':'var(--text2)', transition:'all 0.15s' }}>⊞ Cards</button>
               <button onClick={() => switchView('dashboard')} style={{ padding:'6px 14px', border:'none', borderRadius:8, fontFamily:'var(--sans)', fontSize:13, fontWeight:500, cursor:'pointer', background:view==='dashboard'?'var(--surface)':'transparent', color:view==='dashboard'?'var(--text)':'var(--text2)', transition:'all 0.15s' }}>📋 My Activity</button>
             </div>

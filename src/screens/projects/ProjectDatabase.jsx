@@ -75,7 +75,7 @@ function FileCard({ file, onDelete }) {
   const isPdf = file.file_type?.includes('pdf')
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 10, background: 'var(--surface)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', cursor: 'pointer' }} onClick={() => setExpanded(e => !e)}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', cursor: 'pointer' }} onClick={() => setExpanded(e => !e)}>
         <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
           {isImage ? <img src={file.file_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : fileIcon(file.file_type)}
         </div>
@@ -86,7 +86,7 @@ function FileCard({ file, onDelete }) {
             <span>{new Date(file.created_at).toLocaleDateString()}</span>
             {file.uploaded_by && <span>by {file.uploaded_by}</span>}
           </div>
-          {file.description && <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.description}</div>}
+          {file.description && <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.description}</div>}
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <a href={file.file_url} target="_blank" rel="noopener" className="btn btn-sm" onClick={e => e.stopPropagation()}>{isPdf || isImage ? '👁️ View' : '⬇️ Download'}</a>
@@ -95,7 +95,7 @@ function FileCard({ file, onDelete }) {
         </div>
       </div>
       {expanded && (
-        <div style={{ borderTop: '1px solid var(--border)', padding: '14px 18px', background: 'var(--surface2)' }}>
+        <div style={{ borderTop: '1px solid var(--border)', padding: '14px 16px', background: 'var(--surface2)' }}>
           {isImage && <img src={file.file_url} style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 'var(--radius)', marginBottom: file.extracted_text ? 12 : 0 }} />}
           {file.extracted_text
             ? <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Extracted text preview</div><div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, maxHeight: 150, overflow: 'hidden' }}>{file.extracted_text.slice(0, 600)}{file.extracted_text.length > 600 ? '…' : ''}</div></div>

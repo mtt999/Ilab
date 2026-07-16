@@ -141,7 +141,7 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
           position: 'fixed', bottom: widgetBottom, right: 20, zIndex: 9990,
           display: 'flex', alignItems: 'center', gap: 6,
           background: hasPending ? '#ef4444' : ACCENT,
-          color: '#fff', borderRadius: 99, padding: '7px 12px 7px 10px',
+          color: '#fff', borderRadius: 99, padding: '8px 12px 8px 10px',
           fontSize: 12, fontWeight: 700, fontFamily: 'var(--sans)',
           cursor: 'pointer', boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
           transition: 'transform 0.12s, box-shadow 0.12s',
@@ -270,11 +270,11 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
                     <button
                       onClick={() => submit(screen, comment)}
                       disabled={saving || !comment.trim()}
-                      style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: comment.trim() ? ACCENT : '#e5e7eb', color: comment.trim() ? '#fff' : '#9ca3af', fontSize: 13, fontWeight: 700, cursor: comment.trim() ? 'pointer' : 'default', transition: 'background 0.15s' }}
+                      style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: comment.trim() ? ACCENT : '#e5e7eb', color: comment.trim() ? '#fff' : '#9ca3af', fontSize: 13, fontWeight: 700, cursor: comment.trim() ? 'pointer' : 'default', transition: 'background 0.15s' }}
                     >
                       {saving ? 'Saving…' : 'Submit feedback'}
                     </button>
-                    <button onClick={skip} style={{ padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Skip</button>
+                    <button onClick={skip} style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Skip</button>
                   </div>
                 </>
               )}
@@ -291,7 +291,7 @@ export default function FeedbackWidget({ bottomOffset = 24 }) {
 
         {/* ── Progress footer ── */}
         <div style={{ padding: '0 14px 12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <span style={{ fontSize: 11, color: '#9ca3af' }}>Progress</span>
             <span style={{ fontSize: 11, fontWeight: 600, color: ACCENT_DARK }}>{reviewed}/{total} modules</span>
           </div>

@@ -13,13 +13,13 @@ function ExternalLinkModal({ url, onConfirm, onCancel }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onClick={onCancel}>
-      <div style={{ background: '#fff', borderRadius: 14, padding: '28px 28px 22px', maxWidth: 380, width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+      <div style={{ background: '#fff', borderRadius: 14, padding: '28px 28px 20px', maxWidth: 380, width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
         onClick={e => e.stopPropagation()}>
         <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: 'var(--text)' }}>Opening external link</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 18 }}>You are being redirected to an external website:<br /><span style={{ color: '#0369a1', wordBreak: 'break-all' }}>{url}</span></div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>You are being redirected to an external website:<br /><span style={{ color: '#0369a1', wordBreak: 'break-all' }}>{url}</span></div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onCancel} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#f9fafb', cursor: 'pointer', fontSize: 13 }}>Cancel</button>
-          <button onClick={onConfirm} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#1D9E75', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Open ↗</button>
+          <button onClick={onCancel} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#f9fafb', cursor: 'pointer', fontSize: 13 }}>Cancel</button>
+          <button onClick={onConfirm} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#1D9E75', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Open ↗</button>
         </div>
       </div>
     </div>
@@ -251,7 +251,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
     <button
       onClick={() => toggleIconOnly(true)}
       title="Collapse to icon view"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`, padding: '4px 9px 4px 7px', borderRadius: 7, boxShadow: `0 2px 10px ${accentColor}44`, border: 'none', cursor: 'pointer', transition: 'filter 0.15s' }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: `linear-gradient(135deg, ${accentColor}, ${accentColor}bb)`, padding: '4px 8px 4px 8px', borderRadius: 7, boxShadow: `0 2px 10px ${accentColor}44`, border: 'none', cursor: 'pointer', transition: 'filter 0.15s' }}
       onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.12)'}
       onMouseLeave={e => e.currentTarget.style.filter = 'none'}
     >
@@ -302,7 +302,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
       {/* ── Icon-only rail (collapsed) ── */}
       {sidebarIconOnly ? (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px', flex: 1, overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 4px', flex: 1, overflowY: 'auto' }}>
             {AppsIconBtn()}
             <div style={{ width: 28, height: 1, background: 'var(--border)', margin: '4px 0', flexShrink: 0 }} />
             {/* Sub-tabs (module page only) */}
@@ -350,7 +350,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
         /* ── Module page expanded: title + sub-tabs + portal + apps nav + home ── */
         <>
           {mod && (
-            <div style={{ padding: '11px 14px 9px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+            <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 18 }}>{mod.icon}</span>
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', lineHeight: 1.3 }}>{mod.label}</div>
@@ -381,7 +381,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
 
             {visibleMeta.length > 0 && (
               <div style={{ borderTop: '1px solid #f3f4f6', flexShrink: 0, maxHeight: modulesOpen ? 240 : 'none', overflowY: modulesOpen ? 'auto' : 'visible' }}>
-                <div style={{ padding: '7px 14px 3px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ padding: '8px 14px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {AppsBadge()}
                   <button onClick={toggleModules} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'var(--text3)', lineHeight: 1, padding: '0 2px' }} title={modulesOpen ? 'Collapse' : 'Expand'}>
                     {modulesOpen ? '−' : '+'}
@@ -508,7 +508,7 @@ export default function Layout({ children }) {
 
           {/* Profile pill */}
           {session && (
-            <button onClick={() => setScreen('profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 99, padding: '3px 10px 3px 3px', cursor: 'pointer', transition: 'all 0.18s ease' }}
+            <button onClick={() => setScreen('profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 99, padding: '4px 10px 4px 4px', cursor: 'pointer', transition: 'all 0.18s ease' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
@@ -565,8 +565,8 @@ export default function Layout({ children }) {
           overflowY: 'auto',
           scrollbarGutter: 'stable',
           paddingTop: isProto ? 0 : '24px',
-          paddingLeft: isProto ? 0 : '20px',
-          paddingRight: isProto ? 0 : '20px',
+          paddingLeft: isProto ? 0 : isMobile ? '20px' : '24px',
+          paddingRight: isProto ? 0 : isMobile ? '20px' : '24px',
           paddingBottom: isMobile
             ? 'calc(72px + env(safe-area-inset-bottom, 0px))'
             : isProto ? 0 : '24px',
@@ -590,7 +590,7 @@ export default function Layout({ children }) {
               const isActive = tab.screens.includes(screen)
               const dest = tab.id === 'home' ? 'dashboard' : tab.id === 'booking' ? 'booking' : tab.id === 'messages' ? 'remessages' : tab.id === 'projects' ? 'projects' : 'profile'
               return (
-                <button key={tab.id} onClick={() => setScreen(dest)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, border: 'none', background: 'transparent', cursor: 'pointer', padding: '6px 2px 4px', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
+                <button key={tab.id} onClick={() => setScreen(dest)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', background: 'transparent', cursor: 'pointer', padding: '6px 2px 4px', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
                   {isActive && <span style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 40, height: 32, background: accentLight, borderRadius: 10 }} />}
                   <span style={{ fontSize: 20, lineHeight: 1, position: 'relative', zIndex: 1 }}>{tab.icon}</span>
                   <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, color: isActive ? accentColor : '#aaa', fontFamily: 'var(--sans)', position: 'relative', zIndex: 1, letterSpacing: '-0.01em' }}>{tab.label}</span>

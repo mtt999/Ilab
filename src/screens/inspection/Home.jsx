@@ -161,7 +161,7 @@ function PhotoModal({ title, pathPrefix = '', onClose, onSaved }) {
         style={{ border: '2px dashed var(--border)', borderRadius: 'var(--radius)', padding: 28, textAlign: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 28, marginBottom: 8 }}>🖼️</div>
         <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text2)', marginBottom: 4 }}>Drag & drop image here</div>
-        <label style={{ display: 'inline-block', padding: '7px 16px', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, background: 'var(--surface)', marginTop: 8 }}>
+        <label style={{ display: 'inline-block', padding: '8px 16px', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, background: 'var(--surface)', marginTop: 8 }}>
           Browse file<input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
         </label>
       </div>
@@ -196,7 +196,7 @@ function RoomsTab() {
       ) : rooms.map(r => {
         const cnt = supplies.filter(s => s.room_id === r.id).length
         return (
-          <div key={r.id} className="card" style={{ padding: '14px 18px', marginBottom: 10 }}>
+          <div key={r.id} className="card" style={{ padding: '14px 16px', marginBottom: 10 }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-12">
                 {r.photo_url ? <img src={r.photo_url} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', flexShrink: 0 }} /> : <span style={{ fontSize: 22 }}>{r.icon || '🧪'}</span>}
@@ -943,7 +943,7 @@ function ExportData() {
   const roomsForDate = selectedInspDate ? data.filter(r => new Date(r.inspected_at).toLocaleDateString('en-CA') === selectedInspDate) : []
 
   const subTabStyle = (active) => ({
-    padding: '8px 18px', border: 'none', background: 'transparent',
+    padding: '8px 16px', border: 'none', background: 'transparent',
     fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
     color: active ? 'var(--accent)' : 'var(--text2)',
     borderBottom: `2px solid ${active ? 'var(--accent)' : 'transparent'}`,
@@ -1014,12 +1014,12 @@ function ExportData() {
                     </div>
                     {roomsForDate.map((rec, i) => (
                       <div key={rec.id}
-                        style={{ background: i % 2 === 0 ? 'var(--surface)' : '#f0f7ff', border: '1px solid var(--border)', borderRadius: 10, padding: '13px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'border-color 0.15s' }}
+                        style={{ background: i % 2 === 0 ? 'var(--surface)' : '#f0f7ff', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'border-color 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
                         onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                         <div style={{ cursor: 'pointer', flex: 1 }} onClick={() => viewRecord(rec.id)}>
                           <div style={{ fontWeight: 600, fontSize: 15 }}>{rec.room_name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>
+                          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
                             {new Date(rec.inspected_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · {rec.inspector}
                           </div>
                         </div>
@@ -1251,7 +1251,7 @@ function ImportTab() {
                 ['Col D', 'Current quantity'],
                 ['Col E', 'Unit (pcs, bottle, pair…)'],
               ].map(([col, desc]) => (
-                <div key={col} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: 'var(--surface2)', color: 'var(--text2)' }}>
+                <div key={col} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: 'var(--surface2)', color: 'var(--text2)' }}>
                   <strong style={{ color: 'var(--accent)' }}>{col}</strong> — {desc}
                 </div>
               ))}
@@ -1281,7 +1281,7 @@ function ImportTab() {
             {Object.entries(importData).map(([room, items]) => (
               <div key={room} style={{ marginBottom: 10 }}>
                 <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', padding: '4px 0' }}>{room} <span style={{ fontWeight: 400 }}>({items.length} items)</span></div>
-                {items.slice(0, 3).map((s, i) => <div key={i} style={{ fontSize: 13, padding: '3px 0', color: 'var(--text2)' }}>· {s.name} <span style={{ color: 'var(--text3)' }}>min: {s.min_qty}</span></div>)}
+                {items.slice(0, 3).map((s, i) => <div key={i} style={{ fontSize: 13, padding: '4px 0', color: 'var(--text2)' }}>· {s.name} <span style={{ color: 'var(--text3)' }}>min: {s.min_qty}</span></div>)}
                 {items.length > 3 && <div style={{ fontSize: 12, color: 'var(--text3)' }}>…and {items.length - 3} more</div>}
               </div>
             ))}
@@ -1367,7 +1367,7 @@ function SettingsTab() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <input type="number" min={1} max={365} value={customDays}
                 onChange={e => setCustomDays(e.target.value)}
-                style={{ width: 80, fontSize: 15, padding: '7px 10px' }} />
+                style={{ width: 80, fontSize: 15, padding: '8px 10px' }} />
               <span style={{ fontSize: 14, color: 'var(--text2)' }}>days</span>
             </div>
             <div className="text-muted" style={{ marginTop: 6 }}>

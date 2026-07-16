@@ -175,7 +175,7 @@ function SoloProfile({ session }) {
           { key: 'danger',        label: '⚠️ Delete Account' },
         ].map(t => (
           <button key={t.key} onClick={() => setSidebarSubTab(t.key)}
-            style={{ padding: '10px 22px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: activeTab === t.key ? '#534AB7' : 'var(--text2)', borderBottom: `2px solid ${activeTab === t.key ? '#534AB7' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
+            style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: activeTab === t.key ? '#534AB7' : 'var(--text2)', borderBottom: `2px solid ${activeTab === t.key ? '#534AB7' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
             {t.label}
           </button>
         ))}
@@ -686,8 +686,8 @@ function DashboardIconsPanel({ session }) {
           if (locked) return (
             <div key={m.key} style={{ borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface2)', padding: '14px 14px 12px', cursor: 'default', position: 'relative', opacity: 0.5, userSelect: 'none', filter: 'grayscale(0.6)' }}>
               <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface2)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, pointerEvents: 'none' }}>🔒</div>
-              <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{m.icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{m.label}</div>
+              <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{m.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{m.label}</div>
               <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{m.sub}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text3)', fontWeight: 600, pointerEvents: 'none' }}>Team accounts only</div>
             </div>
@@ -705,8 +705,8 @@ function DashboardIconsPanel({ session }) {
               <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: sel ? m.color : 'var(--surface2)', border: `2px solid ${sel ? m.color : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                 {sel && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
               </div>
-              <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{m.icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: sel ? m.color : 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{m.label}</div>
+              <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{m.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: sel ? m.color : 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{m.label}</div>
               <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{m.sub}</div>
               {(uiPinned || alwaysOn) && <div style={{ marginTop: 6, fontSize: 10, color: m.color, fontWeight: 600, pointerEvents: 'none' }}>Always visible</div>}
             </div>
@@ -718,8 +718,8 @@ function DashboardIconsPanel({ session }) {
           .map(m => (
             <div key={m.key} style={{ borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface2)', padding: '14px 14px 12px', cursor: 'default', position: 'relative', opacity: 0.45, userSelect: 'none', filter: 'grayscale(0.7)' }}>
               <div style={{ position: 'absolute', top: 9, right: 9, width: 20, height: 20, borderRadius: '50%', background: 'var(--surface2)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, pointerEvents: 'none' }}>🔒</div>
-              <div style={{ fontSize: 26, marginBottom: 7, pointerEvents: 'none' }}>{m.icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 22, pointerEvents: 'none' }}>{m.label}</div>
+              <div style={{ fontSize: 26, marginBottom: 8, pointerEvents: 'none' }}>{m.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2, paddingRight: 20, pointerEvents: 'none' }}>{m.label}</div>
               <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.4, pointerEvents: 'none' }}>{m.sub}</div>
               <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text3)', fontWeight: 600, pointerEvents: 'none' }}>Staff access only</div>
             </div>
@@ -821,7 +821,7 @@ function CustomLinksManager({ session }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <button
               onClick={() => toggleEnabled(idx)}
-              style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, border: '1px solid', cursor: 'pointer',
+              style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 99, border: '1px solid', cursor: 'pointer',
                 background: link.enabled ? '#E1F5EE' : 'var(--surface2)',
                 color: link.enabled ? '#0f6e56' : 'var(--text3)',
                 borderColor: link.enabled ? '#0f6e56' : 'var(--border)' }}>
@@ -1395,7 +1395,7 @@ export function StudentsPanel({ toast, session }) {
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : filtered.length === 0 ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No lab users match your search.' : 'No lab users yet.'}</div>
         : filtered.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 18px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: s.photo_denial_flagged ? '#fefce8' : undefined, borderLeft: s.photo_denial_flagged ? '3px solid #f59e0b' : undefined }}>
+          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: s.photo_denial_flagged ? '#fefce8' : undefined, borderLeft: s.photo_denial_flagged ? '3px solid #f59e0b' : undefined }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -1406,7 +1406,7 @@ export function StudentsPanel({ toast, session }) {
                     <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>⚠️ Declined photo</span>
                   )}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 3 }}>
+                <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
                   {sEmail(s) && <span>📧 {sEmail(s)}</span>}
                   {s.password && <span style={{ fontSize: 11, color: 'var(--text3)' }}>🔑 ••••••••</span>}
                   {s.project_group && <span>{s.project_group}</span>}
@@ -1575,7 +1575,7 @@ function StaffListPanel({ toast, session }) {
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : staff.length === 0 ? <div className="empty-state"><div className="empty-icon">👨‍💼</div>No lab managers yet.</div>
         : staff.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 18px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5 }}>
+          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 600 }}>
@@ -1733,12 +1733,12 @@ function IconSetupModal({ userId, displayName, organizationId, userRole = 'stude
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(3px)' }}>
       <div style={{ background: 'var(--surface)', borderRadius: 20, width: '100%', maxWidth: 640, maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
-        <div style={{ padding: '22px 26px 0' }}>
+        <div style={{ padding: '20px 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 6 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: '#e0f7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🎛️</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 17 }}>Step 2 of 2 — Dashboard Icons</div>
-              <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 3 }}>Choose which icons <strong>{displayName}</strong> will see on their dashboard.</div>
+              <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>Choose which icons <strong>{displayName}</strong> will see on their dashboard.</div>
             </div>
           </div>
           <div style={{ background: '#fef3c7', borderRadius: 8, padding: '8px 14px', marginTop: 14, fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
@@ -1755,7 +1755,7 @@ function IconSetupModal({ userId, displayName, organizationId, userRole = 'stude
             </div>
           </div>
         </div>
-        <div style={{ overflowY: 'auto', padding: '0 26px', flex: 1 }}>
+        <div style={{ overflowY: 'auto', padding: '0 24px', flex: 1 }}>
           {selected === null ? (
             <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
           ) : (
@@ -1779,7 +1779,7 @@ function IconSetupModal({ userId, displayName, organizationId, userRole = 'stude
             </div>
           )}
         </div>
-        <div style={{ padding: '14px 26px 22px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ padding: '14px 24px 20px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Profile is always visible. Tap icons to toggle.</div>
           <button className="btn btn-primary" onClick={save} disabled={saving || selected === null}>
             {saving ? 'Saving…' : 'Save & complete ✓'}
@@ -1837,7 +1837,7 @@ function StaffStudentIconManager() {
         : filtered.length === 0
           ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No students match your search.' : 'No students yet.'}</div>
           : filtered.map((s, idx) => (
-            <div key={s.id} className="card" style={{ padding: '12px 18px', marginBottom: 10 }}>
+            <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>
@@ -2028,8 +2028,8 @@ function UserProfileForm({ session, toast }) {
         <div>
           <div style={{ fontWeight: 700, fontSize: 20 }}>{displayName || user.name}</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-            <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{user.role === 'student' ? 'Student' : 'Staff'}</span>
-            {user.project_group && <span style={{ background: groupBg[user.project_group]||'#f0efe9', color: groupColor[user.project_group]||'#6b6860', borderRadius: 99, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>{user.project_group}</span>}
+            <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{user.role === 'student' ? 'Student' : 'Staff'}</span>
+            {user.project_group && <span style={{ background: groupBg[user.project_group]||'#f0efe9', color: groupColor[user.project_group]||'#6b6860', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{user.project_group}</span>}
           </div>
         </div>
       </div>
@@ -2305,9 +2305,9 @@ export function ApprovalRequestsPanel({ toast, session, onCountChange }) {
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{req.user_name}</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
                   Requested: {new Date(req.requested_at).toLocaleDateString()}
-                  {req.suggested_transfer_name && <span style={{ marginLeft: 8, background: '#e0f2fe', color: '#0369a1', borderRadius: 4, padding: '1px 7px', fontWeight: 600 }}>User suggests → {req.suggested_transfer_name}</span>}
+                  {req.suggested_transfer_name && <span style={{ marginLeft: 8, background: '#e0f2fe', color: '#0369a1', borderRadius: 4, padding: '1px 8px', fontWeight: 600 }}>User suggests → {req.suggested_transfer_name}</span>}
                 </div>
               </div>
               <button className="btn btn-sm" onClick={() => exportUserData(req.user_id, req.user_name)}>⬇️ Export Data</button>
@@ -2377,7 +2377,7 @@ function PrivacyTab() {
           <div style={{ fontWeight: 600, fontSize: 14, color: '#0d6b50' }}>Essential Cookies</div>
           <div style={{ fontSize: 12, color: '#6b6860', marginTop: 2 }}>Login sessions, app preferences, sidebar state. Always active — required for the app to work.</div>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 600, color: '#0d6b50', background: '#d1f5e8', padding: '3px 8px', borderRadius: 99, flexShrink: 0 }}>Always on</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#0d6b50', background: '#d1f5e8', padding: '4px 8px', borderRadius: 99, flexShrink: 0 }}>Always on</span>
       </div>
 
       {/* Analytics */}
@@ -2392,7 +2392,7 @@ function PrivacyTab() {
           <div style={{ fontWeight: 600, fontSize: 14, color: isAll ? '#3b5bdb' : 'var(--text)' }}>Analytics Cookies (Google Analytics)</div>
           <div style={{ fontSize: 12, color: '#6b6860', marginTop: 2 }}>Helps us understand how the platform is used so we can improve it. No personal data is sold or shared with advertisers.</div>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 600, color: isAll ? '#3b5bdb' : '#9ca3af', background: isAll ? '#dce4ff' : '#f3f4f6', padding: '3px 8px', borderRadius: 99, flexShrink: 0 }}>{isAll ? 'Enabled' : 'Disabled'}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: isAll ? '#3b5bdb' : '#9ca3af', background: isAll ? '#dce4ff' : '#f3f4f6', padding: '4px 8px', borderRadius: 99, flexShrink: 0 }}>{isAll ? 'Enabled' : 'Disabled'}</span>
       </div>
 
       {/* Action buttons */}
@@ -2717,7 +2717,7 @@ function IconImageManager({ toast, session }) {
                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.25)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0)'}>
-                  <div style={{ background: 'rgba(255,255,255,0.92)', borderRadius: 8, padding: '5px 14px', fontSize: 12, fontWeight: 500, color: '#1a1916', pointerEvents: 'none' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.92)', borderRadius: 8, padding: '4px 14px', fontSize: 12, fontWeight: 500, color: '#1a1916', pointerEvents: 'none' }}>
                     {uploading === m.key ? '⏳ Uploading…' : '📷 Click to upload'}
                   </div>
                 </div>
@@ -2726,8 +2726,8 @@ function IconImageManager({ toast, session }) {
               <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.icon} {m.label}</div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  <button className="btn btn-sm" style={{ fontSize: 11, padding: '3px 10px' }} onClick={() => fileRefs.current[m.key]?.click()} disabled={uploading === m.key}>{uploading === m.key ? '⏳' : img ? 'Change' : 'Upload'}</button>
-                  {img && <button className="btn btn-sm btn-danger" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => removeImage(m.key)}>x</button>}
+                  <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => fileRefs.current[m.key]?.click()} disabled={uploading === m.key}>{uploading === m.key ? '⏳' : img ? 'Change' : 'Upload'}</button>
+                  {img && <button className="btn btn-sm btn-danger" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => removeImage(m.key)}>x</button>}
                 </div>
               </div>
             </div>
