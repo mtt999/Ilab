@@ -2485,19 +2485,27 @@ function BookingCalendar({ session }) {
     const reminderTypes = new Set(['before_photo_reminder', 'after_photo_reminder'])
     const reminderNotifs = all.filter(n => reminderTypes.has(n.type) && n.booking_id)
     let pastBookingIds = new Set()
+    const inactiveBookingIds = new Set()   // cancelled/denied → reminder is obsolete
     if (reminderNotifs.length > 0) {
       const ids = [...new Set(reminderNotifs.map(n => n.booking_id))]
-      const { data: bks } = await sb.from('equipment_bookings').select('id, end_time').in('id', ids)
+      const { data: bks } = await sb.from('equipment_bookings').select('id, end_time, status').in('id', ids)
       const now = new Date()
       ;(bks || []).forEach(b => {
+        if (b.status === 'cancelled' || b.status === 'denied') { inactiveBookingIds.add(b.id); return }
         const d = new Date(b.end_time)
         const cutoff = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 0, 0)
         if (now > cutoff) pastBookingIds.add(b.id)
       })
+      // Permanently retire reminders for cancelled/denied bookings (unlike past
+      // ones, which stay unread so the bell still shows them)
+      if (inactiveBookingIds.size > 0) {
+        const staleIds = reminderNotifs.filter(n => inactiveBookingIds.has(n.booking_id)).map(n => n.id)
+        sb.from('booking_notifications').update({ read: true }).in('id', staleIds).then(() => {})
+      }
     }
 
     setNotifications(all.filter(n =>
-      !reminderTypes.has(n.type) || !pastBookingIds.has(n.booking_id)
+      !reminderTypes.has(n.type) || (!pastBookingIds.has(n.booking_id) && !inactiveBookingIds.has(n.booking_id))
     ))
   }
 
@@ -2636,6 +2644,10 @@ function BookingCalendar({ session }) {
 
   async function handleDeny(booking, reason) {
     await sb.from('equipment_bookings').update({ status: 'denied', denied_by: session.username, denied_reason: reason, updated_at: new Date().toISOString() }).eq('id', booking.id)
+    // Retire photo reminders — no photos needed for a denied booking
+    await sb.from('booking_notifications').update({ read: true })
+      .eq('booking_id', booking.id)
+      .in('type', ['before_photo_reminder', 'after_photo_reminder', 'after_photo_last_warning'])
     const eqName = equipment.find(e => e.id === booking.equipment_id)?.nickname || 'equipment'
     const when = fmtDateTime(booking.start_time)
     const denyMsg = `Your booking for ${eqName} on ${when} was denied.${reason ? ` Reason: ${reason}` : ''}`
@@ -2670,6 +2682,10 @@ function BookingCalendar({ session }) {
     if (!confirm('Cancel this booking?')) return
     setDetailBooking(null)
     await sb.from('equipment_bookings').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', booking.id)
+    // Retire photo reminders for this booking — no photos needed once cancelled
+    await sb.from('booking_notifications').update({ read: true })
+      .eq('booking_id', booking.id)
+      .in('type', ['before_photo_reminder', 'after_photo_reminder', 'after_photo_last_warning'])
     const eqName = equipment.find(e => e.id === booking.equipment_id)?.nickname || 'equipment'
     const when = fmtDateTime(booking.start_time)
     await sendBookingEmail(
