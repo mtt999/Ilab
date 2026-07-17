@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 import { sb } from '../../lib/supabase'
 import { useAppStore } from '../../store/useAppStore'
 import { googleCalUrl, outlookCalUrl, downloadIcs } from '../../lib/calendarLinks'
-import { IconCalendarPlus } from '../../components/Icons'
+import { IconCalendarPlus, IconCheckCircle } from '../../components/Icons'
 import { buildEmailHtml } from '../../lib/emailTemplate'
 
 async function sendBookingEmail(userId, type, subject, title, body) {
@@ -148,7 +148,7 @@ const statusColor = { confirmed: '#085041', pending: '#92400e', denied: '#a32d2d
 const statusBg = { confirmed: '#E1F5EE', pending: '#fef3c7', denied: '#fcebeb', cancelled: '#f1efe8' }
 
 // ── Booking Form Modal ────────────────────────────────────────
-function BookingModal({ booking, equipmentList, selectedEquipment, session, onSave, onClose, onAdjustTime, initialSlot, photoRequired, panel, defaultBehalfOf = '' }) {
+function BookingModal({ booking, equipmentList, selectedEquipment, session, onSave, onClose, onAdjustTime, initialSlot, photoRequired, panel, defaultBehalfOf = '', onBooked }) {
   const { toast } = useAppStore()
 
   // Parse existing booking title to restore purpose type on edit
@@ -295,6 +295,9 @@ function BookingModal({ booking, equipmentList, selectedEquipment, session, onSa
         }
         await Promise.all(tasks)
       }
+      // Surface the add-to-calendar prompt right after creation so new users
+      // discover the feature (it otherwise only lives in the detail modal)
+      onBooked?.({ ...payload, id: newBooking?.id })
     }
     setSaving(false); onSave(); onClose()
   }
@@ -1739,6 +1742,46 @@ function BookingDetail({ booking, equipment, session, onEdit, onDelete, onDeny, 
   )
 }
 
+// ── Post-booking "Add to calendar" prompt ─────────────────────
+// Shown immediately after a booking is created so users discover the
+// calendar feature without having to re-open the booking detail modal.
+function CalendarPromptModal({ booking, equipment, orgName, onClose }) {
+  const eq = equipment
+  const calCtx = {
+    eqName: eq?.nickname || eq?.equipment_name,
+    orgName: orgName || '',
+    location: eq?.location || '',
+    bookedBy: booking.booked_on_behalf_of || booking.user_name,
+  }
+  const pending = booking.status === 'pending'
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 28, maxWidth: 400, width: '100%', border: '1px solid var(--border)', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: pending ? '#92400e' : 'var(--accent)' }}>
+          <IconCheckCircle size={44} />
+        </div>
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{pending ? 'Booking submitted!' : 'Booking confirmed!'}</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{calCtx.eqName}</div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>{fmtDateTime(booking.start_time)} → {fmtDateTime(booking.end_time)}</div>
+        {pending && (
+          <div style={{ fontSize: 12, color: '#92400e', background: 'var(--warn-light)', borderRadius: 8, padding: '8px 12px', marginBottom: 16 }}>
+            Pending approval — you'll be notified when it's confirmed.
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 10 }}>
+          <IconCalendarPlus size={16} /> Add it to your calendar
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+          <a className="btn btn-sm" href={googleCalUrl(booking, calCtx)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Google Calendar</a>
+          <a className="btn btn-sm" href={outlookCalUrl(booking, calCtx)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Outlook</a>
+          <button className="btn btn-sm" onClick={() => downloadIcs(booking, calCtx)}>.ics file</button>
+        </div>
+        <button className="btn" style={{ width: '100%', justifyContent: 'center' }} onClick={onClose}>Done</button>
+      </div>
+    </div>
+  )
+}
+
 // ── Multi-Equipment Booking Modal ─────────────────────────────
 function MultiBookingModal({ equipmentList, defaultSlot, session, onSave, onClose }) {
   const { toast } = useAppStore()
@@ -2215,6 +2258,7 @@ function BookingCalendar({ session }) {
   const [activeBlock, setActiveBlock] = useState(null)
   const [photoRequired, setPhotoRequired] = useState(false)
   const [orgName, setOrgName] = useState('')
+  const [calendarPrompt, setCalendarPrompt] = useState(null)   // booking just created → add-to-calendar prompt
   const photoRequiredRef = useRef(false)
   const orgEqIdsRef = useRef(null)
   const equipmentRef = useRef([])
@@ -3025,6 +3069,7 @@ function BookingCalendar({ session }) {
                   selectedEquipment={selectedEq.length === 1 ? equipment.find(e => e.id === selectedEq[0]) : null}
                   session={session}
                   onSave={() => { loadBookings(); loadNotifications() }}
+                  onBooked={b => setCalendarPrompt(b)}
                   onClose={() => { setShowBookingModal(false); setBookingDraft(null); setEditBooking(null) }}
                   initialSlot={bookingDraft}
                   photoRequired={photoRequired}
@@ -3073,6 +3118,7 @@ function BookingCalendar({ session }) {
           selectedEquipment={selectedEq.length === 1 ? equipment.find(e => e.id === selectedEq[0]) : null}
           session={session}
           onSave={() => { loadBookings(); loadNotifications(); setBookingDraft(null); setEditBooking(null) }}
+          onBooked={b => setCalendarPrompt(b)}
           onClose={() => {
             setShowBookingModal(false)
             setEditBooking(null)
@@ -3098,6 +3144,15 @@ function BookingCalendar({ session }) {
           onUpdated={loadBookings}
           photoRequired={photoRequired}
           orgName={orgName}
+        />
+      )}
+
+      {calendarPrompt && (
+        <CalendarPromptModal
+          booking={calendarPrompt}
+          equipment={equipment.find(e => e.id === calendarPrompt.equipment_id)}
+          orgName={orgName}
+          onClose={() => setCalendarPrompt(null)}
         />
       )}
     </div>
