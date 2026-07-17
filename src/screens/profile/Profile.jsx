@@ -1395,7 +1395,7 @@ export function StudentsPanel({ toast, session }) {
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : filtered.length === 0 ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No lab users match your search.' : 'No lab users yet.'}</div>
         : filtered.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: s.photo_denial_flagged ? '#fefce8' : idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)', borderLeft: s.photo_denial_flagged ? '3px solid #f59e0b' : undefined }}>
+          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: s.photo_denial_flagged ? '#fefce8' : idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)', borderLeft: s.photo_denial_flagged ? '3px solid #f59e0b' : undefined }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -1575,7 +1575,7 @@ function StaffListPanel({ toast, session }) {
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : staff.length === 0 ? <div className="empty-state"><div className="empty-icon">👨‍💼</div>No lab managers yet.</div>
         : staff.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)' }}>
+          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 600 }}>
@@ -2301,7 +2301,7 @@ export function ApprovalRequestsPanel({ toast, session, onCountChange }) {
       {requests.map((req, idx) => {
         const selectedTo = transferTo[req.id] || ''
         return (
-          <div key={req.id} className="card" style={{ marginBottom: 16, background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)' }}>
+          <div key={req.id} className="card" style={{ marginBottom: 16, background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{req.user_name}</div>

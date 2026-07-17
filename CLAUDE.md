@@ -647,7 +647,7 @@ New UI chrome (buttons, banners, toggles) must use the shared line-icon set in `
 ### Alternating row colors — standard for every list/table
 Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f2` (odd, green tint); header/emphasis variants `--row-a-strong` `#eef2ff` / `--row-b-strong` `#edf5ea`.
 
-- **JSX card/div lists:** `background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)'`
+- **JSX card/div row lists:** `background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'` — the STRONG variants; the soft `--row-a`/`--row-b` read as white on standalone cards and are only for large expanded content areas (e.g. Training row bodies) and table zebra
 - **`<table>` screens:** zebra applied globally by CSS (`tbody tr:nth-child` rules in index.css) — do not add per-table backgrounds
 - **Semantic states override the stripe:** flagged yellow (`#fefce8` + orange border), selected (`--accent-light`), unread tint, `.flag-red`
 - Never hardcode the old hexes — always the `--row-*` tokens

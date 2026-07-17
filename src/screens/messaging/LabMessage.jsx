@@ -358,7 +358,7 @@ export default function LabMessage() {
                 <button key={conv.id} onClick={() => selectConv(conv)} style={{
                   display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%',
                   padding: '12px 14px', border: 'none', borderBottom: '1px solid var(--border)',
-                  background: selected ? 'var(--accent-light)' : conv.unreadCount > 0 ? 'rgba(29,158,117,0.035)' : idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)',
+                  background: selected ? 'var(--accent-light)' : conv.unreadCount > 0 ? 'rgba(29,158,117,0.035)' : idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)',
                   cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
                 }}>
                   <Avatar name={name} size={36} />
