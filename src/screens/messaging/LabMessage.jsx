@@ -350,7 +350,7 @@ export default function LabMessage() {
                 <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
                 <div style={{ fontSize: 13 }}>No conversations yet</div>
               </div>
-            ) : conversations.map(conv => {
+            ) : conversations.map((conv, idx) => {
               const name = otherName(conv)
               const selected = conv.id === selectedId
               const preview = (conv.lastMessage?.body || '').slice(0, 52) + ((conv.lastMessage?.body?.length || 0) > 52 ? '…' : '')
@@ -358,7 +358,7 @@ export default function LabMessage() {
                 <button key={conv.id} onClick={() => selectConv(conv)} style={{
                   display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%',
                   padding: '12px 14px', border: 'none', borderBottom: '1px solid var(--border)',
-                  background: selected ? 'var(--accent-light)' : conv.unreadCount > 0 ? 'rgba(29,158,117,0.035)' : 'transparent',
+                  background: selected ? 'var(--accent-light)' : conv.unreadCount > 0 ? 'rgba(29,158,117,0.035)' : idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)',
                   cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
                 }}>
                   <Avatar name={name} size={36} />

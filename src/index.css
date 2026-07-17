@@ -30,6 +30,14 @@
   --sp-5: 20px;
   --sp-6: 24px;
   --sp-7: 32px;
+  /* STANDARD ALTERNATING ROW COLORS — every list/table with rows uses these.
+     Even rows blue, odd rows green (matches Training Records, the reference).
+     JSX lists: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)'
+     Semantic states (flagged yellow, selected, unread) override the stripe. */
+  --row-a: #f8faff;         /* even row body — cool blue tint */
+  --row-b: #f5f7f2;         /* odd row body — soft green tint */
+  --row-a-strong: #eef2ff;  /* even row header / emphasis */
+  --row-b-strong: #edf5ea;  /* odd row header / emphasis */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -136,8 +144,12 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); font-family: var(--mono); padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
 td { padding: 10px; border-bottom: 1px solid var(--surface2); vertical-align: middle; transition: background 0.1s; }
-/* subtle row highlight — aids horizontal scanning on wide tables */
-tbody tr:hover td { background: rgba(26,25,22,0.03); }
+/* standard zebra striping (see --row-a/--row-b tokens); .flag-red rows keep
+   their semantic red background */
+tbody tr:nth-child(odd):not(.flag-red) td { background: var(--row-a); }
+tbody tr:nth-child(even):not(.flag-red) td { background: var(--row-b); }
+/* row hover highlight — declared AFTER zebra (equal specificity, later wins) */
+tbody tr:hover:not(.flag-red) td { background: #ecefe9; }
 tr:last-child td { border-bottom: none; }
 .flag-red { background: var(--accent2-light); }
 .flag-red td:first-child { border-left: 3px solid var(--accent2); }

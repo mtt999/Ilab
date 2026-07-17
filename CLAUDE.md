@@ -644,6 +644,14 @@ Allowed `padding` / `margin` / `gap` values: **even numbers 0–16** (0, 2, 4, 6
 ### UI icons — line icons, not emoji
 New UI chrome (buttons, banners, toggles) must use the shared line-icon set in `src/components/Icons.jsx` (1.7px stroke, rounded caps, inherits `currentColor`) — not raw emoji, which render inconsistently across platforms. Add new icons to that file in the same style. (Module-card emoji in `ALL_MODULES_META` are content, not chrome — they stay until the app-wide icon rollout.)
 
+### Alternating row colors — standard for every list/table
+Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f2` (odd, green tint); header/emphasis variants `--row-a-strong` `#eef2ff` / `--row-b-strong` `#edf5ea`.
+
+- **JSX card/div lists:** `background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)'`
+- **`<table>` screens:** zebra applied globally by CSS (`tbody tr:nth-child` rules in index.css) — do not add per-table backgrounds
+- **Semantic states override the stripe:** flagged yellow (`#fefce8` + orange border), selected (`--accent-light`), unread tint, `.flag-red`
+- Never hardcode the old hexes — always the `--row-*` tokens
+
 ### Typography scale
 26px page greeting / 24px `.section-title` screen headings / 15px body / 13px labels-captions. DM Sans is loaded in weights 300–700 (700 was added July 2026 — do not remove it; `fontWeight: 700` is used app-wide).
 

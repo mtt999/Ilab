@@ -172,7 +172,7 @@ export default function SuperAdminBell() {
 
           {/* Preferences Panel */}
           {showPrefs && (
-            <div style={{ borderBottom: '2px solid var(--border)', background: '#f8faff', padding: '12px 16px' }}>
+            <div style={{ borderBottom: '2px solid var(--border)', background: 'var(--row-a)', padding: '12px 16px' }}>
               <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: BLUE }}>Notification Preferences</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '6px 12px', alignItems: 'center', fontSize: 12 }}>
                 <div style={{ color: 'var(--text3)', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Event</div>

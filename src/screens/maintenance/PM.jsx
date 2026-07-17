@@ -522,7 +522,7 @@ function TaskAttachments({ taskId, userName, refreshToken }) {
             <div key={att.id} style={{ background: 'var(--surface2)', borderRadius: 10, marginBottom: 8, overflow: 'hidden', border: isDrawing ? '1px solid #bfdbfe' : '1px solid transparent' }}>
               {isImage && (
                 <a href={att.file_url} target="_blank" rel="noopener">
-                  <img src={att.file_url} alt={att.file_name} style={{ width: '100%', maxHeight: 220, objectFit: 'contain', display: 'block', background: '#f8faff', borderBottom: '1px solid var(--border)' }} />
+                  <img src={att.file_url} alt={att.file_name} style={{ width: '100%', maxHeight: 220, objectFit: 'contain', display: 'block', background: 'var(--row-a)', borderBottom: '1px solid var(--border)' }} />
                 </a>
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px' }}>

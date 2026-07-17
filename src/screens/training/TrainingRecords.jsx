@@ -271,11 +271,11 @@ function FreshTraining({ students, session }) {
         const masterRec = getRecord(u.id)
         const approvedCount = userRecs.filter(r => r.admin_approved).length
         const pct = userRecs.length ? Math.round((approvedCount / userRecs.length) * 100) : 0
-        const rowBg = idx % 2 === 0 ? '#f8faff' : '#f5f7f2'
+        const rowBg = idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)'
         return (
           <div key={u.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 12, overflow: 'hidden', background: rowBg }}>
             {/* Card header */}
-            <div style={{ padding: '12px 16px', background: idx % 2 === 0 ? '#eef2ff' : '#edf5ea', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ padding: '12px 16px', background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>{fullName(u)}</div>
@@ -480,7 +480,7 @@ function GolfCarTraining({ students, session }) {
       {filteredStudents.map((u, idx) => {
         const userRecs = getRecordsForUser(u.id)
         const trainedCount = userRecs.filter(r => r.trained).length
-        const headerBg = idx % 2 === 0 ? '#eef2ff' : '#edf5ea'
+        const headerBg = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'
         return (
           <div key={u.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 12, overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', background: headerBg, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
@@ -858,7 +858,7 @@ function EquipmentTraining({ students, session }) {
                 {displayStudents.map((u, idx) => {
             const recs = getRecords(u.id)
             const passedCount = recs.filter(r => r.passed_exam).length
-            const headerBg = idx % 2 === 0 ? '#eef2ff' : '#edf5ea'
+            const headerBg = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'
             return (
               <div key={u.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 12, overflow: 'hidden' }}>
                 <div style={{ padding: '12px 16px', background: headerBg, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1099,7 +1099,7 @@ function BuildingAlarm({ students, session }) {
       )}
       {filteredStudents.map((u, idx) => {
         const rec = getRecord(u.id)
-        const headerBg = idx % 2 === 0 ? '#eef2ff' : '#edf5ea'
+        const headerBg = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'
         return (
           <div key={u.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 10, overflow: 'hidden' }}>
             <div style={{ padding: '10px 16px', background: headerBg, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
