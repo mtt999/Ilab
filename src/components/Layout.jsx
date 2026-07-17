@@ -177,7 +177,7 @@ function LabHiveLogo({ size = 40 }) {
 }
 
 // ── Sidebar ────────────────────────────────────────────────────
-function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubTab, setScreen, accentColor, accentLight }) {
+function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubTab, setScreen, accentColor, accentLight, forceExpanded = false }) {
   const isDash      = screen === 'dashboard'
   const tabs        = getScreenTabs(screen, session)
   const mod         = MODULE_META[screen]
@@ -238,11 +238,15 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
     return next
   })
 
-  // Icon-only collapsed sidebar — persisted in localStorage
+  // Icon-only collapsed sidebar — persisted in localStorage.
+  // forceExpanded (mobile drawer) always shows the full sidebar and makes the
+  // collapse toggle a no-op so it can't desync the desktop preference.
   const [sidebarIconOnly, setSidebarIconOnly] = useState(
     () => localStorage.getItem('ilab_sidebar_icon_only') === 'true'
   )
+  const iconOnly = forceExpanded ? false : sidebarIconOnly
   const toggleIconOnly = (val) => {
+    if (forceExpanded) return
     setSidebarIconOnly(val)
     localStorage.setItem('ilab_sidebar_icon_only', String(val))
   }
@@ -291,7 +295,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
   return (
     <>
     <aside style={{
-      width: sidebarIconOnly ? 56 : 220,
+      width: iconOnly ? 56 : 220,
       flexShrink: 0, background: '#fff',
       borderRight: '1px solid var(--border)',
       display: 'flex', flexDirection: 'column',
@@ -300,7 +304,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
     }}>
 
       {/* ── Icon-only rail (collapsed) ── */}
-      {sidebarIconOnly ? (
+      {iconOnly ? (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 4px', flex: 1, overflowY: 'auto' }}>
             {AppsIconBtn()}
@@ -459,6 +463,9 @@ export default function Layout({ children }) {
   const [orgLogoUrl, setOrgLogoUrl] = useState(null)
   const [showAbout,   setShowAbout]   = useState(false)
   const [showContact, setShowContact] = useState(false)
+  // Mobile: sidebar lives in a slide-in drawer opened by the header hamburger
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  useEffect(() => { setMobileDrawerOpen(false) }, [screen, sidebarSubTab])
 
   useEffect(() => {
     const orgId = session?.organizationId
@@ -479,6 +486,17 @@ export default function Layout({ children }) {
           </div>
         )}
 
+        {isMobile && !isProto && session && (
+          <button
+            onClick={() => setMobileDrawerOpen(true)}
+            aria-label="Open menu"
+            style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: 8 }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+            </svg>
+          </button>
+        )}
         <div onClick={() => setScreen('dashboard')} style={{ cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ marginTop: 20 }}><LabHiveLogo size={79} /></div>
           {!isMobile && (
@@ -599,6 +617,26 @@ export default function Layout({ children }) {
             })}
           </div>
         </nav>
+      )}
+
+      {/* ── Mobile sidebar drawer ── */}
+      {isMobile && !isProto && session && mobileDrawerOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>
+          <div onClick={() => setMobileDrawerOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
+          <div className="mobile-drawer" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, display: 'flex', background: '#fff', boxShadow: '4px 0 24px rgba(0,0,0,0.25)', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            <Sidebar
+              session={session}
+              screen={screen}
+              activeModules={activeModules}
+              sidebarSubTab={sidebarSubTab}
+              setSidebarSubTab={setSidebarSubTab}
+              setScreen={setScreen}
+              accentColor={accentColor}
+              accentLight={accentLight}
+              forceExpanded
+            />
+          </div>
+        </div>
       )}
 
       {showAbout   && <AboutModal onClose={() => setShowAbout(false)} onContact={() => { setShowAbout(false); setShowContact(true) }} />}

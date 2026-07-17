@@ -183,6 +183,13 @@ main > * { animation: screen-fade 0.16s ease-out; }
   main > * { animation: none; }
 }
 
+/* ── Mobile sidebar drawer ── */
+.mobile-drawer { animation: drawer-in 0.22s cubic-bezier(0.4,0,0.2,1); }
+@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer { animation: none; }
+}
+
 /* ── Empty state ── */
 .empty-state { text-align: center; padding: 48px 24px; color: var(--text3); font-size: 14px; }
 .empty-icon { font-size: 32px; margin-bottom: 8px; }
