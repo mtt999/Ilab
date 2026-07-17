@@ -5,13 +5,29 @@ import { sb } from '../../lib/supabase'
 export default function Inspection() {
   const { inspection, setInspection, setScreen, setLastRecord, session, toast } = useAppStore()
   const [tab, setTab] = useState('count')
+  // Last inspection's counts for this room, keyed by supply id — shown as a
+  // gray template in the count box. Untouched items save the template value.
+  const [lastQtys, setLastQtys] = useState(null)
 
   useEffect(() => { if (!inspection) setScreen('home') }, [inspection])
+  useEffect(() => {
+    if (!inspection?.roomId) return
+    sb.from('inspections').select('results')
+      .eq('room_id', inspection.roomId)
+      .order('inspected_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => {
+        const map = {}
+        ;(data?.results || []).forEach(r => { if (r.id != null && r.qty != null) map[r.id] = r.qty })
+        setLastQtys(map)
+      })
+  }, [inspection?.roomId])
   if (!inspection) return null
 
   const { items, index, results } = inspection
   const item = items[index]
-  const currentQty = results[index]?.qty ?? 0
+  const enteredQty = results[index]?.qty                 // undefined until touched
+  const lastQty = lastQtys?.[item.id]                    // previous inspection's count
+  const currentQty = enteredQty ?? lastQty ?? 0          // effective value (template fallback)
   const currentQtyNeeded = results[index]?.qty_needed ?? ''
 
   function setQty(val) {
@@ -21,16 +37,28 @@ export default function Inspection() {
     setInspection({ ...inspection, results: updated })
   }
 
+  function clearQty() {
+    // Empty box → back to showing the gray template
+    const updated = [...results]
+    updated[index] = { ...item, qty: undefined, qty_needed: currentQtyNeeded, low: (lastQty ?? 0) < item.min_qty }
+    setInspection({ ...inspection, results: updated })
+  }
+
   function setQtyNeeded(val) {
     const qty_needed = Math.max(0, parseInt(val) || 0)
     const updated = [...results]
-    updated[index] = { ...item, qty: currentQty, qty_needed, low: currentQty < item.min_qty }
+    updated[index] = { ...item, qty: enteredQty, qty_needed, low: currentQty < item.min_qty }
     setInspection({ ...inspection, results: updated })
+  }
+
+  // Snapshot the current item, resolving an untouched box to the template value
+  function snapshot(updated) {
+    updated[index] = { ...item, qty: currentQty, qty_needed: currentQtyNeeded || 0, low: currentQty < item.min_qty }
   }
 
   function next() {
     const updated = [...results]
-    if (!updated[index]) updated[index] = { ...item, qty: currentQty, qty_needed: currentQtyNeeded, low: currentQty < item.min_qty }
+    snapshot(updated)
     if (index < items.length - 1) {
       setInspection({ ...inspection, index: index + 1, results: updated })
       setTab('count')
@@ -41,7 +69,7 @@ export default function Inspection() {
 
   function back() {
     const updated = [...results]
-    if (!updated[index]) updated[index] = { ...item, qty: currentQty, qty_needed: currentQtyNeeded, low: currentQty < item.min_qty }
+    snapshot(updated)
     setInspection({ ...inspection, index: index - 1, results: updated })
     setTab('count')
   }
@@ -95,11 +123,19 @@ export default function Inspection() {
         {tab === 'count' && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current count</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: lastQty != null ? 6 : 20 }}>
               <button onClick={() => setQty(currentQty - 1)} style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--surface2)', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)' }}>−</button>
-              <input type="number" value={currentQty} onChange={e => setQty(parseInt(e.target.value) || 0)} style={{ width: 100, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 32, fontWeight: 500, borderRadius: 'var(--radius)', padding: 8 }} />
+              <input type="number" value={enteredQty ?? ''}
+                placeholder={lastQty != null ? String(lastQty) : '0'}
+                onChange={e => e.target.value === '' ? clearQty() : setQty(parseInt(e.target.value) || 0)}
+                style={{ width: 100, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 32, fontWeight: 500, borderRadius: 'var(--radius)', padding: 8 }} />
               <button onClick={() => setQty(currentQty + 1)} style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--surface2)', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)' }}>+</button>
             </div>
+            {lastQty != null && (
+              <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', marginBottom: 16 }}>
+                Last inspected: {lastQty} {item.unit}{enteredQty == null ? ' — will be saved unless you change it' : ''}
+              </div>
+            )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
               <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Needs to be ordered ({item.unit})</div>
               <input
