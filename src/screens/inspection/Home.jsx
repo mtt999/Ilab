@@ -562,33 +562,51 @@ function ExportData() {
       doc.text(`${rec.inspector}  ·  ${timeStr}`, PW - MR - 2, y + 5, { align: 'right' })
       doc.setTextColor(0); y += 9
 
+      // First purchase link per item — rendered as a clickable "Buy" cell
+      const rowLinks = (rec.results || []).map(r => (r.links || []).find(l => l?.url)?.url || null)
       const tbl = autoTable(doc, {
         startY: y,
         margin: { left: ML, right: MR },
-        head: [['#', 'Item Name', 'Unit', 'Count', 'Min', 'Status', 'To Order', 'Notes']],
-        body: (rec.results || []).map((r, idx) => [
-          idx + 1, r.name || '', r.unit || '', r.qty ?? '', r.min_qty ?? '',
-          r.low ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '',
-        ]),
+        head: [['#', 'Item Name', 'Unit', 'Count', 'Min', 'Status', 'To Order', 'Notes', 'Link']],
+        body: (rec.results || []).map((r, idx) => {
+          const links = (r.links || []).filter(l => l?.url)
+          const linkText = links.length ? (links[0].label || 'Buy now') + (links.length > 1 ? ` +${links.length - 1}` : '') : ''
+          return [
+            idx + 1, r.name || '', r.unit || '', r.qty ?? '', r.min_qty ?? '',
+            r.low ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '', linkText,
+          ]
+        }),
         theme: 'grid',
         headStyles: { fillColor: [29, 158, 117], textColor: [255,255,255], fontSize: 8, fontStyle: 'bold', halign: 'center' },
         bodyStyles: { fontSize: 7.5, cellPadding: 1.5 },
         alternateRowStyles: { fillColor: [240, 250, 245] },
         columnStyles: {
           0: { cellWidth: 7,  halign: 'center' },
-          1: { cellWidth: 44 },
+          1: { cellWidth: 40 },
           2: { cellWidth: 12, halign: 'center' },
           3: { cellWidth: 13, halign: 'center' },
           4: { cellWidth: 12, halign: 'center' },
           5: { cellWidth: 14, halign: 'center' },
           6: { cellWidth: 16, halign: 'center' },
           7: { cellWidth: 'auto' },
+          8: { cellWidth: 20 },
         },
         didParseCell: data => {
           if (data.section === 'body' && data.column.index === 5 && data.cell.raw === 'LOW') {
             data.cell.styles.fillColor = [254, 243, 199]
             data.cell.styles.textColor = [146, 64, 14]
             data.cell.styles.fontStyle = 'bold'
+          }
+          // Link cell: blue, to signal clickability
+          if (data.section === 'body' && data.column.index === 8 && rowLinks[data.row.index]) {
+            data.cell.styles.textColor = [23, 92, 211]
+          }
+        },
+        didDrawCell: data => {
+          // Overlay a real PDF link annotation on the link cell
+          if (data.section === 'body' && data.column.index === 8) {
+            const url = rowLinks[data.row.index]
+            if (url) doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url })
           }
         },
       })
@@ -708,7 +726,7 @@ function ExportData() {
       // Column widths first — must be before any data
       ws.columns = [
         { width: 36 }, { width: 12 }, { width: 10 },
-        { width: 12 }, { width: 16 }, { width: 18 }, { width: 28 },
+        { width: 12 }, { width: 16 }, { width: 18 }, { width: 28 }, { width: 22 },
       ]
 
       const labhiveB64 = await imgUrlToBase64(window.location.origin + '/labhive_logo.svg')
@@ -724,7 +742,7 @@ function ExportData() {
       }
       if (orgB64) {
         const id = wb.addImage({ base64: orgB64, extension: 'png' })
-        ws.addImage(id, { tl: { col: 6, row: 0 }, ext: { width: 80, height: 55 } })
+        ws.addImage(id, { tl: { col: 7, row: 0 }, ext: { width: 80, height: 55 } })
       }
       ws.mergeCells('B2:F2')
       const titleCell = ws.getCell('B2')
@@ -741,7 +759,7 @@ function ExportData() {
 
       // ── Row 4: Teal divider ──
       ws.getRow(4).height = 4
-      for (let c = 1; c <= 7; c++) {
+      for (let c = 1; c <= 8; c++) {
         ws.getRow(4).getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D9E75' } }
       }
 
@@ -783,19 +801,19 @@ function ExportData() {
 
       // ── Row 9: Light separator ──
       ws.getRow(9).height = 3
-      for (let c = 1; c <= 7; c++) {
+      for (let c = 1; c <= 8; c++) {
         ws.getRow(9).getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } }
       }
 
       let dr = 10  // data row cursor
 
       // ── Inspected room sections ──
-      const colHeaders = ['Item', 'Unit', 'Count', 'Min Qty', 'Status', 'To Order', 'Notes']
+      const colHeaders = ['Item', 'Unit', 'Count', 'Min Qty', 'Status', 'To Order', 'Notes', 'Purchase Link']
       for (const rec of roomRecords) {
         const timeStr = new Date(rec.inspected_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
         // Room header bar — dark navy, merged full width
-        ws.mergeCells(dr, 1, dr, 7)
+        ws.mergeCells(dr, 1, dr, 8)
         ws.getRow(dr).height = 22
         const rhCell = ws.getCell(dr, 1)
         rhCell.value = `ROOM: ${rec.room_name}   —   ${rec.inspector}   —   ${timeStr}`
@@ -819,7 +837,7 @@ function ExportData() {
         ;(rec.results || []).forEach((r, idx) => {
           const itemRow = ws.getRow(dr); itemRow.height = 16
           const isLow = r.low; const isAlt = idx % 2 === 1
-          const rowData = [r.name, r.unit, r.qty ?? '', r.min_qty ?? '', isLow ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '']
+          const rowData = [r.name, r.unit, r.qty ?? '', r.min_qty ?? '', isLow ? 'LOW' : 'OK', r.qty_needed || '', r.notes || '', '']
           rowData.forEach((val, ci) => {
             const cell = itemRow.getCell(ci + 1)
             cell.value = val ?? ''
@@ -830,6 +848,16 @@ function ExportData() {
             }
             cell.alignment = ci >= 2 && ci <= 5 ? { horizontal: 'center', vertical: 'middle' } : { vertical: 'middle' }
           })
+          // Purchase link cell — real clickable hyperlink (first link with a URL)
+          const links = (r.links || []).filter(l => l?.url)
+          if (links.length) {
+            const linkCell = itemRow.getCell(8)
+            linkCell.value = {
+              text: (links[0].label || 'Buy now') + (links.length > 1 ? ` +${links.length - 1} more` : ''),
+              hyperlink: links[0].url,
+            }
+            linkCell.font = { size: 9, color: { argb: 'FF175CD3' }, underline: true }
+          }
           dr++
         })
         dr++ // gap row
@@ -837,7 +865,7 @@ function ExportData() {
 
       // ── Uninspected rooms section ──
       if (uninspectedRooms.length > 0) {
-        ws.mergeCells(dr, 1, dr, 7)
+        ws.mergeCells(dr, 1, dr, 8)
         ws.getRow(dr).height = 22
         const uhCell = ws.getCell(dr, 1)
         uhCell.value = 'ROOMS NOT INSPECTED THIS DATE'
@@ -847,7 +875,7 @@ function ExportData() {
         dr++
 
         uninspectedRooms.forEach(({ room_name, items }) => {
-          ws.mergeCells(dr, 1, dr, 7)
+          ws.mergeCells(dr, 1, dr, 8)
           ws.getRow(dr).height = 20
           const rCell = ws.getCell(dr, 1)
           rCell.value = `ROOM: ${room_name}`
@@ -857,7 +885,7 @@ function ExportData() {
           dr++
 
           const uChrRow = ws.getRow(dr); uChrRow.height = 18
-          ;['Item', 'Unit', 'Min Qty', '', 'Status', '', 'Notes'].forEach((h, ci) => {
+          ;['Item', 'Unit', 'Min Qty', '', 'Status', '', 'Notes', ''].forEach((h, ci) => {
             const cell = uChrRow.getCell(ci + 1)
             cell.value = h
             cell.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } }
@@ -869,7 +897,7 @@ function ExportData() {
           items.forEach((s, idx) => {
             const itemRow = ws.getRow(dr); itemRow.height = 16
             const isAlt = idx % 2 === 1
-            ;[s.name, s.unit, s.min_qty ?? '', '', 'Not inspected', '', s.notes || ''].forEach((val, ci) => {
+            ;[s.name, s.unit, s.min_qty ?? '', '', 'Not inspected', '', s.notes || '', ''].forEach((val, ci) => {
               const cell = itemRow.getCell(ci + 1)
               cell.value = val ?? ''
               cell.font = { size: 9, italic: true, color: { argb: 'FF6B7280' } }

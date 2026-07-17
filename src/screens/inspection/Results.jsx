@@ -31,6 +31,8 @@ function buildInspectionSheet(rec, results) {
   const dateStr = new Date(rec.inspected_at).toLocaleString()
   const rows = []
   const styles = {}   // rowIndex → style
+  const linkCells = []   // { r } → clickable hyperlink on the Purchase Links column
+  const firstUrl = (r) => (r.links || []).find(l => l?.url)?.url || null
 
   rows.push(['LabStock — Inspection Report']); styles[rows.length - 1] = STYLE_TITLE
   rows.push(['Date:', dateStr])
@@ -41,7 +43,11 @@ function buildInspectionSheet(rec, results) {
   if (rlow.length) {
     rows.push(['⚠ ITEMS NEEDING RESTOCK']); styles[rows.length - 1] = STYLE_WARN
     rows.push(['Item', 'Unit', 'Current Count', 'Minimum', 'Shortage', 'Notes', 'Purchase Links']); styles[rows.length - 1] = STYLE_HEADER
-    rlow.forEach(r => { rows.push([r.name, r.unit, r.qty, r.min_qty, r.min_qty - r.qty, r.notes || '', fmtLinks(r.links)]); styles[rows.length - 1] = STYLE_LOW })
+    rlow.forEach(r => {
+      rows.push([r.name, r.unit, r.qty, r.min_qty, r.min_qty - r.qty, r.notes || '', fmtLinks(r.links)])
+      styles[rows.length - 1] = STYLE_LOW
+      if (firstUrl(r)) linkCells.push({ r: rows.length - 1, url: firstUrl(r) })
+    })
     rows.push([])
   }
 
@@ -50,6 +56,7 @@ function buildInspectionSheet(rec, results) {
   results.forEach(r => {
     rows.push([r.name, r.unit, r.qty, r.min_qty, r.low ? 'NEEDS RESTOCK' : 'OK', r.notes || '', fmtLinks(r.links)])
     if (r.low) styles[rows.length - 1] = STYLE_LOW
+    if (firstUrl(r)) linkCells.push({ r: rows.length - 1, url: firstUrl(r) })
   })
 
   const ws = XLSX.utils.aoa_to_sheet(rows)
@@ -57,6 +64,12 @@ function buildInspectionSheet(rec, results) {
 
   Object.entries(styles).forEach(([rowIdx, style]) => {
     applyRowStyle(ws, Number(rowIdx), 7, style)
+  })
+
+  // Make the Purchase Links column clickable (first URL per item)
+  linkCells.forEach(({ r, url }) => {
+    const ref = XLSX.utils.encode_cell({ r, c: 6 })
+    if (ws[ref]) ws[ref].l = { Target: url }
   })
 
   return ws
