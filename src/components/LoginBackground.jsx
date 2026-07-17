@@ -156,12 +156,12 @@ export default function LoginBackground() {
     function init() {
       const mobile = W < 768
       const cell = mobile ? .62 : 1        // shrink logo cells on phones
-      rings = Array.from({ length: mobile ? 6 : 9 }, () => {
-        const depth = rnd(.45, 1)
+      rings = Array.from({ length: mobile ? 11 : 18 }, () => {
+        const depth = rnd(.55, 1)
         return {
-          x: rnd(0, W), y: rnd(0, H), R: rnd(20, 50) * depth, a: rnd(0, 6.3), va: rnd(-.001, .001) * depth,
+          x: rnd(0, W), y: rnd(0, H), R: rnd(26, 62) * depth, a: rnd(0, 6.3), va: rnd(-.001, .001) * depth,
           vx: rnd(-.09, .09) * depth, vy: rnd(-.07, .07) * depth,
-          c: [TEAL, PURPLE, ORANGE][Math.floor(rnd(0, 3))], al: rnd(.09, .22) * depth, lw: .9 + depth * .7, depth,
+          c: [TEAL, PURPLE, ORANGE][Math.floor(rnd(0, 3))], al: rnd(.16, .30) * depth, lw: .9 + depth * .7, depth,
         }
       })
       logoHexes = [
