@@ -27,7 +27,7 @@ function fullLocation(ctx) {
   return [ctx.orgName, ctx.location].filter(Boolean).join(' - ')
 }
 
-function description(booking, ctx) {
+function descriptionParts(booking, ctx) {
   const s = new Date(booking.start_time), e = new Date(booking.end_time)
   const day = (d) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   const tm = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -43,9 +43,24 @@ function description(booking, ctx) {
   ]
   if (booking.notes) parts.push(`Notes: ${booking.notes}`)
   parts.push(`This reminder was sent to ${who} from LabHive.app.`)
-  parts.push(`The link below will guide you to the booking page on the website or app:`)
-  parts.push(BOOKING_URL)
-  return parts.join('\n')
+  return parts
+}
+
+// Plain-text body: bare URL on its own line (Outlook auto-links it on save)
+function description(booking, ctx) {
+  return [
+    ...descriptionParts(booking, ctx),
+    'The link below will guide you to the booking page on the website or app:',
+    BOOKING_URL,
+  ].join('\n')
+}
+
+const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// HTML body: real clickable anchor (Google Calendar details + ICS X-ALT-DESC)
+function descriptionHtml(booking, ctx) {
+  return descriptionParts(booking, ctx).map(p => escHtml(p)).join('<br>') +
+    `<br><a href="${BOOKING_URL}">Open the booking page in LabHive →</a>`
 }
 
 export function googleCalUrl(booking, ctx) {
@@ -53,7 +68,7 @@ export function googleCalUrl(booking, ctx) {
     action: 'TEMPLATE',
     text: summary(ctx),
     dates: `${toCalUtc(booking.start_time)}/${toCalUtc(booking.end_time)}`,
-    details: description(booking, ctx),
+    details: descriptionHtml(booking, ctx),   // Google renders HTML — clickable link
   })
   const loc = fullLocation(ctx)
   if (loc) p.set('location', loc)
@@ -95,6 +110,8 @@ export function downloadIcs(booking, ctx) {
     `SUMMARY:${icsEscape(summary(ctx))}`,
     ...(loc ? [`LOCATION:${icsEscape(loc)}`] : []),
     `DESCRIPTION:${icsEscape(description(booking, ctx))}`,
+    // HTML alternative — Outlook/Google render this with a clickable link
+    `X-ALT-DESC;FMTTYPE=text/html:${icsEscape(`<html><body>${descriptionHtml(booking, ctx)}</body></html>`)}`,
     `URL:${BOOKING_URL}`,
     'END:VEVENT',
     'END:VCALENDAR',
