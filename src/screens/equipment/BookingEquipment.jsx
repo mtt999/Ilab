@@ -1648,12 +1648,19 @@ function CleanlinessSection({ booking, session, eqName, onUpdated }) {
 }
 
 // ── Booking Detail Modal ──────────────────────────────────────
-function BookingDetail({ booking, equipment, session, onEdit, onDelete, onDeny, onClose, onApprove, onUpdated, photoRequired }) {
+function BookingDetail({ booking, equipment, session, onEdit, onDelete, onDeny, onClose, onApprove, onUpdated, photoRequired, orgName }) {
   const [denyReason, setDenyReason] = useState('')
   const [showDenyForm, setShowDenyForm] = useState(false)
 
   const eq = equipment
   const isOwn = booking.user_id === session.userId || booking.user_name === session.username
+  // context for the "Add to calendar" links
+  const calCtx = {
+    eqName: eq?.nickname || eq?.equipment_name,
+    orgName: orgName || '',
+    location: eq?.location || '',
+    bookedBy: booking.booked_on_behalf_of || booking.user_name,
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -1682,9 +1689,9 @@ function BookingDetail({ booking, equipment, session, onEdit, onDelete, onDeny, 
               <IconCalendarPlus size={15} /> Add to your calendar
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <a className="btn btn-sm" href={googleCalUrl(booking, eq?.nickname || eq?.equipment_name)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Google Calendar</a>
-              <a className="btn btn-sm" href={outlookCalUrl(booking, eq?.nickname || eq?.equipment_name)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Outlook</a>
-              <button className="btn btn-sm" onClick={() => downloadIcs(booking, eq?.nickname || eq?.equipment_name)}>.ics file</button>
+              <a className="btn btn-sm" href={googleCalUrl(booking, calCtx)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Google Calendar</a>
+              <a className="btn btn-sm" href={outlookCalUrl(booking, calCtx)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Outlook</a>
+              <button className="btn btn-sm" onClick={() => downloadIcs(booking, calCtx)}>.ics file</button>
             </div>
           </div>
         )}
@@ -2207,6 +2214,7 @@ function BookingCalendar({ session }) {
   const [retrainingBlocked, setRetrainingBlocked] = useState([])
   const [activeBlock, setActiveBlock] = useState(null)
   const [photoRequired, setPhotoRequired] = useState(false)
+  const [orgName, setOrgName] = useState('')
   const photoRequiredRef = useRef(false)
   const orgEqIdsRef = useRef(null)
   const equipmentRef = useRef([])
@@ -2287,10 +2295,11 @@ function BookingCalendar({ session }) {
   async function loadPhotoRequired() {
     if (!session?.organizationId) return
     const { data } = await sb.from('organizations')
-      .select('require_equipment_photos').eq('id', session.organizationId).maybeSingle()
+      .select('require_equipment_photos, name').eq('id', session.organizationId).maybeSingle()
     const val = data?.require_equipment_photos === true
     setPhotoRequired(val)
     photoRequiredRef.current = val
+    if (data?.name) setOrgName(data.name)
   }
 
   async function checkPhotoReminders(eqList) {
@@ -3088,6 +3097,7 @@ function BookingCalendar({ session }) {
           onClose={() => setDetailBooking(null)}
           onUpdated={loadBookings}
           photoRequired={photoRequired}
+          orgName={orgName}
         />
       )}
     </div>
