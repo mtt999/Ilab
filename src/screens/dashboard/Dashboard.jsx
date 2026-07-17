@@ -550,7 +550,19 @@ export default function Dashboard() {
   const [savingUrl, setSavingUrl] = useState(false)
   const [userAccess, setUserAccess] = useState(null)
   const [studentAllowedPool, setStudentAllowedPool] = useState(null)
-  const [moduleImages, setModuleImages] = useState({})
+  // Module card images: seed from localStorage cache (stale-while-revalidate)
+  // so repeat visits paint images on the first frame instead of flashing the
+  // emoji fallback while loadSettings() round-trips to Supabase.
+  const imgCacheKey = `ilab_module_imgs_${session?.loginMode || 'team'}_${session?.organizationId || 'global'}`
+  const [moduleImages, setModuleImages] = useState(() => {
+    const base = import.meta.env.BASE_URL
+    const defaults = {   // local SVGs — always available, no fetch needed
+      pm: `${base}icon-pm.svg`, barcode: `${base}icon-barcode.svg`,
+      barcodeqr: `${base}icon-barcodeqr.svg`, profile: `${base}icon-profile.svg`,
+      supply: `${base}icon-supply.svg`,
+    }
+    try { return { ...defaults, ...(JSON.parse(localStorage.getItem(imgCacheKey) || 'null') || {}) } } catch { return defaults }
+  })
   const [orgName, setOrgName] = useState('')
   const [customLinks, setCustomLinks] = useState([])
   const [soloPoolFilter, setSoloPoolFilter] = useState(null)
@@ -742,6 +754,7 @@ export default function Dashboard() {
     }
 
     setModuleImages(imgs)
+    try { localStorage.setItem(imgCacheKey, JSON.stringify(imgs)) } catch { /* storage full/blocked — cache is best-effort */ }
   }
 
   async function saveUrl() {
