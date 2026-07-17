@@ -27,6 +27,28 @@ export default function LoginBackground() {
 
     let rings = [], logoHexes = [], dnas = [], sparks = []
 
+    // The login card is an obstacle: floating items bounce off it instead of
+    // sliding underneath. Its viewport rect is re-measured every few frames
+    // (cheap) so scrolling / switching to the sign-up form stays accurate.
+    let cardRect = null
+    function updateCardRect() {
+      const el = document.querySelector('.card')
+      cardRect = el ? el.getBoundingClientRect() : null
+    }
+    function bounceOffCard(o, r) {
+      if (!cardRect) return
+      const L = cardRect.left - r, R = cardRect.right + r
+      const T = cardRect.top - r, B = cardRect.bottom + r
+      if (o.x > L && o.x < R && o.y > T && o.y < B) {
+        const dl = o.x - L, dr = R - o.x, dt = o.y - T, db = B - o.y
+        const m = Math.min(dl, dr, dt, db)     // push out along shallowest side
+        if (m === dl)      { o.x = L; o.vx = -Math.abs(o.vx) }
+        else if (m === dr) { o.x = R; o.vx =  Math.abs(o.vx) }
+        else if (m === dt) { o.y = T; o.vy = -Math.abs(o.vy) }
+        else               { o.y = B; o.vy =  Math.abs(o.vy) }
+      }
+    }
+
     function size() {
       W = window.innerWidth; H = window.innerHeight
       cv.width = W * DPR; cv.height = H * DPR
@@ -174,13 +196,24 @@ export default function LoginBackground() {
         { x: W * .50, y: H * .08, len: 190, amp: 16, rot: -.12, sp: .008, al: .40, vx: .03, vy: .012 },
         { x: W * .42, y: H * .93, len: 150, amp: 13, rot: .10, sp: -.006, al: .32, vx: -.025, vy: -.01 },
       ]
-      sparks = Array.from({ length: mobile ? 10 : 16 }, () => ({
-        x: rnd(0, W), y: rnd(0, H), s: rnd(2, 4.5), ph: rnd(0, 6.3), sp: rnd(.008, .02),
-        plus: Math.random() < .5, c: [TEAL, PURPLE, ORANGE][Math.floor(rnd(0, 3))],
-      }))
+      updateCardRect()
+      sparks = Array.from({ length: mobile ? 10 : 16 }, () => {
+        let x = rnd(0, W), y = rnd(0, H)
+        // sparks are static — re-roll any that would be hidden under the card
+        for (let tries = 0; tries < 8 && cardRect &&
+             x > cardRect.left - 6 && x < cardRect.right + 6 &&
+             y > cardRect.top - 6 && y < cardRect.bottom + 6; tries++) {
+          x = rnd(0, W); y = rnd(0, H)
+        }
+        return {
+          x, y, s: rnd(2, 4.5), ph: rnd(0, 6.3), sp: rnd(.008, .02),
+          plus: Math.random() < .5, c: [TEAL, PURPLE, ORANGE][Math.floor(rnd(0, 3))],
+        }
+      })
     }
 
     function draw() {
+      if (t % 15 === 0) updateCardRect()
       ctx.clearRect(0, 0, W, H)
       for (const sp of sparks) {
         const a = (Math.sin(t * sp.sp + sp.ph) + 1) / 2 * .35
@@ -196,6 +229,7 @@ export default function LoginBackground() {
         g.x += g.vx; g.y += g.vy; g.a += g.va
         if (g.x < -80) g.x = W + 80; if (g.x > W + 80) g.x = -80
         if (g.y < -80) g.y = H + 80; if (g.y > H + 80) g.y = -80
+        bounceOffCard(g, g.R)
         hexPath(g.x, g.y, g.R, g.a); ctx.strokeStyle = `rgba(${g.c},${g.al})`; ctx.lineWidth = g.lw; ctx.stroke()
         for (let k = 0; k < 6; k++) {
           const th = g.a + k * Math.PI / 3
@@ -207,12 +241,14 @@ export default function LoginBackground() {
         d.x += d.vx; d.y += d.vy
         if (d.x < -d.len / 2) d.x = W + d.len / 2; if (d.x > W + d.len / 2) d.x = -d.len / 2
         if (d.y < -40) d.y = H + 40; if (d.y > H + 40) d.y = -40
+        bounceOffCard(d, d.amp + 12)
         drawDnaSeg(d)
       }
       for (const h of logoHexes) {
         h.x += h.vx; h.y += h.vy; h.rot += h.vrot
         if (h.x < h.R) h.vx = Math.abs(h.vx); if (h.x > W - h.R) h.vx = -Math.abs(h.vx)
         if (h.y < h.R) h.vy = Math.abs(h.vy); if (h.y > H - h.R) h.vy = -Math.abs(h.vy)
+        bounceOffCard(h, h.R)
         const bob = Math.sin(t * .005 + h.R) * 2
         const g = ctx.createRadialGradient(h.x, h.y + bob, h.R * .2, h.x, h.y + bob, h.R * 1.5)
         g.addColorStop(0, `rgba(${h.col},.07)`); g.addColorStop(1, `rgba(${h.col},0)`)
