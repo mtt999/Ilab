@@ -33,6 +33,7 @@ function buildInspectionSheet(rec, results) {
   const styles = {}   // rowIndex → style
   const linkCells = []   // { r } → clickable hyperlink on the Purchase Links column
   const firstUrl = (r) => (r.links || []).find(l => l?.url)?.url || null
+  const alignRows = []   // table rows (headers + items) that get column alignment
 
   rows.push(['LabStock — Inspection Report']); styles[rows.length - 1] = STYLE_TITLE
   rows.push(['Date:', dateStr])
@@ -42,20 +43,22 @@ function buildInspectionSheet(rec, results) {
 
   if (rlow.length) {
     rows.push(['⚠ ITEMS NEEDING RESTOCK']); styles[rows.length - 1] = STYLE_WARN
-    rows.push(['Item', 'Unit', 'Current Count', 'Minimum', 'Shortage', 'Notes', 'Purchase Links']); styles[rows.length - 1] = STYLE_HEADER
+    rows.push(['Item', 'Unit', 'Current Count', 'Minimum', 'Shortage', 'Notes', 'Purchase Links']); styles[rows.length - 1] = STYLE_HEADER; alignRows.push(rows.length - 1)
     rlow.forEach(r => {
       rows.push([r.name, r.unit, r.qty, r.min_qty, r.min_qty - r.qty, r.notes || '', fmtLinks(r.links)])
       styles[rows.length - 1] = STYLE_LOW
+      alignRows.push(rows.length - 1)
       if (firstUrl(r)) linkCells.push({ r: rows.length - 1, url: firstUrl(r) })
     })
     rows.push([])
   }
 
   rows.push(['FULL INVENTORY']); styles[rows.length - 1] = STYLE_SECTION
-  rows.push(['Item', 'Unit', 'Count', 'Minimum', 'Status', 'Notes', 'Purchase Links']); styles[rows.length - 1] = STYLE_HEADER
+  rows.push(['Item', 'Unit', 'Count', 'Minimum', 'Status', 'Notes', 'Purchase Links']); styles[rows.length - 1] = STYLE_HEADER; alignRows.push(rows.length - 1)
   results.forEach(r => {
     rows.push([r.name, r.unit, r.qty, r.min_qty, r.low ? 'NEEDS RESTOCK' : 'OK', r.notes || '', fmtLinks(r.links)])
     if (r.low) styles[rows.length - 1] = STYLE_LOW
+    alignRows.push(rows.length - 1)
     if (firstUrl(r)) linkCells.push({ r: rows.length - 1, url: firstUrl(r) })
   })
 
@@ -70,6 +73,17 @@ function buildInspectionSheet(rec, results) {
   linkCells.forEach(({ r, url }) => {
     const ref = XLSX.utils.encode_cell({ r, c: 6 })
     if (ws[ref]) ws[ref].l = { Target: url }
+  })
+
+  // Alignment: Item (0) and Notes (5) left+middle; all other columns center+middle.
+  // Runs after applyRowStyle and merges so fills/fonts are preserved.
+  alignRows.forEach(r => {
+    for (let c = 0; c < 7; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c })
+      if (!ws[ref]) continue
+      const horizontal = (c === 0 || c === 5) ? 'left' : 'center'
+      ws[ref].s = { ...(ws[ref].s || {}), alignment: { horizontal, vertical: 'center' } }
+    }
   })
 
   return ws
