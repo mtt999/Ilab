@@ -5,6 +5,7 @@ import AboutModal from '../../components/AboutModal'
 import CustomerServiceModal from '../../components/CustomerServiceModal'
 import SaraChat from '../../components/SaraChat'
 import { IconQr, IconAlert, IconEye, IconEyeOff, IconCheckCircle, IconSparkle, IconInfo, IconMail } from '../../components/Icons'
+import LoginBackground from '../../components/LoginBackground'
 
 function LabHiveLogo({ size = 120 }) {
   return <img src={import.meta.env.BASE_URL + 'labhive_logo.svg'} width={size} height={size} style={{ display: 'block', objectFit: 'contain', margin: '0 auto' }} alt="LabHive" />
@@ -358,7 +359,8 @@ export default function Login() {
   return (
     <>
     <div style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', background: 'var(--bg)', padding: '8px 20px 8px' }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
+      <LoginBackground />
+      <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
 
         <div style={{ textAlign: 'center', marginBottom: -40 }}>
           <LabHiveLogo size={200} />
