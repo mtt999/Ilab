@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { sb } from '../../lib/supabase'
 import { useAppStore } from '../../store/useAppStore'
+import { googleCalUrl, outlookCalUrl, downloadIcs } from '../../lib/calendarLinks'
+import { IconCalendarPlus } from '../../components/Icons'
 import { buildEmailHtml } from '../../lib/emailTemplate'
 
 async function sendBookingEmail(userId, type, subject, title, body) {
@@ -1672,6 +1674,20 @@ function BookingDetail({ booking, equipment, session, onEdit, onDelete, onDeny, 
           {booking.notes && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text3)' }}>Notes: </span>{booking.notes}</div>}
           {booking.denied_reason && <div style={{ fontSize: 13, color: '#a32d2d' }}><span style={{ color: 'var(--text3)' }}>Denied: </span>{booking.denied_reason}</div>}
         </div>
+
+        {/* Add to calendar — Phase 1 calendar integration (no OAuth) */}
+        {booking.status !== 'cancelled' && booking.status !== 'denied' && (
+          <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 8 }}>
+              <IconCalendarPlus size={15} /> Add to your calendar
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <a className="btn btn-sm" href={googleCalUrl(booking, eq?.nickname || eq?.equipment_name)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Google Calendar</a>
+              <a className="btn btn-sm" href={outlookCalUrl(booking, eq?.nickname || eq?.equipment_name)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Outlook</a>
+              <button className="btn btn-sm" onClick={() => downloadIcs(booking, eq?.nickname || eq?.equipment_name)}>.ics file</button>
+            </div>
+          </div>
+        )}
 
         {/* Deny form */}
         {showDenyForm && (

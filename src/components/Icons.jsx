@@ -66,3 +66,11 @@ export const IconMail = (p) => (
     <rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>
   </Icon>
 )
+
+export const IconCalendarPlus = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="4.5" width="18" height="16" rx="2"/>
+    <path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>
+    <path d="M12 12.5v5M9.5 15h5"/>
+  </Icon>
+)
