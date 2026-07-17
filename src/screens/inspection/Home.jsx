@@ -612,6 +612,13 @@ function ExportData() {
     toast('PDF exported!')
     } catch (e) {
       console.error('PDF export error:', e)
+      // Chunk-load failure = browser has a stale build (old hashed chunk was
+      // deleted by a newer deploy). Reload to pick up the fresh version.
+      if (/dynamically imported module|Failed to fetch|Importing a module script failed/i.test(e.message || '')) {
+        toast('LabHive was updated — reloading to get the new version…')
+        setTimeout(() => window.location.reload(), 1200)
+        return
+      }
       toast('PDF export failed: ' + e.message)
     }
   }
