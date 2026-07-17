@@ -367,6 +367,70 @@ async function imgUrlToBase64(url) {
   } catch { return null }
 }
 
+// Edit a saved inspection record's counts/needs after the fact.
+// Recomputes each item's low flag and the record's flag_count on save.
+function EditRecordModal({ record, onClose, onSaved }) {
+  const { toast } = useAppStore()
+  const [results, setResults] = useState(() => (record.results || []).map(r => ({ ...r })))
+  const [saving, setSaving] = useState(false)
+
+  function setField(i, field, val) {
+    setResults(prev => {
+      const next = [...prev]
+      const num = Math.max(0, parseFloat(val) || 0)
+      next[i] = { ...next[i], [field]: num }
+      next[i].low = (next[i].qty ?? 0) < (next[i].min_qty ?? 0)
+      return next
+    })
+  }
+
+  async function save() {
+    setSaving(true)
+    const flag_count = results.filter(r => r.low).length
+    const { error } = await sb.from('inspections').update({ results, flag_count }).eq('id', record.id)
+    setSaving(false)
+    if (error) { toast('Save failed: ' + error.message); return }
+    toast('Inspection updated ✓')
+    onSaved(); onClose()
+  }
+
+  return (
+    <Modal onClose={onClose}>
+      <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>Edit inspection — {record.room_name}</div>
+      <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', marginBottom: 16 }}>
+        {new Date(record.inspected_at).toLocaleString()} · {record.inspector}
+      </div>
+      <div style={{ maxHeight: '55vh', overflowY: 'auto', marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 11, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ flex: 1 }}>Item</div>
+          <div style={{ width: 76, textAlign: 'center' }}>Count</div>
+          <div style={{ width: 76, textAlign: 'center' }}>Needed</div>
+        </div>
+        {results.map((r, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--surface2)' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 500, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+              <div style={{ fontSize: 11, color: r.low ? 'var(--accent2)' : 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                min {r.min_qty} {r.unit}{r.low ? ' · LOW' : ''}
+              </div>
+            </div>
+            <input type="number" min="0" step="any" value={r.qty ?? 0}
+              onChange={e => setField(i, 'qty', e.target.value)}
+              style={{ width: 76, textAlign: 'center', fontFamily: 'var(--mono)', padding: '6px 4px' }} />
+            <input type="number" min="0" step="any" value={r.qty_needed ?? 0}
+              onChange={e => setField(i, 'qty_needed', e.target.value)}
+              style={{ width: 76, textAlign: 'center', fontFamily: 'var(--mono)', padding: '6px 4px' }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+        <button className="btn" onClick={onClose}>Cancel</button>
+      </div>
+    </Modal>
+  )
+}
+
 function ExportData() {
   const { toast, session } = useAppStore()
   const isSolo = session?.loginMode === 'solo'
@@ -380,6 +444,7 @@ function ExportData() {
   const [orgName, setOrgName] = useState('')
   const [orgLogoSrc, setOrgLogoSrc] = useState(null)
   const [inspectorFullName, setInspectorFullName] = useState('')
+  const [editRecord, setEditRecord] = useState(null)
 
   const canDelete = session?.role === 'admin' || session?.role === 'user'
 
@@ -1027,6 +1092,8 @@ function ExportData() {
                           {rec.flag_count > 0
                             ? <span style={{ fontSize: 12, padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#92400e', fontWeight: 600 }}>{rec.flag_count} low</span>
                             : <span style={{ fontSize: 12, padding: '2px 10px', borderRadius: 20, background: '#d1fae5', color: '#065f46', fontWeight: 600 }}>All OK</span>}
+                          <button className="btn btn-sm" title="Edit counts & needs for this inspection" style={{ flexShrink: 0 }}
+                            onClick={() => setEditRecord(rec)}>Edit</button>
                           <button className="btn btn-sm" title={`Download ${exportFormat === 'pdf' ? 'PDF' : 'Excel'} report for this room`} style={{ flexShrink: 0 }}
                             onClick={() => exportSingleRecord(rec)}>{exportFormat === 'pdf' ? '📄 PDF' : '📊 Excel'}</button>
                           {canDelete && (
@@ -1061,6 +1128,10 @@ function ExportData() {
             </button>
           </div>
         </div>
+      )}
+
+      {editRecord && (
+        <EditRecordModal record={editRecord} onClose={() => setEditRecord(null)} onSaved={load} />
       )}
     </div>
   )

@@ -75,7 +75,7 @@ function downloadWb(wb, filename) {
 }
 
 export default function Results() {
-  const { lastRecord, setScreen, toast, session } = useAppStore()
+  const { lastRecord, setScreen, toast, session, rooms, supplies, setInspection } = useAppStore()
   const isSolo = session?.loginMode === 'solo'
   const orgId = session?.organizationId
   useEffect(() => { if (!lastRecord) setScreen('home') }, [lastRecord])
@@ -83,6 +83,18 @@ export default function Results() {
 
   const results = lastRecord.results || []
   const low = results.filter(r => r.low)
+
+  // Next room in the rooms list (after the one just inspected) that has supplies
+  const curRoomIdx = rooms.findIndex(r => r.id === lastRecord.room_id)
+  const nextRoom = curRoomIdx >= 0
+    ? rooms.slice(curRoomIdx + 1).find(r => supplies.some(s => s.room_id === r.id))
+    : null
+
+  function startNextRoom() {
+    const items = supplies.filter(s => s.room_id === nextRoom.id)
+    setInspection({ roomId: nextRoom.id, room: nextRoom, items, index: 0, results: [] })
+    setScreen('inspection')
+  }
 
   function exportExcel() {
     try {
@@ -148,7 +160,12 @@ export default function Results() {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn btn-sm" onClick={exportExcel}>📄 This Inspection</button>
           <button className="btn btn-sm" onClick={exportAllRecords}>📚 All Records</button>
-          <button className="btn btn-sm btn-primary" onClick={() => setScreen('home')}>Done</button>
+          <button className={`btn btn-sm${nextRoom ? '' : ' btn-primary'}`} onClick={() => setScreen('home')}>Save</button>
+          {nextRoom && (
+            <button className="btn btn-sm btn-primary" onClick={startNextRoom}>
+              Save & next room: {nextRoom.name} →
+            </button>
+          )}
         </div>
       </div>
       <div className="card">
