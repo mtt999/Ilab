@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { sb } from '../../lib/supabase'
+import { IconAlert } from '../../components/Icons'
 
 export default function Inspection() {
   const { inspection, setInspection, setScreen, setLastRecord, session, toast } = useAppStore()
@@ -8,6 +9,9 @@ export default function Inspection() {
   // Last inspection's counts for this room, keyed by supply id — shown as a
   // gray template in the count box. Untouched items save the template value.
   const [lastQtys, setLastQtys] = useState(null)
+  // Reminder popup: count below minimum but "needs to be ordered" left empty
+  const [lowReminder, setLowReminder] = useState(false)
+  const neededRef = useRef(null)
 
   useEffect(() => { if (!inspection) setScreen('home') }, [inspection])
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function Inspection() {
     updated[index] = { ...item, qty: currentQty, qty_needed: currentQtyNeeded || 0, low: currentQty < item.min_qty }
   }
 
-  function next() {
+  function advance() {
     const updated = [...results]
     snapshot(updated)
     if (index < items.length - 1) {
@@ -65,6 +69,15 @@ export default function Inspection() {
     } else {
       finish(updated)
     }
+  }
+
+  function next() {
+    // Count below minimum but no order amount entered → remind before moving on
+    if (currentQty < item.min_qty && currentQtyNeeded === '') {
+      setLowReminder(true)
+      return
+    }
+    advance()
   }
 
   function back() {
@@ -139,6 +152,7 @@ export default function Inspection() {
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
               <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Needs to be ordered ({item.unit})</div>
               <input
+                ref={neededRef}
                 type="number" min="0"
                 value={currentQtyNeeded}
                 onChange={e => setQtyNeeded(e.target.value)}
@@ -163,6 +177,32 @@ export default function Inspection() {
           <button className="btn btn-primary" onClick={next}>{index === items.length - 1 ? 'Finish →' : 'Next →'}</button>
         </div>
       </div>
+
+      {/* Reminder: below minimum but no order amount entered */}
+      {lowReminder && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 24, maxWidth: 380, width: '100%', border: '1px solid var(--border)', textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: '#92400e' }}>
+              <IconAlert size={36} />
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Below minimum — order amount is empty</div>
+            <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
+              <strong>{item.name}</strong> is at {currentQty} {item.unit} (minimum {item.min_qty}), but you haven't
+              entered how many need to be ordered.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button className="btn btn-primary" onClick={() => {
+                setLowReminder(false)
+                setTab('count')
+                setTimeout(() => neededRef.current?.focus(), 60)
+              }}>Enter amount</button>
+              <button className="btn" onClick={() => { setLowReminder(false); advance() }}>
+                {index === items.length - 1 ? 'Finish anyway →' : 'Next item anyway →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
