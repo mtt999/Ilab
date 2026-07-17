@@ -18,6 +18,16 @@ export default defineConfig({
         stringArrayThreshold: 0.75,
         renameGlobals: false,
         selfDefending: false,
+        // CRITICAL: never obfuscate import specifiers. String-encoding them
+        // blinds Rollup's dynamic-import analysis — no lazy chunks get
+        // emitted and browsers hit bare `import("jspdf")` at runtime
+        // ("failed to resolve module specifier"). Reserve bare package names
+        // and relative paths so code-splitting keeps working.
+        reservedStrings: [
+          '^jspdf$', '^jspdf-autotable$', '^exceljs$', '^xlsx$',
+          '^@capacitor/', '^@capacitor-mlkit/', '^@basecom-gmbh/', '^capacitor-rate-app$',
+          '^\\./', '^\\.\\./',
+        ],
       },
     }),
     isMobile && {

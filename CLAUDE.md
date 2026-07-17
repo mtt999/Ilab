@@ -657,6 +657,22 @@ Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f
 
 ---
 
+## Build — obfuscator vs dynamic imports (July 2026)
+
+The prod obfuscator (`vite.config.js`) MUST keep `reservedStrings` covering every
+dynamically-imported package (`jspdf`, `jspdf-autotable`, `exceljs`, `xlsx`,
+`@capacitor/*`, …) plus relative paths (`^\./`, `^\.\./`). Without it, string
+encoding hides import specifiers from Rollup → NO lazy chunks are emitted →
+browsers throw `failed to resolve module specifier "jspdf"` in production.
+**When adding a new `import('some-pkg')` anywhere, add `'^some-pkg$'` to
+`reservedStrings`.** Sanity check after build: `ls docs/assets` must show
+multiple chunks (jspdf/exceljs/web-*), and
+`grep -oE 'import\([a-zA-Z_$]+\(' docs/assets/*.js` must return nothing.
+`main.jsx` also has a `vite:preloadError` one-shot reload that heals stale-cache
+chunk 404s after deploys — do not remove it.
+
+---
+
 ## Common mistakes to avoid
 
 - **Do not** re-introduce `const [activeModules, setActiveModules] = useState(null)` in Dashboard.jsx
