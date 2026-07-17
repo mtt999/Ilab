@@ -200,7 +200,10 @@ export default function Login() {
   const { setSession, setLoginMode, setSharedWorkspaces } = useAppStore()
   // When arriving from a QR code scan, default to Solo mode so visitors can sign up
   const [mode, setMode]             = useState(QR_SCAN_EQ ? 'solo' : null)
-  const [identifier, setIdentifier] = useState('')
+  const [identifier, setIdentifier] = useState(() => localStorage.getItem('ilab_remembered_email') || '')
+  // "Keep me signed in" — controls whether the Supabase auth session persists
+  // across browser restarts (see the auth storage adapter in lib/supabase.js)
+  const [keepSignedIn, setKeepSignedIn] = useState(() => localStorage.getItem('ilab_keep_signed_in') !== 'false')
   const [password, setPassword]     = useState('')
   const [error, setError]           = useState('')
   const [loading, setLoading]       = useState(false)
@@ -266,6 +269,10 @@ export default function Login() {
     }
     if (!mode) { setError('Please select how you are using LabHive first.'); return }
     if (!identifier.trim() || !password.trim()) { setError('Please enter your email and password.'); return }
+    // Must be set BEFORE signInWithPassword — the auth storage adapter reads it
+    localStorage.setItem('ilab_keep_signed_in', String(keepSignedIn))
+    if (keepSignedIn) localStorage.setItem('ilab_remembered_email', identifier.trim())
+    else localStorage.removeItem('ilab_remembered_email')
     setLoading(true); setError('')
     const emailLower = identifier.trim().toLowerCase()
 
@@ -437,6 +444,17 @@ export default function Login() {
                     </button>
                   </div>
                 </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, cursor: mode ? 'pointer' : 'default', opacity: mode ? 1 : 0.35, pointerEvents: mode ? 'auto' : 'none', transition: 'opacity 0.2s', fontSize: 13, color: 'var(--text2)', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={keepSignedIn}
+                    onChange={e => setKeepSignedIn(e.target.checked)}
+                    disabled={!mode}
+                    style={{ width: 16, height: 16, accentColor: accentColor, cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  Keep me signed in on this device
+                </label>
 
                 {error && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--accent2)', background: 'var(--accent2-light)', borderRadius: 8, padding: '8px 12px', marginBottom: 16 }}><IconAlert size={16} /> {error}</div>
