@@ -200,7 +200,7 @@ function RoomsTab() {
           {rooms.map(r => {
             const cnt = supplies.filter(s => s.room_id === r.id).length
             return (
-              <div key={r.id} style={{ width: 176, flexShrink: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: r.photo_url ? '0 16px 16px' : '20px 16px 16px', overflow: 'hidden', textAlign: 'center' }}>
+              <div key={r.id} className="manage-card" style={{ width: 176, flexShrink: 0, padding: r.photo_url ? '0 16px 16px' : '20px 16px 16px', overflow: 'hidden' }}>
                 {r.photo_url
                   ? <img src={r.photo_url} style={{ width: 'calc(100% + 32px)', height: 90, objectFit: 'cover', borderRadius: '10px 10px 0 0', margin: '0 -16px 12px' }} />
                   : <div style={{ fontSize: 28, marginBottom: 8 }}>{r.icon || '🧪'}</div>}
@@ -325,23 +325,24 @@ function SuppliesTab() {
       {Object.keys(byRoom).length === 0 ? (
         <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">📦</div>No supplies yet.</div>
       ) : Object.entries(byRoom).map(([room, items]) => (
-        <div key={room} style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text3)', fontFamily: 'var(--mono)', padding: '6px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{room}</div>
-          {items.map(s => (
-            <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 8 }}>
-              <div className="flex items-center justify-between">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {s.photo_url ? <img src={s.photo_url} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', flexShrink: 0 }} /> : <div style={{ width: 44, height: 44, borderRadius: 8, border: '1px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, color: 'var(--text3)' }}>📷</div>}
-                  <div><div style={{ fontWeight: 500 }}>{s.name}</div><div className="text-muted">Min: {s.min_qty} {s.unit}</div></div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-sm" onClick={() => setPhotoModal({ title: s.name, pathPrefix: `${s.id}_`, onSaved: async url => { await sb.from('supplies').update({ photo_url: url }).eq('id', s.id); await refreshCache() } })}>Photo</button>
-                  <button className="btn btn-sm" onClick={() => setSupplyModal(s)}>Edit</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => deleteSupply(s.id)}>Delete</button>
+        <div key={room} style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text3)', fontFamily: 'var(--mono)', padding: '6px 0', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{room}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+            {items.map(s => (
+              <div key={s.id} className="manage-card" style={{ width: 176, flexShrink: 0, padding: s.photo_url ? '0 16px 16px' : '20px 16px 16px', overflow: 'hidden' }}>
+                {s.photo_url
+                  ? <img src={s.photo_url} style={{ width: 'calc(100% + 32px)', height: 90, objectFit: 'cover', borderRadius: '10px 10px 0 0', margin: '0 -16px 12px' }} />
+                  : <div style={{ width: 44, height: 44, borderRadius: 8, border: '1px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: 'var(--text3)', margin: '0 auto 8px' }}>📷</div>}
+                <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, marginBottom: 12 }}>Min: {s.min_qty} {s.unit}</div>
+                <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                  <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => setPhotoModal({ title: s.name, pathPrefix: `${s.id}_`, onSaved: async url => { await sb.from('supplies').update({ photo_url: url }).eq('id', s.id); await refreshCache() } })}>Photo</button>
+                  <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => setSupplyModal(s)}>Edit</button>
+                  <button className="btn btn-danger" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => deleteSupply(s.id)}>Delete</button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       ))}
       {supplyModal && <SupplyModal supply={supplyModal === 'add' ? null : supplyModal} rooms={rooms} defaultRoomId={roomFilter} onClose={() => setSupplyModal(null)} onSaved={refreshCache} />}
