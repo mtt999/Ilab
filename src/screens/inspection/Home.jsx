@@ -193,24 +193,29 @@ function RoomsTab() {
       </div>
       {rooms.length === 0 ? (
         <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">🏠</div>No rooms yet.</div>
-      ) : rooms.map(r => {
-        const cnt = supplies.filter(s => s.room_id === r.id).length
-        return (
-          <div key={r.id} className="card" style={{ padding: '14px 16px', marginBottom: 10 }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-12">
-                {r.photo_url ? <img src={r.photo_url} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', flexShrink: 0 }} /> : <span style={{ fontSize: 22 }}>{r.icon || '🧪'}</span>}
-                <div><div style={{ fontWeight: 600 }}>{r.name}</div><div className="text-muted">{cnt} supplies</div></div>
+      ) : (
+        /* Card grid matching the Inspect tab layout — photo/icon on top,
+           name + count, action buttons under each room */
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+          {rooms.map(r => {
+            const cnt = supplies.filter(s => s.room_id === r.id).length
+            return (
+              <div key={r.id} style={{ width: 176, flexShrink: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: r.photo_url ? '0 16px 16px' : '20px 16px 16px', overflow: 'hidden', textAlign: 'center' }}>
+                {r.photo_url
+                  ? <img src={r.photo_url} style={{ width: 'calc(100% + 32px)', height: 90, objectFit: 'cover', borderRadius: '10px 10px 0 0', margin: '0 -16px 12px' }} />
+                  : <div style={{ fontSize: 28, marginBottom: 8 }}>{r.icon || '🧪'}</div>}
+                <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, marginBottom: 12 }}>{cnt} supply{cnt !== 1 ? ' items' : ' item'}</div>
+                <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                  <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => setPhotoModal({ title: r.name, pathPrefix: `room_${r.id}_`, onSaved: async url => { await sb.from('rooms').update({ photo_url: url }).eq('id', r.id); await refreshCache() } })}>Photo</button>
+                  <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => setRoomModal(r)}>Edit</button>
+                  <button className="btn btn-danger" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => deleteRoom(r.id)}>Delete</button>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-sm" onClick={() => setPhotoModal({ title: r.name, pathPrefix: `room_${r.id}_`, onSaved: async url => { await sb.from('rooms').update({ photo_url: url }).eq('id', r.id); await refreshCache() } })}>Photo</button>
-                <button className="btn btn-sm" onClick={() => setRoomModal(r)}>Edit</button>
-                <button className="btn btn-sm btn-danger" onClick={() => deleteRoom(r.id)}>Delete</button>
-              </div>
-            </div>
-          </div>
-        )
-      })}
+            )
+          })}
+        </div>
+      )}
       {roomModal && <RoomModal room={roomModal === 'add' ? null : roomModal} onClose={() => setRoomModal(null)} onSaved={refreshCache} />}
       {photoModal && <PhotoModal title={photoModal.title} pathPrefix={photoModal.pathPrefix} onClose={() => setPhotoModal(null)} onSaved={photoModal.onSaved} />}
     </div>
