@@ -721,12 +721,28 @@ Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f
 - **Alignment standard:** Item Name and Notes columns left+middle; every other
   column center+middle — in PDF, ExcelJS report, and xlsx-js-style exports.
 
-### Training Records
-- **User avatars in Lab User Documents:** each user header shows their profile
-  photo (round, 44px) or a gender-based scientist emoji fallback (👨‍🔬 male /
-  👩‍🔬 female / 🧑‍🔬 unset) via the `UserAvatar` component in
-  TrainingRecords.jsx. Gender is self-selected in Profile → My Info
-  (`users.gender`: 'male' | 'female' | NULL).
+### Training Records — user-centric hub (do not revert to per-tab lists)
+- **`UserTrainingHub`** (TrainingRecords.jsx) is the main view for all
+  training sub-tabs except `requests`: one avatar card grid of lab users
+  (photo or gender scientist-emoji fallback via `UserAvatar`; gender from
+  `users.gender`, self-selected in Profile → My Info); clicking a card opens a
+  detail panel below with **inner tabs** Documents / Vehicle / Equipment /
+  Alarm / Exam / Locker. Inner tabs = sidebar sub-tab keys
+  (fresh/golf/equipment/alarm/exam/locker) driven by `setSidebarSubTab`, so
+  sidebar and panel tabs are the same state.
+- **Status dots** on each inner tab (✓ complete / ⏳ pending / — none) from
+  hub-level queries on training_fresh, training_golf_car, training_equipment
+  (passed_exam), training_building_alarm, student_lockers.
+- **"This user / All users" toggle** (managers only): 'all' renders the
+  original full-list tab component — that IS the audit view; do not delete
+  the old list rendering from the tab components.
+- Tab components accept **`hideChrome`** prop: skips their SectionHeader/
+  search/pills (+ FreshTraining's own grid) and renders records for the single
+  student passed. `selectedArr` is memoized by user id — do NOT pass a fresh
+  `[user]` array inline or child `useEffect([students])` re-fires each render.
+- Lab users (non-editable) auto-select themselves; managers get a hint until
+  they pick a card. Panel tables use the global zebra stripes (cert rows must
+  NOT set inline row backgrounds — approval state lives in the chips).
 - **Required SQL (run once):**
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT NULL;`
   `ALTER TABLE solo_users ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT NULL;`

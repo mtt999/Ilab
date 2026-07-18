@@ -2,7 +2,7 @@ import HelpPanel from '../../components/HelpPanel'
 import ScrollTabs from '../../components/ScrollTabs'
 import React from 'react'
 import { TrainingRequestsPanel, UserTrainingSchedule, ExamTab } from './TrainingSchedule'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { sb } from '../../lib/supabase'
 import { useAppStore } from '../../store/useAppStore'
 import StorageService from '../../lib/storage/StorageService'
@@ -82,7 +82,7 @@ function SectionHeader({ title, count }) {
 // ══════════════════════════════════════════════════════════════
 // TAB 1 — FRESH STUDENT TRAINING
 // ══════════════════════════════════════════════════════════════
-function FreshTraining({ students, session }) {
+function FreshTraining({ students, session, hideChrome = false }) {
   const isSolo = session?.loginMode === 'solo'
   const { toast } = useAppStore()
   const [records, setRecords] = useState([])
@@ -254,14 +254,15 @@ function FreshTraining({ students, session }) {
     { key: 'approved', label: '✓ All approved',color: '#16a34a' },
   ]
 
-  // Card-grid selection: lab users land on their own panel; managers pick a card
+  // Card-grid selection: lab users land on their own panel; managers pick a card.
+  // hideChrome (hub panel mode): single student passed in — always selected.
   const ownUser = filteredStudents.find(u => session.userId === u.id || session.username === u.name)
-  const effSelectedId = selectedUserId ?? (ownUser && !editable ? ownUser.id : null)
+  const effSelectedId = hideChrome ? students[0]?.id : (selectedUserId ?? (ownUser && !editable ? ownUser.id : null))
 
   return (
     <div>
-      <SectionHeader title="Lab User Documents" count={students.length} />
-      {editable && (
+      {!hideChrome && <SectionHeader title="Lab User Documents" count={students.length} />}
+      {!hideChrome && editable && (
         <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
           <input
             value={search}
@@ -279,13 +280,13 @@ function FreshTraining({ students, session }) {
           </div>
         </div>
       )}
-      {filteredStudents.length === 0 && (
+      {!hideChrome && filteredStudents.length === 0 && (
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12, padding: '24px 0', textAlign: 'center' }}>
           {search.trim() ? `No users match "${search}".` : 'No users in this category.'}
         </div>
       )}
       {/* ── User card grid (Supply-tab style) — click a card for details ── */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+      {!hideChrome && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
         {filteredStudents.map(u => {
           const userRecs = records.filter(r => r.user_id === u.id)
           const approvedCount = userRecs.filter(r => r.admin_approved).length
@@ -309,15 +310,15 @@ function FreshTraining({ students, session }) {
             </div>
           )
         })}
-      </div>
+      </div>}
 
       {/* ── Detail panel: certs for the selected user ── */}
-      {effSelectedId == null && filteredStudents.length > 0 && (
+      {!hideChrome && effSelectedId == null && filteredStudents.length > 0 && (
         <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text3)', padding: '8px 0 16px' }}>
           Select a lab user above to view their certifications.
         </div>
       )}
-      {filteredStudents.filter(u => u.id === effSelectedId).map(u => {
+      {(hideChrome ? students : filteredStudents).filter(u => u.id === effSelectedId).map(u => {
         const isOwn = session.userId === u.id || session.username === u.name
         const canAdd = editable || isOwn
         const userRecs = records.filter(r => r.user_id === u.id)
@@ -384,7 +385,7 @@ function FreshTraining({ students, session }) {
                 </thead>
                 <tbody>
                   {userRecs.map(certRec => (
-                    <tr key={certRec.id} style={{ background: certRec.admin_approved ? 'rgba(220,252,231,0.3)' : certRec.certificate_url ? 'rgba(254,243,199,0.3)' : 'transparent' }}>
+                    <tr key={certRec.id}>
                       <td style={{ fontWeight: 500 }}>{certRec.certificate_name || 'Certificate'}</td>
                       <td>
                         {certRec.certificate_url
@@ -440,7 +441,7 @@ function FreshTraining({ students, session }) {
 // ══════════════════════════════════════════════════════════════
 // TAB 2 — VEHICLE TRAINING
 // ══════════════════════════════════════════════════════════════
-function GolfCarTraining({ students, session }) {
+function GolfCarTraining({ students, session, hideChrome = false }) {
   const { toast } = useAppStore()
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
@@ -514,12 +515,12 @@ function GolfCarTraining({ students, session }) {
 
   return (
     <div>
-      <SectionHeader title="Training Records" count={students.length} />
-      {canEdit(session) && (
+      {!hideChrome && <SectionHeader title="Training Records" count={students.length} />}
+      {!hideChrome && canEdit(session) && (
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…"
           style={{ marginBottom: 12, maxWidth: 280, fontSize: 13, padding: '8px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', width: '100%' }} />
       )}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+      {!hideChrome && <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {[
           { key: 'all', label: `All (${students.length})` },
           { key: 'trained', label: `✓ Trained (${totalTrained})` },
@@ -529,11 +530,11 @@ function GolfCarTraining({ students, session }) {
             style={{ padding: '4px 12px', borderRadius: 20, border: '1px solid', fontSize: 12, cursor: 'pointer', fontWeight: statusFilter === f.key ? 700 : 400, background: statusFilter === f.key ? 'var(--accent)' : 'transparent', color: statusFilter === f.key ? '#fff' : 'var(--text2)', borderColor: statusFilter === f.key ? 'var(--accent)' : 'var(--border)' }}
           >{f.label}</button>
         ))}
-      </div>
-      {filteredStudents.length === 0 && (
+      </div>}
+      {!hideChrome && filteredStudents.length === 0 && (
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12 }}>No lab users match.</div>
       )}
-      {filteredStudents.map((u, idx) => {
+      {(hideChrome ? students : filteredStudents).map((u, idx) => {
         const userRecs = getRecordsForUser(u.id)
         const trainedCount = userRecs.filter(r => r.trained).length
         const headerBg = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'
@@ -641,7 +642,7 @@ function GolfCarTraining({ students, session }) {
 // ══════════════════════════════════════════════════════════════
 // TAB 3 — EQUIPMENT TRAINING
 // ══════════════════════════════════════════════════════════════
-function EquipmentTraining({ students, session }) {
+function EquipmentTraining({ students, session, hideChrome = false }) {
   const isSolo = session?.loginMode === 'solo'
   const canManage = canEdit(session) || isSolo
   const { toast } = useAppStore()
@@ -791,17 +792,17 @@ function EquipmentTraining({ students, session }) {
 
   return (
     <div>
-      <SectionHeader title="Equipment Training" count={isSolo ? undefined : students.length} />
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
+      {!hideChrome && <SectionHeader title="Equipment Training" count={isSolo ? undefined : students.length} />}
+      {!hideChrome && <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
         {[{ key: 'training', label: 'Training Records' }, { key: 'history', label: 'Equipment History' }].map(t => (
           <button key={t.key} onClick={() => setEquipSubTab(t.key)}
             style={{ padding: '8px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: equipSubTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${equipSubTab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s' }}>
             {t.label}
           </button>
         ))}
-      </div>
+      </div>}
 
-      {equipSubTab === 'history' && (
+      {!hideChrome && equipSubTab === 'history' && (
         <div>
           <input
             value={searchHistory}
@@ -869,12 +870,12 @@ function EquipmentTraining({ students, session }) {
         </div>
       )}
 
-      {equipSubTab === 'training' && (
+      {(hideChrome || equipSubTab === 'training') && (
         <div>
           {!canEdit(session) && (
             <RetrainingRequestPanel session={session} equipment={equipment} pendingRetraining={pendingRetraining} onSubmit={submitRetrainingRequest} />
           )}
-          {canEdit(session) && (
+          {!hideChrome && canEdit(session) && (
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -896,7 +897,7 @@ function EquipmentTraining({ students, session }) {
               : searchBase.filter(u => totalMap[u.id] === 0)
             return (
               <>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                {!hideChrome && <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                   {[
                     { key: 'all', label: `All (${students.length})` },
                     { key: 'approved', label: `✓ All passed (${allPassed})` },
@@ -907,11 +908,11 @@ function EquipmentTraining({ students, session }) {
                       style={{ padding: '4px 12px', borderRadius: 20, border: '1px solid', fontSize: 12, cursor: 'pointer', fontWeight: statusFilter === f.key ? 700 : 400, background: statusFilter === f.key ? 'var(--accent)' : 'transparent', color: statusFilter === f.key ? '#fff' : 'var(--text2)', borderColor: statusFilter === f.key ? 'var(--accent)' : 'var(--border)' }}
                     >{f.label}</button>
                   ))}
-                </div>
-                {displayStudents.length === 0 && (
+                </div>}
+                {!hideChrome && displayStudents.length === 0 && (
                   <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12 }}>No lab users match.</div>
                 )}
-                {displayStudents.map((u, idx) => {
+                {(hideChrome ? students : displayStudents).map((u, idx) => {
             const recs = getRecords(u.id)
             const passedCount = recs.filter(r => r.passed_exam).length
             const headerBg = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'
@@ -1072,7 +1073,7 @@ function AddTrainingRecord({ userId, equipment, existingRecords, session, onSave
 // ══════════════════════════════════════════════════════════════
 // TAB 4 — BUILDING ALARM
 // ══════════════════════════════════════════════════════════════
-function BuildingAlarm({ students, session }) {
+function BuildingAlarm({ students, session, hideChrome = false }) {
   const { toast } = useAppStore()
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1129,9 +1130,9 @@ function BuildingAlarm({ students, session }) {
 
   return (
     <div>
-      <SectionHeader title="Building Alarm Training" count={students.length} />
-      <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Admin/RE enters the lab user's 4-digit alarm PIN and confirms training completion.</p>
-      {canEdit(session) && (
+      {!hideChrome && <SectionHeader title="Building Alarm Training" count={students.length} />}
+      {!hideChrome && <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Admin/RE enters the lab user's 4-digit alarm PIN and confirms training completion.</p>}
+      {!hideChrome && canEdit(session) && (
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -1139,7 +1140,7 @@ function BuildingAlarm({ students, session }) {
           style={{ marginBottom: 12, maxWidth: 280, fontSize: 13, padding: '8px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', width: '100%' }}
         />
       )}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+      {!hideChrome && <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {[
           { key: 'all', label: `All (${students.length})` },
           { key: 'trained', label: `✓ Trained (${totalTrained})` },
@@ -1149,11 +1150,11 @@ function BuildingAlarm({ students, session }) {
             style={{ padding: '4px 12px', borderRadius: 20, border: '1px solid', fontSize: 12, cursor: 'pointer', fontWeight: statusFilter === f.key ? 700 : 400, background: statusFilter === f.key ? 'var(--accent)' : 'transparent', color: statusFilter === f.key ? '#fff' : 'var(--text2)', borderColor: statusFilter === f.key ? 'var(--accent)' : 'var(--border)' }}
           >{f.label}</button>
         ))}
-      </div>
-      {filteredStudents.length === 0 && (
+      </div>}
+      {!hideChrome && filteredStudents.length === 0 && (
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12 }}>No lab users match.</div>
       )}
-      {filteredStudents.map((u, idx) => {
+      {(hideChrome ? students : filteredStudents).map((u, idx) => {
         const rec = getRecord(u.id)
         const headerBg = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'
         return (
@@ -1462,6 +1463,177 @@ function StudentLocker({ session }) {
 // ══════════════════════════════════════════════════════════════
 // MAIN TRAINING RECORDS COMPONENT
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// USER TRAINING HUB — avatar card grid; clicking a user opens a
+// panel with inner tabs (Documents/Vehicle/Equipment/Alarm/Exam/
+// Locker) showing that user's records. Tabs carry status dots.
+// "All users" toggle renders the classic full-list audit view.
+// ══════════════════════════════════════════════════════════════
+const HUB_TABS = [
+  { key: 'fresh',     label: 'Documents' },
+  { key: 'golf',      label: 'Vehicle' },
+  { key: 'equipment', label: 'Equipment' },
+  { key: 'alarm',     label: 'Alarm' },
+  { key: 'exam',      label: 'Exam' },
+  { key: 'locker',    label: 'Locker' },
+]
+
+function UserTrainingHub({ students, session, subTab, setSubTab }) {
+  const [selectedUserId, setSelectedUserId] = useState(null)
+  const [viewMode, setViewMode] = useState('user')     // 'user' | 'all' (audit)
+  const [statuses, setStatuses] = useState(null)       // userId -> { fresh|golf|equipment|alarm|locker: ok|pend|none }
+  const [freshCounts, setFreshCounts] = useState({})   // userId -> { approved, total } for card badges
+  const [search, setSearch] = useState('')
+
+  const editable = canEdit(session)
+  const ownUser = students.find(u => session.userId === u.id || session.username === u.name)
+  const effSelectedId = selectedUserId ?? (ownUser && !editable ? ownUser.id : null)
+  const selectedUser = students.find(u => u.id === effSelectedId) || null
+  // stable single-element array so child useEffect([students]) doesn't loop
+  const selectedArr = useMemo(() => selectedUser ? [selectedUser] : [], [selectedUser?.id])
+
+  useEffect(() => { loadStatuses() }, [students])
+
+  async function loadStatuses() {
+    const ids = students.map(s => s.id)
+    if (!ids.length) { setStatuses({}); return }
+    const [fresh, golf, equip, alarm, lockers] = await Promise.all([
+      sb.from('training_fresh').select('user_id, admin_approved, certificate_url').in('user_id', ids),
+      sb.from('training_golf_car').select('user_id, trained').in('user_id', ids),
+      sb.from('training_equipment').select('user_id, passed_exam').in('user_id', ids),
+      sb.from('training_building_alarm').select('user_id, trained').in('user_id', ids),
+      sb.from('student_lockers').select('user_id').in('user_id', ids),
+    ])
+    const map = {}
+    const get = uid => map[uid] || (map[uid] = {})
+    const agg = (rows, key, okFn) => {
+      const by = {}
+      ;(rows.data || []).forEach(r => { (by[r.user_id] = by[r.user_id] || []).push(r) })
+      ids.forEach(uid => {
+        const rs = by[uid] || []
+        get(uid)[key] = rs.length === 0 ? 'none' : rs.every(okFn) ? 'ok' : 'pend'
+      })
+    }
+    agg(fresh, 'fresh', r => r.admin_approved)
+    agg(golf, 'golf', r => r.trained)
+    agg(equip, 'equipment', r => r.passed_exam)
+    agg(alarm, 'alarm', r => r.trained)
+    ids.forEach(uid => { get(uid).locker = (lockers.data || []).some(r => r.user_id === uid) ? 'ok' : 'none' })
+    setStatuses(map)
+    const fc = {}
+    ids.forEach(uid => {
+      const rs = (fresh.data || []).filter(r => r.user_id === uid && r.certificate_url)
+      fc[uid] = { approved: rs.filter(r => r.admin_approved).length, total: rs.length }
+    })
+    setFreshCounts(fc)
+  }
+
+  const DOT = {
+    ok:   <span style={{ color: '#16a34a' }}>✓</span>,
+    pend: <span style={{ color: '#d97706' }}>⏳</span>,
+    none: <span style={{ color: 'var(--text3)' }}>—</span>,
+  }
+
+  const searchFiltered = search.trim()
+    ? students.filter(u => fullName(u).toLowerCase().includes(search.toLowerCase()))
+    : students
+
+  function renderTabContent(mode) {
+    const su = mode === 'user'
+    const props = su
+      ? { students: selectedArr, session, hideChrome: true }
+      : { students, session }
+    switch (subTab) {
+      case 'golf':      return <GolfCarTraining {...props} />
+      case 'equipment': return <EquipmentTraining {...props} />
+      case 'alarm':     return <BuildingAlarm {...props} />
+      case 'exam':      return <ExamTab session={session} />
+      case 'locker':    return <StudentLocker session={session} />
+      default:          return <FreshTraining {...props} />
+    }
+  }
+
+  return (
+    <div>
+      {editable && (
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name…"
+          style={{ marginBottom: 14, maxWidth: 240, fontSize: 13, padding: '8px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', width: '100%' }} />
+      )}
+
+      {/* ── Avatar card grid ── */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+        {searchFiltered.map(u => {
+          const fc = freshCounts[u.id] || { approved: 0, total: 0 }
+          const pct = fc.total ? Math.round(fc.approved / fc.total * 100) : 0
+          const selected = u.id === effSelectedId
+          return (
+            <div key={u.id} className="manage-card" onClick={() => setSelectedUserId(selected ? null : u.id)}
+              style={{ width: 176, flexShrink: 0, padding: '16px 12px 14px', cursor: 'pointer', ...(selected ? { borderColor: 'var(--accent)', background: 'var(--accent-light)', boxShadow: '0 6px 18px rgba(29,158,117,0.18)' } : {}) }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><UserAvatar user={u} size={56} /></div>
+              <div style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(u)}</div>
+              {u.degree && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.degree}</div>}
+              <div style={{ marginTop: 8 }}><CompletionBadge approved={fc.approved} total={fc.total} /></div>
+              {fc.total > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#16a34a' : '#d97706', borderRadius: 99 }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>{pct}%</span>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Detail panel ── */}
+      {!selectedUser ? (
+        students.length > 0 && (
+          <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text3)', padding: '8px 0 16px' }}>
+            Select a lab user above to view their training profile.
+          </div>
+        )
+      ) : (
+        <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--surface)' }}>
+          {/* Header: identity + view toggle */}
+          <div style={{ padding: '12px 16px', background: 'var(--row-a-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <UserAvatar user={selectedUser} size={40} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{fullName(selectedUser)}</div>
+                <div style={{ fontSize: 12, color: 'var(--text3)' }}>Training profile{selectedUser.degree ? ` · Supervisor: ${selectedUser.degree}` : ''}</div>
+              </div>
+            </div>
+            {editable && (
+              <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+                {[['user', 'This user'], ['all', 'All users']].map(([m, label]) => (
+                  <button key={m} onClick={() => setViewMode(m)}
+                    style={{ border: 'none', padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)', background: viewMode === m ? 'var(--accent)' : 'var(--surface)', color: viewMode === m ? '#fff' : 'var(--text2)' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Inner tab bar with status dots */}
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto' }}>
+            {HUB_TABS.map(t => (
+              <button key={t.key} onClick={() => setSubTab(t.key)}
+                style={{ padding: '10px 14px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: subTab === t.key ? 600 : 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent)' : 'transparent'}`, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                {t.key !== 'exam' && DOT[statuses?.[selectedUser.id]?.[t.key] || 'none']} {t.label}
+              </button>
+            ))}
+          </div>
+          {/* Content */}
+          <div style={{ padding: 16 }}>
+            {renderTabContent(viewMode === 'all' && editable ? 'all' : 'user')}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function TrainingRecords() {
   const { session, toast, sidebarSubTab, setSidebarSubTab } = useAppStore()
   const [students, setStudents] = useState([])
@@ -1532,10 +1704,8 @@ export default function TrainingRecords() {
       )}
 
       {subTab === 'requests' && <TrainingRequestsPanel session={session} />}
-      {subTab === 'exam'     && <ExamTab session={session} />}
-      {subTab === 'locker'   && <StudentLocker session={session} />}
 
-      {!['requests','exam','locker'].includes(subTab) && (
+      {subTab !== 'requests' && (
         loading ? (
           <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         ) : students.length === 0 ? (
@@ -1544,12 +1714,12 @@ export default function TrainingRecords() {
             <div>No students yet. Add students in Admin → Students.</div>
           </div>
         ) : (
-          <div>
-            {subTab === 'fresh'     && <FreshTraining students={students} session={session} />}
-            {subTab === 'golf'      && <GolfCarTraining students={students} session={session} />}
-            {subTab === 'equipment' && <EquipmentTraining students={students} session={session} />}
-            {subTab === 'alarm'     && <BuildingAlarm students={students} session={session} />}
-          </div>
+          <UserTrainingHub
+            students={students}
+            session={session}
+            subTab={HUB_TABS.some(t => t.key === subTab) ? subTab : 'fresh'}
+            setSubTab={setSidebarSubTab}
+          />
         )
       )}
     </div>
