@@ -31,6 +31,21 @@ function StatusBadge({ done }) {
   )
 }
 
+// Round user avatar: profile photo when set, otherwise a scientist emoji
+// based on the gender the user selected in Profile → My Info (neutral default)
+function UserAvatar({ user, size = 44 }) {
+  if (user?.photo_url) {
+    return <img src={user.photo_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)', flexShrink: 0 }} />
+  }
+  const g = (user?.gender || '').toLowerCase()
+  const emoji = g === 'male' ? '👨‍🔬' : g === 'female' ? '👩‍🔬' : '🧑‍🔬'
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent-light)', border: '2px solid #9FE1CB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(size * 0.5), flexShrink: 0, lineHeight: 1 }}>
+      {emoji}
+    </div>
+  )
+}
+
 function ApprovalChip({ approved, approvedBy, onClick, editable }) {
   const base = { display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, cursor: editable ? 'pointer' : 'default', userSelect: 'none', transition: 'opacity 0.15s' }
   if (approved) return (
@@ -276,22 +291,25 @@ function FreshTraining({ students, session }) {
           <div key={u.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 12, overflow: 'hidden', background: rowBg }}>
             {/* Card header */}
             <div style={{ padding: '12px 16px', background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{fullName(u)}</div>
-                  <CompletionBadge approved={approvedCount} total={userRecs.length} />
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
-                  {u.degree ? `Supervisor: ${u.degree}` : ''}{u.year_semester ? ` · ${u.year_semester}` : ''}
-                </div>
-                {userRecs.length > 0 && (
-                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden', maxWidth: 120 }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#16a34a' : '#d97706', borderRadius: 99, transition: 'width 0.4s' }} />
-                    </div>
-                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>{pct}%</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <UserAvatar user={u} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{fullName(u)}</div>
+                    <CompletionBadge approved={approvedCount} total={userRecs.length} />
                   </div>
-                )}
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>
+                    {u.degree ? `Supervisor: ${u.degree}` : ''}{u.year_semester ? ` · ${u.year_semester}` : ''}
+                  </div>
+                  {userRecs.length > 0 && (
+                    <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden', maxWidth: 120 }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#16a34a' : '#d97706', borderRadius: 99, transition: 'width 0.4s' }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: 'var(--text3)' }}>{pct}%</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 {editable ? (

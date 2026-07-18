@@ -721,6 +721,17 @@ Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f
 - **Alignment standard:** Item Name and Notes columns left+middle; every other
   column center+middle — in PDF, ExcelJS report, and xlsx-js-style exports.
 
+### Training Records
+- **User avatars in Lab User Documents:** each user header shows their profile
+  photo (round, 44px) or a gender-based scientist emoji fallback (👨‍🔬 male /
+  👩‍🔬 female / 🧑‍🔬 unset) via the `UserAvatar` component in
+  TrainingRecords.jsx. Gender is self-selected in Profile → My Info
+  (`users.gender`: 'male' | 'female' | NULL).
+- **Required SQL (run once):**
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT NULL;`
+  `ALTER TABLE solo_users ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT NULL;`
+  Without the column, saving My Info fails (payload includes gender).
+
 ### Mobile
 - **Sidebar drawer:** hamburger in header (mobile only) slides the full
   sidebar in as a left drawer (`.mobile-drawer`, 220ms, backdrop). Closes on

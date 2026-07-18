@@ -1969,7 +1969,7 @@ function UserProfileForm({ session, toast }) {
     if (session.userId) { const { data } = await sb.from('users').select('*').eq('id', session.userId).maybeSingle(); u = data }
     if (!u) { const { data } = await sb.from('users').select('*').eq('name', session.username).maybeSingle(); u = data }
     setUser(u)
-    if (u) setForm({ name: u.name||'', last_name: u.last_name||'', nick_name: u.nick_name||'', email: u.email||'', phone: u.phone||'', degree: u.degree||'', year_semester: u.year_semester||'', supervisor: u.supervisor||'', project_group: u.project_group||'', photo_url: u.photo_url||'' })
+    if (u) setForm({ name: u.name||'', last_name: u.last_name||'', nick_name: u.nick_name||'', email: u.email||'', phone: u.phone||'', degree: u.degree||'', year_semester: u.year_semester||'', supervisor: u.supervisor||'', project_group: u.project_group||'', photo_url: u.photo_url||'', gender: u.gender||'' })
     setLoading(false)
   }
 
@@ -1977,7 +1977,7 @@ function UserProfileForm({ session, toast }) {
 
   async function saveInfo() {
     setSaving(true)
-    const payload = { name: form.name.trim(), last_name: form.last_name||null, nick_name: form.nick_name?.trim()||null, phone: form.phone||null, degree: form.degree||null, year_semester: form.year_semester||null, photo_url: form.photo_url||null }
+    const payload = { name: form.name.trim(), last_name: form.last_name||null, nick_name: form.nick_name?.trim()||null, phone: form.phone||null, degree: form.degree||null, year_semester: form.year_semester||null, photo_url: form.photo_url||null, gender: form.gender||null }
     if (!isStudent) { payload.supervisor = form.supervisor||null; payload.project_group = form.project_group||null }
     const { error } = await sb.from('users').update(payload).eq('id', user.id)
     if (error) { toast('Error saving: ' + error.message); setSaving(false); return }
@@ -2038,9 +2038,19 @@ function UserProfileForm({ session, toast }) {
           <div className="field"><label>First Name *</label><input autoComplete="given-name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
           <div className="field"><label>Last Name *</label><input autoComplete="family-name" value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} /></div>
         </div>
-        <div className="field">
-          <label>Nick Name <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: 12 }}>(optional — shown instead of first name)</span></label>
-          <input autoComplete="nickname" value={form.nick_name} onChange={e => setForm(f => ({ ...f, nick_name: e.target.value }))} placeholder="e.g. Alex" />
+        <div className="grid-2">
+          <div className="field">
+            <label>Nick Name <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: 12 }}>(optional)</span></label>
+            <input autoComplete="nickname" value={form.nick_name} onChange={e => setForm(f => ({ ...f, nick_name: e.target.value }))} placeholder="e.g. Alex" />
+          </div>
+          <div className="field">
+            <label>Gender <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: 12 }}>(sets your avatar when no photo)</span></label>
+            <select value={form.gender || ''} onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}>
+              <option value="">— Prefer not to say —</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
         </div>
         <div className="grid-2">
           <div className="field">
