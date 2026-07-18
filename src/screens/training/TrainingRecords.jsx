@@ -98,6 +98,7 @@ function FreshTraining({ students, session }) {
   const addFileRef = useRef(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedUserId, setSelectedUserId] = useState(null)   // card grid → detail panel
 
   useEffect(() => { if (students.length > 0) load() }, [students])
 
@@ -253,6 +254,10 @@ function FreshTraining({ students, session }) {
     { key: 'approved', label: '✓ All approved',color: '#16a34a' },
   ]
 
+  // Card-grid selection: lab users land on their own panel; managers pick a card
+  const ownUser = filteredStudents.find(u => session.userId === u.id || session.username === u.name)
+  const effSelectedId = selectedUserId ?? (ownUser && !editable ? ownUser.id : null)
+
   return (
     <div>
       <SectionHeader title="Lab User Documents" count={students.length} />
@@ -279,18 +284,51 @@ function FreshTraining({ students, session }) {
           {search.trim() ? `No users match "${search}".` : 'No users in this category.'}
         </div>
       )}
-      {filteredStudents.map((u, idx) => {
+      {/* ── User card grid (Supply-tab style) — click a card for details ── */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+        {filteredStudents.map(u => {
+          const userRecs = records.filter(r => r.user_id === u.id)
+          const approvedCount = userRecs.filter(r => r.admin_approved).length
+          const pct = userRecs.length ? Math.round((approvedCount / userRecs.length) * 100) : 0
+          const selected = u.id === effSelectedId
+          return (
+            <div key={u.id} className="manage-card" onClick={() => setSelectedUserId(selected ? null : u.id)}
+              style={{ width: 176, flexShrink: 0, padding: '16px 12px 14px', cursor: 'pointer', ...(selected ? { borderColor: 'var(--accent)', background: 'var(--accent-light)', boxShadow: '0 6px 18px rgba(29,158,117,0.18)' } : {}) }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><UserAvatar user={u} size={56} /></div>
+              <div style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName(u)}</div>
+              {u.degree && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.degree}</div>}
+              <div style={{ marginTop: 8 }}><CompletionBadge approved={approvedCount} total={userRecs.length} /></div>
+              {userRecs.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#16a34a' : '#d97706', borderRadius: 99 }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>{pct}%</span>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Detail panel: certs for the selected user ── */}
+      {effSelectedId == null && filteredStudents.length > 0 && (
+        <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text3)', padding: '8px 0 16px' }}>
+          Select a lab user above to view their certifications.
+        </div>
+      )}
+      {filteredStudents.filter(u => u.id === effSelectedId).map(u => {
         const isOwn = session.userId === u.id || session.username === u.name
         const canAdd = editable || isOwn
         const userRecs = records.filter(r => r.user_id === u.id)
         const masterRec = getRecord(u.id)
         const approvedCount = userRecs.filter(r => r.admin_approved).length
         const pct = userRecs.length ? Math.round((approvedCount / userRecs.length) * 100) : 0
-        const rowBg = idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)'
+        const rowBg = 'var(--row-a)'
         return (
           <div key={u.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 12, overflow: 'hidden', background: rowBg }}>
             {/* Card header */}
-            <div style={{ padding: '12px 16px', background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ padding: '12px 16px', background: 'var(--row-a-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <UserAvatar user={u} />
                 <div style={{ minWidth: 0 }}>
