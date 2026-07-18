@@ -1211,7 +1211,7 @@ function BuildingAlarm({ students, session, hideChrome = false }) {
 // ══════════════════════════════════════════════════════════════
 const TOTAL_LOCKERS = 15
 
-function StudentLocker({ session }) {
+function StudentLocker({ session, panelUser = null }) {
   const { toast } = useAppStore()
   const [lockers, setLockers] = useState([])
   const [students, setStudents] = useState([])
@@ -1240,8 +1240,9 @@ function StudentLocker({ session }) {
   }
 
   async function assignLocker(lockerNumber) {
-    if (!selectedStudent) { toast('Select a lab user.'); return }
-    const student = students.find(s => s.id === selectedStudent)
+    const targetId = panelUser?.id || selectedStudent
+    if (!targetId) { toast('Select a lab user.'); return }
+    const student = students.find(s => s.id === targetId) || panelUser
     if (!student) return
     const orgId = session?.organizationId
     const displayName = firstName(student)
@@ -1302,6 +1303,42 @@ function StudentLocker({ session }) {
   const assigned = lockers.filter(l => l.user_name).length
   const unavailableCount = lockers.filter(l => l.is_unavailable && !l.user_name).length
   const available = TOTAL_LOCKERS - assigned - unavailableCount
+
+  // ── Panel mode: compact single-user locker view ──
+  if (panelUser) {
+    const mine = lockers.find(l => l.user_id === panelUser.id)
+    const availableLockers = Array.from({ length: TOTAL_LOCKERS }, (_, i) => i + 1)
+      .filter(n => { const l = lockerMap[n]; return !l || (!l.user_name && !l.is_unavailable) })
+    return (
+      <div>
+        {mine ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: 'var(--accent-light)', border: '1px solid #9FE1CB', borderRadius: 12, padding: '12px 16px' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>🗄️ Locker #{mine.locker_number}</div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>
+                Assigned {mine.assigned_at ? new Date(mine.assigned_at).toLocaleDateString() : '—'}{mine.assigned_by ? ` by ${mine.assigned_by}` : ''}
+              </div>
+              {mine.notes && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Note: {mine.notes}</div>}
+            </div>
+            {canEdit(session) && <button className="btn btn-sm btn-danger" onClick={() => unassignLocker(mine)}>Unassign</button>}
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--text3)' }}>
+            No locker assigned{canEdit(session) ? ':' : '.'}
+            {canEdit(session) && availableLockers.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <select value={assigning || ''} onChange={e => setAssigning(e.target.value)} style={{ maxWidth: 180 }}>
+                  <option value="">— Select locker —</option>
+                  {availableLockers.map(n => <option key={n} value={n}>Locker #{n}</option>)}
+                </select>
+                <button className="btn btn-sm btn-primary" disabled={!assigning} onClick={() => assignLocker(Number(assigning))}>Assign</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -1469,6 +1506,36 @@ function StudentLocker({ session }) {
 // Locker) showing that user's records. Tabs carry status dots.
 // "All users" toggle renders the classic full-list audit view.
 // ══════════════════════════════════════════════════════════════
+// Per-user exam results (managers viewing a user in the hub panel).
+// Students see the full ExamTab instead so they can take exams.
+function UserExamResults({ user }) {
+  const [results, setResults] = useState(null)
+  useEffect(() => {
+    sb.from('equipment_exam_results')
+      .select('*, equipment_inventory(equipment_name, nickname)')
+      .eq('user_id', user.id).order('taken_at', { ascending: false })
+      .then(({ data }) => setResults(data || []))
+  }, [user.id])
+
+  if (results === null) return <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+  if (results.length === 0) return <div style={{ fontSize: 13, color: 'var(--text3)', fontStyle: 'italic' }}>No exam attempts yet.</div>
+  return (
+    <table style={{ fontSize: 13 }}>
+      <thead><tr><th>Equipment</th><th>Score</th><th>Result</th><th>Date</th></tr></thead>
+      <tbody>
+        {results.map(r => (
+          <tr key={r.id}>
+            <td style={{ fontWeight: 500 }}>{r.equipment_inventory?.nickname || r.equipment_inventory?.equipment_name || '—'}</td>
+            <td style={{ fontFamily: 'var(--mono)' }}>{r.total ? `${r.score}/${r.total} (${Math.round(r.score / r.total * 100)}%)` : r.score}</td>
+            <td><span className={`badge ${r.passed ? 'badge-ok' : 'badge-low'}`}>{r.passed ? '✓ Passed' : '✗ Failed'}</span></td>
+            <td style={{ fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{r.taken_at ? new Date(r.taken_at).toLocaleDateString() : '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 const HUB_TABS = [
   { key: 'fresh',     label: 'Documents' },
   { key: 'golf',      label: 'Vehicle' },
@@ -1547,8 +1614,16 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
       case 'golf':      return <GolfCarTraining {...props} />
       case 'equipment': return <EquipmentTraining {...props} />
       case 'alarm':     return <BuildingAlarm {...props} />
-      case 'exam':      return <ExamTab session={session} />
-      case 'locker':    return <StudentLocker session={session} />
+      case 'exam':
+        // Managers viewing a user → that user's results; students (own
+        // profile) and audit mode → full ExamTab (take exams / manage questions)
+        return su && editable && selectedUser && selectedUser.id !== session.userId
+          ? <UserExamResults user={selectedUser} />
+          : <ExamTab session={session} />
+      case 'locker':
+        return su && selectedUser
+          ? <StudentLocker session={session} panelUser={selectedUser} />
+          : <StudentLocker session={session} />
       default:          return <FreshTraining {...props} />
     }
   }
