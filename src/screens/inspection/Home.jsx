@@ -308,9 +308,10 @@ function SuppliesTab() {
   const filtered = roomFilter ? supplies.filter(s => s.room_id === roomFilter) : supplies
   const byRoom = {}
   filtered.forEach(s => {
-    const name = rooms.find(r => r.id === s.room_id)?.name || 'Unknown'
-    if (!byRoom[name]) byRoom[name] = []
-    byRoom[name].push(s)
+    const room = rooms.find(r => r.id === s.room_id)
+    const name = room?.name || 'Unknown'
+    if (!byRoom[name]) byRoom[name] = { room, items: [] }
+    byRoom[name].items.push(s)
   })
 
   return (
@@ -324,9 +325,16 @@ function SuppliesTab() {
       </div>
       {Object.keys(byRoom).length === 0 ? (
         <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">📦</div>No supplies yet.</div>
-      ) : Object.entries(byRoom).map(([room, items]) => (
-        <div key={room} style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text3)', fontFamily: 'var(--mono)', padding: '6px 0', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{room}</div>
+      ) : Object.entries(byRoom).map(([name, { room, items }]) => (
+        <div key={name} style={{ marginBottom: 24 }}>
+          {/* Room divider bar — matches the navy ROOM: bars in PDF/Excel reports */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0C1140', borderRadius: 10, padding: '8px 14px', marginBottom: 12 }}>
+            {room?.photo_url
+              ? <img src={room.photo_url} style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', flexShrink: 0 }} />
+              : <span style={{ fontSize: 16, lineHeight: 1 }}>{room?.icon || '🧪'}</span>}
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#fff', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#9FE1CB', fontFamily: 'var(--mono)', flexShrink: 0 }}>{items.length} item{items.length !== 1 ? 's' : ''}</span>
+          </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             {items.map(s => (
               <div key={s.id} className="manage-card" style={{ width: 176, flexShrink: 0, padding: s.photo_url ? '0 16px 16px' : '20px 16px 16px', overflow: 'hidden' }}>
