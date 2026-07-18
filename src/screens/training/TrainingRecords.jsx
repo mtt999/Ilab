@@ -1506,42 +1506,11 @@ function StudentLocker({ session, panelUser = null }) {
 // Locker) showing that user's records. Tabs carry status dots.
 // "All users" toggle renders the classic full-list audit view.
 // ══════════════════════════════════════════════════════════════
-// Per-user exam results (managers viewing a user in the hub panel).
-// Students see the full ExamTab instead so they can take exams.
-function UserExamResults({ user }) {
-  const [results, setResults] = useState(null)
-  useEffect(() => {
-    sb.from('equipment_exam_results')
-      .select('*, equipment_inventory(equipment_name, nickname)')
-      .eq('user_id', user.id).order('taken_at', { ascending: false })
-      .then(({ data }) => setResults(data || []))
-  }, [user.id])
-
-  if (results === null) return <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-  if (results.length === 0) return <div style={{ fontSize: 13, color: 'var(--text3)', fontStyle: 'italic' }}>No exam attempts yet.</div>
-  return (
-    <table style={{ fontSize: 13 }}>
-      <thead><tr><th>Equipment</th><th>Score</th><th>Result</th><th>Date</th></tr></thead>
-      <tbody>
-        {results.map(r => (
-          <tr key={r.id}>
-            <td style={{ fontWeight: 500 }}>{r.equipment_inventory?.nickname || r.equipment_inventory?.equipment_name || '—'}</td>
-            <td style={{ fontFamily: 'var(--mono)' }}>{r.total ? `${r.score}/${r.total} (${Math.round(r.score / r.total * 100)}%)` : r.score}</td>
-            <td><span className={`badge ${r.passed ? 'badge-ok' : 'badge-low'}`}>{r.passed ? '✓ Passed' : '✗ Failed'}</span></td>
-            <td style={{ fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{r.taken_at ? new Date(r.taken_at).toLocaleDateString() : '—'}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
 const HUB_TABS = [
   { key: 'fresh',     label: 'Documents' },
   { key: 'golf',      label: 'Vehicle' },
   { key: 'equipment', label: 'Equipment' },
   { key: 'alarm',     label: 'Alarm' },
-  { key: 'exam',      label: 'Exam' },
   { key: 'locker',    label: 'Locker' },
 ]
 
@@ -1614,12 +1583,6 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
       case 'golf':      return <GolfCarTraining {...props} />
       case 'equipment': return <EquipmentTraining {...props} />
       case 'alarm':     return <BuildingAlarm {...props} />
-      case 'exam':
-        // Managers viewing a user → that user's results; students (own
-        // profile) and audit mode → full ExamTab (take exams / manage questions)
-        return su && editable && selectedUser && selectedUser.id !== session.userId
-          ? <UserExamResults user={selectedUser} />
-          : <ExamTab session={session} />
       case 'locker':
         return su && selectedUser
           ? <StudentLocker session={session} panelUser={selectedUser} />
@@ -1669,7 +1632,7 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
           </div>
         )
       ) : (
-        <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--surface)' }}>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--surface)', maxWidth: 900, margin: '0 auto' }}>
           {/* Header: identity + view toggle */}
           <div style={{ padding: '12px 16px', background: 'var(--row-a-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
@@ -1695,7 +1658,7 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
             {HUB_TABS.map(t => (
               <button key={t.key} onClick={() => setSubTab(t.key)}
                 style={{ padding: '10px 14px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: subTab === t.key ? 600 : 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent)' : 'transparent'}`, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                {t.key !== 'exam' && DOT[statuses?.[selectedUser.id]?.[t.key] || 'none']} {t.label}
+                {DOT[statuses?.[selectedUser.id]?.[t.key] || 'none']} {t.label}
               </button>
             ))}
           </div>
@@ -1780,7 +1743,9 @@ export default function TrainingRecords() {
 
       {subTab === 'requests' && <TrainingRequestsPanel session={session} />}
 
-      {subTab !== 'requests' && (
+      {subTab === 'exam' && <ExamTab session={session} />}
+
+      {subTab !== 'requests' && subTab !== 'exam' && (
         loading ? (
           <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         ) : students.length === 0 ? (
