@@ -327,13 +327,13 @@ function SuppliesTab() {
         <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">📦</div>No supplies yet.</div>
       ) : Object.entries(byRoom).map(([name, { room, items }]) => (
         <div key={name} style={{ marginBottom: 24 }}>
-          {/* Room divider bar — matches the navy ROOM: bars in PDF/Excel reports */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0C1140', borderRadius: 10, padding: '8px 14px', marginBottom: 12 }}>
+          {/* Room divider bar — soft teal tint: visible section break without weight */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--accent-light)', border: '1px solid #9FE1CB', borderRadius: 10, padding: '8px 14px', marginBottom: 12 }}>
             {room?.photo_url
-              ? <img src={room.photo_url} style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', flexShrink: 0 }} />
+              ? <img src={room.photo_url} style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: '50%', border: '1.5px solid #9FE1CB', flexShrink: 0 }} />
               : <span style={{ fontSize: 16, lineHeight: 1 }}>{room?.icon || '🧪'}</span>}
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#fff', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#9FE1CB', fontFamily: 'var(--mono)', flexShrink: 0 }}>{items.length} item{items.length !== 1 ? 's' : ''}</span>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#085041', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{items.length} item{items.length !== 1 ? 's' : ''}</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             {items.map(s => (
