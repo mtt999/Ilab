@@ -82,7 +82,7 @@ function SectionHeader({ title, count }) {
 // ══════════════════════════════════════════════════════════════
 // TAB 1 — FRESH STUDENT TRAINING
 // ══════════════════════════════════════════════════════════════
-function FreshTraining({ students, session, hideChrome = false }) {
+function FreshTraining({ students, session, hideChrome = false, onChanged }) {
   const isSolo = session?.loginMode === 'solo'
   const { toast } = useAppStore()
   const [records, setRecords] = useState([])
@@ -119,7 +119,7 @@ function FreshTraining({ students, session, hideChrome = false }) {
   async function toggleApprove(rec) {
     await sb.from('training_fresh').update({ admin_approved: !rec.admin_approved, admin_approved_by: session.username, admin_approved_at: new Date().toISOString() }).eq('id', rec.id)
     toast(rec.admin_approved ? 'Approval removed.' : 'Certificate approved ✓')
-    load()
+    load(); onChanged?.()
   }
 
   async function toggleInstructions(user) {
@@ -129,7 +129,7 @@ function FreshTraining({ students, session, hideChrome = false }) {
     } else {
       await sb.from('training_fresh').insert({ user_id: user.id, instructions_read: true })
     }
-    load()
+    load(); onChanged?.()
   }
 
   async function addCertForUser(userId, file, label) {
@@ -148,7 +148,7 @@ function FreshTraining({ students, session, hideChrome = false }) {
       toast('Certification added.')
       setShowAddForm(false); setNewCertLabel('')
       setAddingFor(null); setAddingLabel('')
-      load()
+      load(); onChanged?.()
     } catch (e) { toast('Upload failed.') }
     setUploading(null)
   }
@@ -157,7 +157,7 @@ function FreshTraining({ students, session, hideChrome = false }) {
     if (!confirm('Remove this certification?')) return
     await sb.from('training_fresh').delete().eq('id', recId)
     toast('Certification removed.')
-    load()
+    load(); onChanged?.()
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
@@ -441,7 +441,7 @@ function FreshTraining({ students, session, hideChrome = false }) {
 // ══════════════════════════════════════════════════════════════
 // TAB 2 — VEHICLE TRAINING
 // ══════════════════════════════════════════════════════════════
-function GolfCarTraining({ students, session, hideChrome = false }) {
+function GolfCarTraining({ students, session, hideChrome = false, onChanged }) {
   const { toast } = useAppStore()
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
@@ -476,7 +476,7 @@ function GolfCarTraining({ students, session, hideChrome = false }) {
     toast('Vehicle training record added.')
     setAddingFor(null)
     setForm({ vehicleName: '', date: new Date().toISOString().split('T')[0], trainedBy: session?.username || '', trained: false })
-    load()
+    load(); onChanged?.()
   }
 
   async function toggleTrained(rec) {
@@ -487,7 +487,7 @@ function GolfCarTraining({ students, session, hideChrome = false }) {
       trained_date: !rec.trained ? now : null,
       trained_by: !rec.trained ? session.username : null,
     }).eq('id', rec.id)
-    load()
+    load(); onChanged?.()
   }
 
   async function updateDate(rec, date) {
@@ -499,7 +499,7 @@ function GolfCarTraining({ students, session, hideChrome = false }) {
     if (!confirm('Remove this vehicle training record?')) return
     await sb.from('training_golf_car').delete().eq('id', id)
     toast('Record removed.')
-    load()
+    load(); onChanged?.()
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
@@ -642,7 +642,7 @@ function GolfCarTraining({ students, session, hideChrome = false }) {
 // ══════════════════════════════════════════════════════════════
 // TAB 3 — EQUIPMENT TRAINING
 // ══════════════════════════════════════════════════════════════
-function EquipmentTraining({ students, session, hideChrome = false }) {
+function EquipmentTraining({ students, session, hideChrome = false, onChanged }) {
   const isSolo = session?.loginMode === 'solo'
   const canManage = canEdit(session) || isSolo
   const { toast } = useAppStore()
@@ -774,18 +774,18 @@ function EquipmentTraining({ students, session, hideChrome = false }) {
     const expires = date ? new Date(new Date(date).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
     await sb.from('training_equipment').insert({ user_id: userId, equipment_id: equipmentId, trained_date: date, trained_by: trainedBy, passed_exam: passed, expires_at: expires })
     setAddingRecord(null)
-    load(); toast('Training record added.')
+    load(); onChanged?.(); toast('Training record added.')
   }
 
   async function togglePassed(rec) {
     if (!canManage) return
     await sb.from('training_equipment').update({ passed_exam: !rec.passed_exam }).eq('id', rec.id)
-    load()
+    load(); onChanged?.()
   }
 
   async function deleteRecord(id) {
     await sb.from('training_equipment').delete().eq('id', id)
-    load(); toast('Record removed.')
+    load(); onChanged?.(); toast('Record removed.')
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
@@ -1073,7 +1073,7 @@ function AddTrainingRecord({ userId, equipment, existingRecords, session, onSave
 // ══════════════════════════════════════════════════════════════
 // TAB 4 — BUILDING ALARM
 // ══════════════════════════════════════════════════════════════
-function BuildingAlarm({ students, session, hideChrome = false }) {
+function BuildingAlarm({ students, session, hideChrome = false, onChanged }) {
   const { toast } = useAppStore()
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1102,7 +1102,7 @@ function BuildingAlarm({ students, session, hideChrome = false }) {
     } else {
       await sb.from('training_building_alarm').insert({ user_id: user.id, [field]: value })
     }
-    load()
+    load(); onChanged?.()
   }
 
   async function toggleTrained(user) {
@@ -1115,7 +1115,7 @@ function BuildingAlarm({ students, session, hideChrome = false }) {
       await sb.from('training_building_alarm').insert({ user_id: user.id, trained: true, trained_date: now, trained_by: session.username })
     }
     toast('Record updated.')
-    load()
+    load(); onChanged?.()
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
@@ -1211,7 +1211,7 @@ function BuildingAlarm({ students, session, hideChrome = false }) {
 // ══════════════════════════════════════════════════════════════
 const TOTAL_LOCKERS = 15
 
-function StudentLocker({ session, panelUser = null }) {
+function StudentLocker({ session, panelUser = null, onChanged }) {
   const { toast } = useAppStore()
   const [lockers, setLockers] = useState([])
   const [students, setStudents] = useState([])
@@ -1259,7 +1259,7 @@ function StudentLocker({ session, panelUser = null }) {
     if (error) { toast('Error: ' + error.message); return }
     toast(`Locker ${lockerNumber} assigned to ${displayName} ✓`)
     setAssigning(null); setSelectedStudent(''); setNotes('')
-    load()
+    load(); onChanged?.()
   }
 
   async function unassignLocker(locker) {
@@ -1272,7 +1272,7 @@ function StudentLocker({ session, panelUser = null }) {
     const { error } = await q
     if (error) { toast('Error: ' + error.message); return }
     toast(`Locker ${locker.locker_number} cleared.`)
-    load()
+    load(); onChanged?.()
   }
 
   async function toggleUnavailable(lockerNumber) {
@@ -1576,17 +1576,19 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
 
   function renderTabContent(mode) {
     const su = mode === 'user'
+    // onChanged: children call this after any add/approve/delete so the
+    // card badges, progress bars and tab status dots update without a reload
     const props = su
-      ? { students: selectedArr, session, hideChrome: true }
-      : { students, session }
+      ? { students: selectedArr, session, hideChrome: true, onChanged: loadStatuses }
+      : { students, session, onChanged: loadStatuses }
     switch (subTab) {
       case 'golf':      return <GolfCarTraining {...props} />
       case 'equipment': return <EquipmentTraining {...props} />
       case 'alarm':     return <BuildingAlarm {...props} />
       case 'locker':
         return su && selectedUser
-          ? <StudentLocker session={session} panelUser={selectedUser} />
-          : <StudentLocker session={session} />
+          ? <StudentLocker session={session} panelUser={selectedUser} onChanged={loadStatuses} />
+          : <StudentLocker session={session} onChanged={loadStatuses} />
       default:          return <FreshTraining {...props} />
     }
   }
