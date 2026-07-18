@@ -657,6 +657,85 @@ Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f
 
 ---
 
+## Feature updates — July 2026 session (do not regress)
+
+### Login
+- **"Keep me signed in on this device" checkbox** (default checked). Custom auth
+  storage adapter in `src/lib/supabase.js` routes Supabase tokens to
+  localStorage (checked) or sessionStorage (unchecked) via the
+  `ilab_keep_signed_in` flag, which Login sets BEFORE `signInWithPassword`.
+  Each write clears the other store. Checked also stores
+  `ilab_remembered_email` (prefilled next visit). **Never store passwords** —
+  browser password managers handle that via the existing autocomplete attrs.
+- **LoginBackground.jsx** — animated canvas scene (benzene rings + the four
+  logo hexes: atom/flask/gears/chip + DNA ribbons + sparkles). Retina-scaled
+  (DPR-capped 2), pauses on visibilitychange, static frame under
+  prefers-reduced-motion, reduced density on mobile. Floating items **bounce
+  off the login card** (`.card` rect re-measured every 15 frames). Login only —
+  never mount behind data screens.
+
+### Booking / calendar (Phase 1 shipped)
+- `src/lib/calendarLinks.js` — Google/Outlook template URLs + .ics download.
+  Title `{Org} - Lab booking: {Equipment}`; location `{Org} - {eq.location}`;
+  narrative description with times in generator's local zone (event times UTC);
+  booking-page deep link `https://labhive.app/?screen=booking` — clickable via
+  HTML details (Google), X-ALT-DESC (ics), bare-URL-on-own-line (Outlook).
+- **CalendarPromptModal** pops after every NEW booking (both BookingModal
+  instances via `onBooked`) — this is how users discover the feature; edits
+  don't re-prompt. Buttons also remain in BookingDetail.
+- **Cancelling/denying a booking retires its photo reminders** (all three
+  types marked read) and `loadNotifications` sweeps reminders whose booking is
+  cancelled/denied (hides + marks read). Past-booking reminders keep the
+  bell-only behavior.
+- Phase 2 (not built yet): Google Calendar busy-overlay in the booking grid —
+  requires Calendar API enabled in the same Google Cloud project as Drive.
+
+### Supply Inventory (inspection flow)
+- **Results screen buttons:** "Save" (was "Done") + primary
+  "Save & next room: {name} →" that starts inspecting the next room in rooms
+  order that has supplies (hidden when none remain). Record is already saved
+  before this screen — buttons are navigation.
+- **Export Data tab: Edit button per record** → `EditRecordModal` (Home.jsx):
+  edit count + needed per item after the fact; low flags and `flag_count`
+  recomputed on save. Available to all users (delete stays manager/admin).
+- **Count box template:** last inspection's qty per supply id shown as gray
+  placeholder + "Last inspected: N unit" caption. **Untouched box saves the
+  template value, not 0** (deliberate — placeholder must never lie); +/-
+  steppers start from the template; clearing the box restores it.
+- **Low-item popup:** Next/Finish with count < min and empty "needs to be
+  ordered" shows a reminder — "Enter amount" (focuses the needs input) or
+  "Next item anyway →". Empty string triggers it; explicit 0 does not.
+- **Rooms + Supplies tabs are card grids** (176px `.manage-card` cards, photo
+  strip on top, Photo/Edit/Delete buttons under each). `.manage-card` has the
+  same hover lift/teal as `.room-card` but no pointer cursor. Supplies groups
+  by room under **light-teal divider bars** (accent-light bg, #9FE1CB border,
+  #085041 name, room photo thumb, teal mono item count) — do NOT revert to
+  small mono labels or heavy navy bars.
+
+### Reports (PDF + Excel)
+- **Clickable purchase-link column** in all three builders: PDF (autotable
+  "Link" col + `doc.link` annotation via didDrawCell), Excel report (8-column
+  layout, `{ text, hyperlink }` cells, blue underlined), Results-screen xlsx
+  (`cell.l = { Target }`). One hyperlink per cell = first link; text shows
+  "+N more".
+- **Alignment standard:** Item Name and Notes columns left+middle; every other
+  column center+middle — in PDF, ExcelJS report, and xlsx-js-style exports.
+
+### Mobile
+- **Sidebar drawer:** hamburger in header (mobile only) slides the full
+  sidebar in as a left drawer (`.mobile-drawer`, 220ms, backdrop). Closes on
+  backdrop tap or any screen/sub-tab change. Sidebar's `forceExpanded` prop
+  keeps it out of icon-only mode and no-ops the collapse toggle. Bottom nav
+  unchanged.
+
+### Dashboard
+- **Module image cache:** `moduleImages` initializes synchronously from
+  localStorage (`ilab_module_imgs_{mode}_{org}`), refreshed in background by
+  `loadSettings()` (stale-while-revalidate) — kills the ~1s emoji flash.
+  Local default SVGs seed the initializer. Do not revert to `useState({})`.
+
+---
+
 ## Build — obfuscator vs dynamic imports (July 2026)
 
 The prod obfuscator (`vite.config.js`) MUST keep `reservedStrings` covering every
