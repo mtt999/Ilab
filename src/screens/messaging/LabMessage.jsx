@@ -3,6 +3,7 @@ import { sb } from '../../lib/supabase'
 import { useAppStore } from '../../store/useAppStore'
 import { buildEmailHtml } from '../../lib/emailTemplate'
 import HelpPanel from '../../components/HelpPanel'
+import { IconPaperclip, IconSend, IconChat, IconMegaphone } from '../../components/Icons'
 
 async function sendAppNotification(userId, senderName, messageBody) {
   if (!userId) return
@@ -44,15 +45,44 @@ function fmtDate(d) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined })
 }
 
-function Avatar({ name, size = 32 }) {
+// "Today" / "Yesterday" / "Jul 12" — for thread date separators
+function dayLabel(d) {
+  const date = new Date(d)
+  const now = new Date()
+  const startOf = x => new Date(x.getFullYear(), x.getMonth(), x.getDate())
+  const diffDays = Math.round((startOf(now) - startOf(date)) / 86400000)
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined })
+}
+
+function sameDay(a, b) {
+  const x = new Date(a), y = new Date(b)
+  return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate()
+}
+
+const IMG_EXT = /\.(png|jpe?g|gif|webp|bmp|svg)$/i
+function isImageFile(name, url) {
+  return IMG_EXT.test(name || '') || IMG_EXT.test((url || '').split('?')[0])
+}
+
+// Profile photo → gender scientist emoji → initial letter (same fallback
+// chain as the Training hub's UserAvatar for app-wide consistency)
+function Avatar({ name, user, size = 32 }) {
+  if (user?.photo_url) {
+    return <img src={user.photo_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--border)', flexShrink: 0 }} />
+  }
+  const g = (user?.gender || '').toLowerCase()
+  const emoji = g === 'male' ? '👨‍🔬' : g === 'female' ? '👩‍🔬' : null
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
       background: 'var(--accent-light)', border: '1.5px solid var(--accent)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: Math.floor(size * 0.38), fontWeight: 700, color: 'var(--accent)', flexShrink: 0,
+      fontSize: emoji ? Math.floor(size * 0.5) : Math.floor(size * 0.38),
+      fontWeight: 700, color: 'var(--accent)', flexShrink: 0, lineHeight: 1,
     }}>
-      {(name || '?')[0].toUpperCase()}
+      {emoji || (name || '?')[0].toUpperCase()}
     </div>
   )
 }
@@ -138,6 +168,7 @@ export default function LabMessage() {
   const { session, toast, setScreen } = useAppStore()
   const [conversations, setConversations] = useState([])
   const [staff, setStaff] = useState([])
+  const [userMap, setUserMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
   const [showCompose, setShowCompose] = useState(false)
@@ -201,6 +232,13 @@ export default function LabMessage() {
     if (session?.organizationId && session?.userId) q = q.eq('organization_id', session.organizationId)
     const { data } = await q
     setStaff(data || [])
+    // avatar lookup: all org users (photo + gender), keyed by id
+    let uq = sb.from('users').select('id, photo_url, gender').eq('is_active', true)
+    if (session?.organizationId && session?.userId) uq = uq.eq('organization_id', session.organizationId)
+    const { data: allUsers } = await uq
+    const m = {}
+    ;(allUsers || []).forEach(u => { m[u.id] = u })
+    setUserMap(m)
   }
 
   async function fetchAll() {
@@ -354,6 +392,22 @@ export default function LabMessage() {
     return conv.sender_name || 'Unknown'
   }
 
+  function otherUser(conv) {
+    if (!conv) return null
+    const id = conv.sender_id === session?.userId ? conv.receiver_id : conv.sender_id
+    return id ? userMap[id] : null
+  }
+
+  const isBroadcast = conv => !conv?.receiver_id
+
+  function BroadcastBadge({ small }) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: small ? '1px 6px' : '2px 8px', fontSize: small ? 9 : 11, fontWeight: 700, flexShrink: 0, lineHeight: 1.5 }}>
+        <IconMegaphone size={small ? 10 : 12} /> All staff
+      </span>
+    )
+  }
+
   const totalUnread = conversations.reduce((s, c) => s + (c.unreadCount || 0), 0)
 
   // List filtering: search matches name, subject and any message body
@@ -419,7 +473,7 @@ export default function LabMessage() {
             <button
               onClick={() => setUnreadOnly(v => !v)}
               title="Show unread only"
-              style={{ fontSize: 11, fontWeight: 600, padding: '5px 10px', borderRadius: 20, cursor: 'pointer', flexShrink: 0, border: `1px solid ${unreadOnly ? 'var(--accent)' : 'var(--border)'}`, background: unreadOnly ? 'var(--accent)' : 'var(--surface)', color: unreadOnly ? '#fff' : 'var(--text2)', transition: 'all 0.15s' }}
+              style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, cursor: 'pointer', flexShrink: 0, border: `1px solid ${unreadOnly ? 'var(--accent)' : 'var(--border)'}`, background: unreadOnly ? 'var(--accent)' : 'var(--surface)', color: unreadOnly ? '#fff' : 'var(--text2)', transition: 'all 0.15s' }}
             >
               Unread{totalUnread > 0 ? ` (${totalUnread})` : ''}
             </button>
@@ -430,7 +484,7 @@ export default function LabMessage() {
               <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}><div className="spinner" /></div>
             ) : visibleConvs.length === 0 ? (
               <div style={{ padding: 24, textAlign: 'center', color: 'var(--text3)' }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
+                <div style={{ marginBottom: 8, opacity: 0.6 }}><IconChat size={36} /></div>
                 <div style={{ fontSize: 13 }}>
                   {conversations.length === 0 ? 'No conversations yet'
                     : unreadOnly && !q ? 'No unread conversations'
@@ -448,10 +502,13 @@ export default function LabMessage() {
                   background: selected ? 'var(--accent-light)' : conv.unreadCount > 0 ? 'rgba(29,158,117,0.035)' : idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)',
                   cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
                 }}>
-                  <Avatar name={name} size={36} />
+                  <Avatar name={name} user={otherUser(conv)} size={36} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 4, marginBottom: 1 }}>
-                      <span style={{ fontWeight: conv.unreadCount > 0 ? 700 : 500, fontSize: 13, color: selected ? 'var(--accent)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{name}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                        <span style={{ fontWeight: conv.unreadCount > 0 ? 700 : 500, fontSize: 13, color: selected ? 'var(--accent)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{name}</span>
+                        {isBroadcast(conv) && <BroadcastBadge small />}
+                      </span>
                       <span style={{ fontSize: 10, color: 'var(--text3)', flexShrink: 0, fontFamily: 'var(--mono)' }}>{fmtDate(conv.lastMessage?.created_at)}</span>
                     </div>
                     {conv.subject && (
@@ -474,7 +531,7 @@ export default function LabMessage() {
         <div className={`msg-panel-right${!mobileShowThread ? ' msg-hidden' : ''}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: selectedConv ? 'var(--bg)' : 'var(--surface)' }}>
           {!selectedConv ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)' }}>
-              <div style={{ fontSize: 52, marginBottom: 12, opacity: 0.5 }}>💬</div>
+              <div style={{ marginBottom: 12, opacity: 0.4 }}><IconChat size={52} /></div>
               <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: 'var(--text2)' }}>Select a conversation</div>
               <div style={{ fontSize: 13 }}>or tap <strong>+ New</strong> to start one</div>
             </div>
@@ -483,9 +540,12 @@ export default function LabMessage() {
               {/* Thread header */}
               <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', flexShrink: 0 }}>
                 <button className="msg-back-btn" onClick={() => { setMobileShowThread(false) }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--accent)', padding: '0 4px', lineHeight: 1, flexShrink: 0, display: 'none' }}>←</button>
-                <Avatar name={otherName(selectedConv)} size={34} />
+                <Avatar name={otherName(selectedConv)} user={otherUser(selectedConv)} size={34} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{otherName(selectedConv)}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {otherName(selectedConv)}
+                    {isBroadcast(selectedConv) && <BroadcastBadge />}
+                  </div>
                   {selectedConv.subject && <div style={{ fontSize: 12, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedConv.subject}</div>}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
@@ -497,14 +557,23 @@ export default function LabMessage() {
               <div ref={threadRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {[selectedConv, ...selectedConv.replies].map((m, i, all) => {
                   const isOwn = m.sender_id === session?.userId
-                  const prevSame = i > 0 && all[i - 1].sender_id === m.sender_id
-                  const nextSame = i < all.length - 1 && all[i + 1].sender_id === m.sender_id
+                  const newDay = i === 0 || !sameDay(all[i - 1].created_at, m.created_at)
+                  const prevSame = i > 0 && all[i - 1].sender_id === m.sender_id && !newDay
+                  const nextSame = i < all.length - 1 && all[i + 1].sender_id === m.sender_id && sameDay(m.created_at, all[i + 1].created_at)
                   return (
                     <div key={m.id}>
-                      {/* Date separator or sender label */}
+                      {/* Day separator */}
+                      {newDay && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: `${i === 0 ? 0 : 14}px 0 10px` }}>
+                          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 99, padding: '2px 10px' }}>{dayLabel(m.created_at)}</span>
+                          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                        </div>
+                      )}
+                      {/* Sender label */}
                       {!prevSame && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: `${i === 0 ? 0 : 10}px 0 6px`, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
-                          {!isOwn && <Avatar name={m.sender_name} size={22} />}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: `${i === 0 || newDay ? 0 : 10}px 0 6px`, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
+                          {!isOwn && <Avatar name={m.sender_name} user={userMap[m.sender_id]} size={22} />}
                           <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>
                             {isOwn ? 'You' : m.sender_name}
                           </span>
@@ -527,13 +596,20 @@ export default function LabMessage() {
                             {m.body}
                           </div>
                           {m.file_url && (
-                            <a href={m.file_url} target="_blank" rel="noopener" style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, marginTop: 4,
-                              color: isOwn ? 'var(--accent)' : 'var(--accent)',
-                              background: 'var(--accent-light)', borderRadius: 6, padding: '4px 8px', textDecoration: 'none',
-                            }}>
-                              📎 {m.file_name || 'Attachment'}
-                            </a>
+                            isImageFile(m.file_name, m.file_url) ? (
+                              <a href={m.file_url} target="_blank" rel="noopener" title={m.file_name || 'Image'} style={{ display: 'block', marginTop: 4 }}>
+                                <img src={m.file_url} alt={m.file_name || 'Attachment'} loading="lazy"
+                                  style={{ maxWidth: 220, maxHeight: 180, borderRadius: 10, border: '1px solid var(--border)', display: 'block', objectFit: 'cover', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }} />
+                              </a>
+                            ) : (
+                              <a href={m.file_url} target="_blank" rel="noopener" style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, marginTop: 4,
+                                color: 'var(--accent)',
+                                background: 'var(--accent-light)', borderRadius: 6, padding: '4px 8px', textDecoration: 'none',
+                              }}>
+                                <IconPaperclip size={13} /> {m.file_name || 'Attachment'}
+                              </a>
+                            )
                           )}
                           {!nextSame && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
@@ -558,13 +634,13 @@ export default function LabMessage() {
               <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border)', background: 'var(--surface)', flexShrink: 0 }}>
                 {replyFile && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, padding: '4px 10px', background: 'var(--accent-light)', borderRadius: 6, fontSize: 12, color: 'var(--text2)' }}>
-                    📎 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{replyFile.name}</span>
+                    <IconPaperclip size={13} /> <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{replyFile.name}</span>
                     <button onClick={() => setReplyFile(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--text3)', flexShrink: 0 }}>✕</button>
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                   <input ref={replyFileRef} type="file" style={{ display: 'none' }} onChange={e => setReplyFile(e.target.files[0])} />
-                  <button onClick={() => replyFileRef.current?.click()} title="Attach file" style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--surface2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>📎</button>
+                  <button onClick={() => replyFileRef.current?.click()} title="Attach file" style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--surface2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', flexShrink: 0 }}><IconPaperclip size={16} /></button>
                   <textarea
                     ref={textareaRef}
                     rows={1}
@@ -583,7 +659,7 @@ export default function LabMessage() {
                     title="Send (Enter)"
                     style={{ width: 38, height: 38, borderRadius: '50%', border: 'none', background: replyText.trim() ? 'var(--accent)' : 'var(--border)', color: replyText.trim() ? '#fff' : 'var(--text3)', cursor: replyText.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, transition: 'all 0.15s', flexShrink: 0, fontWeight: 700 }}
                   >
-                    {sendingReply ? <span style={{ fontSize: 11 }}>…</span> : '↑'}
+                    {sendingReply ? <span style={{ fontSize: 11 }}>…</span> : <IconSend size={16} />}
                   </button>
                 </div>
               </div>

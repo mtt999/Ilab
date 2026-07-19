@@ -74,3 +74,29 @@ export const IconCalendarPlus = (p) => (
     <path d="M12 12.5v5M9.5 15h5"/>
   </Icon>
 )
+
+export const IconPaperclip = (p) => (
+  <Icon {...p}>
+    <path d="m20.5 11.5-8.3 8.3a5 5 0 0 1-7-7l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.5a1.7 1.7 0 0 1-2.4-2.4l7.9-7.8"/>
+  </Icon>
+)
+
+export const IconSend = (p) => (
+  <Icon {...p}>
+    <path d="M20.5 3.5 3.5 10.2l7 2.8 2.8 7 7.2-16.5z"/><path d="m10.5 13 10-9.5"/>
+  </Icon>
+)
+
+export const IconChat = (p) => (
+  <Icon {...p}>
+    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5z"/>
+    <path d="M8 10.5h8M8 14h5"/>
+  </Icon>
+)
+
+export const IconMegaphone = (p) => (
+  <Icon {...p}>
+    <path d="M3 10.5v3a1.5 1.5 0 0 0 1.5 1.5H7l9.5 5V5.5L7 10.5H4.5A1.5 1.5 0 0 0 3 12z"/>
+    <path d="M20 9.5a3.5 3.5 0 0 1 0 5M7.5 15.5l1.5 5h2.5l-1.3-5"/>
+  </Icon>
+)
