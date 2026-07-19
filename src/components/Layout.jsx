@@ -184,6 +184,9 @@ function LabHiveLogo({ size = 40 }) {
 // ── Sidebar ────────────────────────────────────────────────────
 function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubTab, setScreen, accentColor, accentLight, forceExpanded = false }) {
   const isDash      = screen === 'dashboard'
+  // Screens that portal a list (equipment, projects…) into the sidebar —
+  // hide the Apps section there so the list gets full height; Home stays.
+  const hasPortal   = ['projects', 'barcodeqr', 'equipment', 'equipmenthub', 'booking'].includes(screen)
   const tabs        = getScreenTabs(screen, session)
   const mod         = MODULE_META[screen]
   const activeTab   = sidebarSubTab || (tabs?.[0]?.key ?? null)
@@ -388,7 +391,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
             <div id="sidebar-portal-slot" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }} />
 
-            {visibleMeta.length > 0 && (
+            {!hasPortal && visibleMeta.length > 0 && (
               <div style={{ borderTop: '1px solid #f3f4f6', flexShrink: 0, maxHeight: modulesOpen ? 240 : 'none', overflowY: modulesOpen ? 'auto' : 'visible' }}>
                 <div style={{ padding: '8px 14px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {AppsBadge()}
