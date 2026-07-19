@@ -969,7 +969,7 @@ function PointChart({ results, isOutlier, title, svgRef, onDownloadPdf }) {
           <button className="btn btn-sm" style={{ fontSize: 12 }} onClick={onDownloadPdf} title="Download chart + results as PDF">⬇ PDF</button>
         )}
       </div>
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 640, height: 'auto', overflow: 'visible', display: 'block', margin: '0 auto' }}>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 960, height: 'auto', overflow: 'visible', display: 'block', margin: '0 auto' }}>
         {/* Gridlines + Y-axis ticks */}
         {tickVals.map((v, i) => (
           <g key={i}>
