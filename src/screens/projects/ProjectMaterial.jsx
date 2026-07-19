@@ -849,7 +849,40 @@ function ResultsTab({ projects, session, allowedNames }) {
 
 // ── Point Chart ───────────────────────────────────────────────
 const PALETTE = ['#0d47a1','#c84b2f','#1D9E75','#534AB7','#b45309','#0369a1','#be185d','#065f46']
-function PointChart({ results, isOutlier }) {
+// Rasterize the chart SVG to PNG. CSS variables don't resolve inside a
+// serialized SVG, so concrete colors are substituted from the live stylesheet.
+async function chartSvgToPng(svgEl, w, h) {
+  const clone = svgEl.cloneNode(true)
+  const cs = getComputedStyle(document.documentElement)
+  const resolveVars = s => s.replace(/var\((--[^),]+)[^)]*\)/g, (_, v) => cs.getPropertyValue(v).trim() || '#333')
+  clone.querySelectorAll('*').forEach(el => {
+    ;['stroke', 'fill'].forEach(a => {
+      const val = el.getAttribute(a)
+      if (val && val.includes('var(')) el.setAttribute(a, resolveVars(val))
+    })
+  })
+  clone.setAttribute('width', w)
+  clone.setAttribute('height', h)
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+  clone.removeAttribute('style')
+  const xml = new XMLSerializer().serializeToString(clone)
+  const img = new Image()
+  await new Promise((res, rej) => {
+    img.onload = res
+    img.onerror = rej
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml)
+  })
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, w, h)
+  ctx.drawImage(img, 0, 0, w, h)
+  return canvas.toDataURL('image/png')
+}
+
+function PointChart({ results, isOutlier, title, svgRef, onDownloadPdf }) {
   if (!results.length) return null
 
   const W = 560, H = 220
@@ -929,8 +962,14 @@ function PointChart({ results, isOutlier }) {
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px' }}>
-      <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Results by Specimen</div>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', overflow: 'visible', display: 'block' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+        {/* Chart named after the equipment — every result here is the same test */}
+        <div style={{ fontWeight: 600, fontSize: 13 }}>{title ? `${title} — Results by Specimen` : 'Results by Specimen'}</div>
+        {onDownloadPdf && (
+          <button className="btn btn-sm" style={{ fontSize: 12 }} onClick={onDownloadPdf} title="Download chart + results as PDF">⬇ PDF</button>
+        )}
+      </div>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 640, height: 'auto', overflow: 'visible', display: 'block', margin: '0 auto' }}>
         {/* Gridlines + Y-axis ticks */}
         {tickVals.map((v, i) => (
           <g key={i}>
@@ -1110,6 +1149,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
   const fileInputRef = useRef(null)
   const emptyAddForm = { test_name: '', specimen_name: '', project_id: '', result_type: 'number', result_value: '', description: '', result_date: new Date().toISOString().split('T')[0] }
   const [addForm, setAddForm] = useState(emptyAddForm)
+  const chartSvgRef = useRef(null)
 
   useEffect(() => {
     const isSolo = session?.loginMode === 'solo'
@@ -1201,6 +1241,57 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
       ? all.filter(row => row.created_by && allowedNames.has(row.created_by))
       : all
     setResults(visible)
+  }
+
+  async function downloadPdf() {
+    try {
+      const { default: jsPDF } = await import('jspdf')
+      const autoTable = (await import('jspdf-autotable')).default
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+
+      doc.setFontSize(16)
+      doc.setFont(undefined, 'bold')
+      doc.text(`${selected.equipment_name} — Test Results`, 40, 48)
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'normal')
+      doc.setTextColor(120)
+      doc.text(`Generated ${new Date().toLocaleDateString()}${filterDate ? ` · filtered to ${filterDate}` : ''} · ${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''}`, 40, 64)
+
+      let y = 84
+      if (chartSvgRef.current) {
+        const png = await chartSvgToPng(chartSvgRef.current, 1120, 440)
+        const imgW = pageW - 80
+        const imgH = imgW * (440 / 1120)
+        doc.addImage(png, 'PNG', 40, y, imgW, imgH)
+        y += imgH + 18
+      }
+      if (stats) {
+        doc.setTextColor(60)
+        doc.setFontSize(10)
+        doc.text(`Mean: ${stats.avg.toFixed(3)}    Std dev: ${stats.std.toFixed(3)}    Min: ${stats.min}    Max: ${stats.max}    n = ${stats.count}`, 40, y)
+        y += 20
+      }
+      autoTable(doc, {
+        startY: y,
+        head: [['Specimen', 'Test', 'Value', 'Type', 'Date', 'By']],
+        body: filteredResults.map(r => [
+          r.specimen_name || r.sample_name || '—',
+          r.test_name || '—',
+          `${r.result_value ?? '—'}${r.result_type === 'percentage' ? '%' : ''}`,
+          r.result_type || '—',
+          r.date || '—',
+          r.created_by || '—',
+        ]),
+        styles: { fontSize: 9, halign: 'center', valign: 'middle' },
+        columnStyles: { 0: { halign: 'left' }, 1: { halign: 'left' } },
+        headStyles: { fillColor: [29, 158, 117] },
+        margin: { left: 40, right: 40 },
+      })
+      doc.save(`${(selected.equipment_name || 'results').replace(/[^a-z0-9]+/gi, '_')}_results.pdf`)
+    } catch (e) {
+      toast('PDF export failed: ' + (e.message || ''))
+    }
   }
 
   async function postComment() {
@@ -1410,7 +1501,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
               </div>
 
               {/* Chart: point graph */}
-              <PointChart results={filteredResults} isOutlier={isOutlier} />
+              <PointChart results={filteredResults} isOutlier={isOutlier} title={selected.equipment_name} svgRef={chartSvgRef} onDownloadPdf={downloadPdf} />
 
               {/* Results table + sample info panel */}
               <div style={{ display: 'grid', gridTemplateColumns: selectedRow ? '1fr 280px' : '1fr', gap: 12, alignItems: 'start' }}>
