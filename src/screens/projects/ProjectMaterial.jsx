@@ -2149,6 +2149,25 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
   const [activeProjectId, setActiveProjectId] = useState(null)
   const [activeProject, setActiveProject] = useState(null)
   const [subTab, setSubTab] = useState('info')
+  const [photoTarget, setPhotoTarget] = useState(null)
+  const photoFileRef = useRef(null)
+
+  // Project photo: managers/admins (team) or the workspace owner (solo)
+  const canSetPhoto = !viewingWorkspaceOwnerId && (isSolo || session?.userId === null || session?.dbRole === 'admin' || session?.dbRole === 'user')
+
+  async function uploadProjectPhoto(file) {
+    if (!file || !photoTarget) return
+    const ext = file.name.split('.').pop()
+    const path = `project-photos/${photoTarget.id}_${Date.now()}.${ext}`
+    const { error: upErr } = await sb.storage.from('project-files').upload(path, file)
+    if (upErr) { toast('Upload failed: ' + upErr.message); return }
+    const { data: url } = sb.storage.from('project-files').getPublicUrl(path)
+    const { error } = await sb.from('projects').update({ photo_url: url.publicUrl }).eq('id', photoTarget.id)
+    if (error) { toast('Could not save photo — the photo_url column is missing. Run the SQL migration.'); return }
+    toast('Project photo updated ✓')
+    setPhotoTarget(null)
+    loadProjects()
+  }
 
   useEffect(() => { loadProjects() }, [filter, viewingWorkspaceOwnerId])
   useEffect(() => { loadUsers() }, [])
@@ -2156,22 +2175,21 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
 
   async function loadProjects() {
     setLoading(true)
-    const baseSelect = 'id, name, project_id, status, cfop, pi_user_id, student_ids, sampling_date, notes, created_at'
-    let q = sb.from('projects').select(baseSelect).order('created_at', { ascending: false })
-
-    if (isSolo && session?.userId) {
-      if (viewingWorkspaceOwnerId) {
-        q = q.eq('solo_owner_id', viewingWorkspaceOwnerId)
-      } else {
-        q = q.eq('solo_owner_id', session.userId)
+    const buildQuery = (select) => {
+      let q = sb.from('projects').select(select).order('created_at', { ascending: false })
+      if (isSolo && session?.userId) {
+        q = q.eq('solo_owner_id', viewingWorkspaceOwnerId || session.userId)
+      } else if (!isSolo) {
+        q = q.is('solo_owner_id', null)
+        if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
       }
-    } else if (!isSolo) {
-      q = q.is('solo_owner_id', null)
-      if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
+      if (filter !== 'all') q = q.eq('status', filter)
+      return q
     }
-
-    if (filter !== 'all') q = q.eq('status', filter)
-    const { data } = await q
+    const baseSelect = 'id, name, project_id, status, cfop, pi_user_id, student_ids, sampling_date, notes, created_at'
+    // photo_url needs the one-time SQL migration — fall back gracefully without it
+    let { data, error } = await buildQuery(baseSelect + ', photo_url')
+    if (error) ({ data } = await buildQuery(baseSelect))
 
     setAllProjects(data || [])
     setProjects(data || [])
@@ -2243,6 +2261,9 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
         ))}
       </div>
 
+      <input ref={photoFileRef} type="file" accept="image/*" style={{ display: 'none' }}
+        onChange={e => { uploadProjectPhoto(e.target.files?.[0]); e.target.value = '' }} />
+
       {/* ── Project card grid (Training-hub style) ── */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
@@ -2255,11 +2276,19 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
             return (
               <div key={p.id} className="manage-card"
                 onClick={() => { if (isActive) { setActiveProjectId(null); setActiveProject(null) } else { setActiveProjectId(p.id); setSubTab('info') } }}
-                style={{ width: 176, flexShrink: 0, padding: '16px 12px 14px', cursor: 'pointer', ...(isActive ? { borderColor: 'var(--accent3)', background: 'var(--accent3-light)', boxShadow: '0 6px 18px rgba(83,74,183,0.18)' } : {}) }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>🧪</div>
+                style={{ width: 176, flexShrink: 0, padding: p.photo_url ? '0 12px 14px' : '16px 12px 14px', cursor: 'pointer', overflow: 'hidden', ...(isActive ? { borderColor: 'var(--accent3)', background: 'var(--accent3-light)', boxShadow: '0 6px 18px rgba(83,74,183,0.18)' } : {}) }}>
+                {p.photo_url
+                  ? <img src={p.photo_url} alt="" style={{ width: 'calc(100% + 24px)', height: 90, objectFit: 'cover', borderRadius: '10px 10px 0 0', margin: '0 -12px 10px' }} />
+                  : <div style={{ fontSize: 28, marginBottom: 8 }}>🧪</div>}
                 <div style={{ fontWeight: 600, fontSize: 14, color: isActive ? 'var(--accent3)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                 {p.project_id && <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.project_id}</div>}
-                <div style={{ marginTop: 8 }}><span className={`badge ${statusBadge(p.status)}`} style={{ fontSize: 10, padding: '2px 8px' }}>{p.status}</span></div>
+                <div style={{ marginTop: 8, marginBottom: canSetPhoto ? 10 : 0 }}><span className={`badge ${statusBadge(p.status)}`} style={{ fontSize: 10, padding: '2px 8px' }}>{p.status}</span></div>
+                {canSetPhoto && (
+                  <button className="btn" style={{ fontSize: 12, padding: '4px 10px' }}
+                    onClick={e => { e.stopPropagation(); setPhotoTarget(p); photoFileRef.current?.click() }}>
+                    {p.photo_url ? 'Change photo' : 'Photo'}
+                  </button>
+                )}
               </div>
             )
           })}
