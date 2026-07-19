@@ -1394,6 +1394,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
   const [loadingRes, setLoadingRes] = useState(false)
   const [postingCmt, setPostingCmt] = useState(false)
   const [filterDate, setFilterDate] = useState('')
+  const [filterProject, setFilterProject] = useState('')  // '' = all projects
   const [selectedRow, setSelectedRow] = useState(null)
   const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768)
 
@@ -1519,7 +1520,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
       doc.setFontSize(10)
       doc.setFont(undefined, 'normal')
       doc.setTextColor(120)
-      doc.text(`Generated ${new Date().toLocaleDateString()}${filterDate ? ` · filtered to ${filterDate}` : ''} · ${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''}`, 40, 64)
+      doc.text(`Generated ${new Date().toLocaleDateString()}${filterProject ? ` · project: ${projName(filterProject)}` : ''}${filterDate ? ` · filtered to ${filterDate}` : ''} · ${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''}`, 40, 64)
 
       let y = 84
       if (chartSvgRef.current) {
@@ -1537,10 +1538,11 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
       }
       autoTable(doc, {
         startY: y,
-        head: [['Specimen', 'Test', 'Value', 'Type', 'Date', 'By']],
+        head: [['Specimen', 'Test', 'Project', 'Value', 'Type', 'Date', 'By']],
         body: filteredResults.map(r => [
           r.specimen_name || r.sample_name || '—',
           r.test_name || '—',
+          projName(r.project_id),
           `${r.result_value ?? '—'}${r.result_type === 'percentage' ? '%' : ''}`,
           r.result_type || '—',
           r.date || '—',
@@ -1579,7 +1581,16 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
   const filteredEq = equipment.filter(e =>
     !search.trim() || e.equipment_name?.toLowerCase().includes(search.toLowerCase()) || e.category?.toLowerCase().includes(search.toLowerCase())
   )
-  const filteredResults = results.filter(r => !filterDate || r.date === filterDate)
+  // Results can span multiple projects on the same equipment — keep them
+  // separable: project filter + per-project labels so data never mixes silently
+  const projName = id => {
+    const p = allProjects.find(x => x.id === id)
+    return p ? (p.project_id || p.name) : '—'
+  }
+  const resultProjects = [...new Set(results.map(r => r.project_id).filter(Boolean))]
+  const filteredResults = results.filter(r =>
+    (!filterDate || r.date === filterDate) && (!filterProject || r.project_id === filterProject)
+  )
 
   const numericVals = filteredResults.filter(r => r.result_type === 'number' || r.result_type === 'percentage').map(r => parseFloat(r.result_value)).filter(v => !isNaN(v))
   const pfResults   = filteredResults.filter(r => r.result_type === 'pass_fail')
@@ -1615,7 +1626,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                   {items.map(e => {
                     const active = selected?.id === e.id
                     return (
-                      <div key={e.id} onClick={() => { setSelected(e); setFilterDate('') }}
+                      <div key={e.id} onClick={() => { setSelected(e); setFilterDate(''); setFilterProject('') }}
                         style={{ padding: '8px 12px', cursor: 'pointer', background: active ? 'var(--accent3-light)' : 'transparent', borderLeft: `3px solid ${active ? 'var(--accent3)' : 'transparent'}` }}>
                         <div style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? 'var(--accent3)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.equipment_name}</div>
                       </div>
@@ -1652,8 +1663,15 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{selected.equipment_name}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
+                {resultProjects.length > 1 && (
+                  <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
+                    style={{ fontSize: 12, padding: '4px 8px', maxWidth: 200, border: filterProject ? '1.5px solid var(--accent3)' : undefined }}>
+                    <option value="">All projects ({resultProjects.length})</option>
+                    {resultProjects.map(pid => <option key={pid} value={pid}>{projName(pid)}</option>)}
+                  </select>
+                )}
                 <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ fontSize: 12, padding: '4px 8px' }} />
-                {filterDate && <button onClick={() => setFilterDate('')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 12 }}>✕ Clear</button>}
+                {(filterDate || filterProject) && <button onClick={() => { setFilterDate(''); setFilterProject('') }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 12 }}>✕ Clear</button>}
                 <button className="btn btn-sm btn-primary" onClick={() => { setShowAddForm(f => !f); setAddForm(emptyAddForm); setUploadFile(null) }}>
                   {showAddForm ? '✕ Cancel' : '+ Add Result'}
                 </button>
@@ -1767,7 +1785,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
               <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                   {/* Chart named after the equipment — every result here is the same test */}
-                  <div style={{ fontWeight: 600, fontSize: 13 }}>{selected.equipment_name} — {CHART_TYPES.find(t => t.key === chartType)?.title}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{selected.equipment_name}{filterProject ? ` · ${projName(filterProject)}` : ''} — {CHART_TYPES.find(t => t.key === chartType)?.title}</div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     {CHART_TYPES.map(t => (
                       <button key={t.key} onClick={() => setChartType(t.key)}
@@ -1778,6 +1796,11 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                     <button className="btn btn-sm" style={{ fontSize: 12 }} onClick={downloadPdf} title="Download chart + results as PDF">⬇ PDF</button>
                   </div>
                 </div>
+                {resultProjects.length > 1 && !filterProject && (
+                  <div style={{ fontSize: 12, background: 'var(--warn-light)', border: '1px solid #fcd34d', color: '#92400e', borderRadius: 8, padding: '6px 12px', marginBottom: 10 }}>
+                    ⚠ Results from {resultProjects.length} projects are mixed in this chart — pick a project above to analyse one at a time.
+                  </div>
+                )}
                 {chartType === 'points'  && <PointChart results={filteredResults} isOutlier={isOutlier} svgRef={chartSvgRef} />}
                 {chartType === 'box'     && <BoxPlotChart results={filteredResults} svgRef={chartSvgRef} />}
                 {chartType === 'control' && <ControlChart results={filteredResults} svgRef={chartSvgRef} />}
@@ -1792,7 +1815,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                           <thead>
                             <tr style={{ background: 'var(--surface2)' }}>
-                              {['Date', 'Sample', 'Type', 'Result', 'Notes', 'By'].map(h => (
+                              {['Date', 'Sample', 'Project', 'Type', 'Result', 'Notes', 'By'].map(h => (
                                 <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
                               ))}
                             </tr>
@@ -1806,6 +1829,9 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                                   style={{ borderTop: '1px solid var(--border)', cursor: 'pointer', background: isActive ? 'var(--accent3-light)' : outlier ? '#fff5f5' : i % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
                                   <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{r.date}</td>
                                   <td style={{ padding: '8px 12px', fontWeight: 500 }}>{r.test_name || r.sample_name}</td>
+                                  <td style={{ padding: '8px 12px' }}>
+                                    <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--accent3-light)', color: 'var(--accent3)', borderRadius: 99, padding: '2px 8px', whiteSpace: 'nowrap' }}>{projName(r.project_id)}</span>
+                                  </td>
                                   <td style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11, textTransform: 'capitalize' }}>{r.result_type?.replace('_', '/')}</td>
                                   <td style={{ padding: '8px 12px', fontWeight: 600, color: outlier ? '#c84b2f' : r.result_value === 'Pass' ? '#1D9E75' : r.result_value === 'Fail' ? '#c84b2f' : 'var(--text)' }}>
                                     {r.result_type === 'percentage' ? r.result_value + '%' : r.result_value}{outlier ? ' ⚠️' : ''}
