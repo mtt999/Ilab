@@ -146,9 +146,13 @@ export default function LabMessage() {
   const [sendingReply, setSendingReply] = useState(false)
   const [mobileShowThread, setMobileShowThread] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [listSearch, setListSearch] = useState('')
+  const [unreadOnly, setUnreadOnly] = useState(false)
   const threadRef = useRef(null)
   const replyFileRef = useRef(null)
   const textareaRef = useRef(null)
+  const selectedIdRef = useRef(null)   // avoids stale closure in realtime/poll callbacks
+  const reloadTimer = useRef(null)
 
   const [fromEquipScan] = useState(() => {
     const flag = sessionStorage.getItem('ilab_return_scan') === '1'
@@ -161,6 +165,30 @@ export default function LabMessage() {
   const selectedConv = conversations.find(c => c.id === selectedId) || null
 
   useEffect(() => { load(); loadStaff() }, [])
+
+  useEffect(() => { selectedIdRef.current = selectedId }, [selectedId])
+
+  // Live updates: Supabase realtime on re_messages, plus a 20s poll and a
+  // refresh on tab focus as fallback (realtime needs the table in the
+  // supabase_realtime publication — polling guarantees delivery regardless)
+  useEffect(() => {
+    const scheduleReload = () => {
+      clearTimeout(reloadTimer.current)
+      reloadTimer.current = setTimeout(loadSilent, 250)
+    }
+    const ch = sb.channel('re-messages-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 're_messages' }, scheduleReload)
+      .subscribe()
+    const iv = setInterval(loadSilent, 20000)
+    const onVis = () => { if (!document.hidden) loadSilent() }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      sb.removeChannel(ch)
+      clearInterval(iv)
+      clearTimeout(reloadTimer.current)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
 
   useEffect(() => {
     if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight
@@ -175,8 +203,7 @@ export default function LabMessage() {
     setStaff(data || [])
   }
 
-  async function load() {
-    setLoading(true)
+  async function fetchAll() {
     let q = sb.from('re_messages').select('*').order('created_at', { ascending: true })
     if (!isAdmin) {
       // staff also see broadcast messages (receiver_id is null)
@@ -187,8 +214,31 @@ export default function LabMessage() {
       q = q.eq('organization_id', session.organizationId)
     }
     const { data } = await q
-    buildConversations(data || [])
+    return data || []
+  }
+
+  async function load() {
+    setLoading(true)
+    buildConversations(await fetchAll())
     setLoading(false)
+  }
+
+  // Background refresh — no spinner, no selection change. If the open thread
+  // received new messages, mark them read right away (we're looking at them).
+  async function loadSilent() {
+    const convs = buildConversations(await fetchAll())
+    const open = convs.find(c => c.id === selectedIdRef.current)
+    if (open && open.unreadCount > 0) {
+      markRead(open)
+      setConversations(cs => cs.map(c => c.id === open.id
+        ? {
+            ...c, unreadCount: 0,
+            is_read: c.sender_id !== session?.userId ? true : c.is_read,
+            replies: c.replies.map(r => r.sender_id !== session?.userId ? { ...r, is_read: true } : r),
+          }
+        : c
+      ))
+    }
   }
 
   function buildConversations(msgs) {
@@ -203,6 +253,7 @@ export default function LabMessage() {
       return { ...r, replies: threadReplies, unreadCount: unread, lastMessage: lastMsg }
     }).sort((a, b) => new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at))
     setConversations(convs)
+    return convs
   }
 
   async function markRead(conv) {
@@ -220,8 +271,13 @@ export default function LabMessage() {
     setReplyFile(null)
     setMobileShowThread(true)
     markRead(conv)
+    // only mark OTHERS' messages read — own messages' is_read means "seen by recipient"
     setConversations(cs => cs.map(c => c.id === conv.id
-      ? { ...c, is_read: true, unreadCount: 0, replies: c.replies.map(r => ({ ...r, is_read: true })) }
+      ? {
+          ...c, unreadCount: 0,
+          is_read: c.sender_id !== session?.userId ? true : c.is_read,
+          replies: c.replies.map(r => r.sender_id !== session?.userId ? { ...r, is_read: true } : r),
+        }
       : c
     ))
     setTimeout(() => textareaRef.current?.focus(), 50)
@@ -300,6 +356,16 @@ export default function LabMessage() {
 
   const totalUnread = conversations.reduce((s, c) => s + (c.unreadCount || 0), 0)
 
+  // List filtering: search matches name, subject and any message body
+  const q = listSearch.trim().toLowerCase()
+  const visibleConvs = conversations.filter(c => {
+    if (unreadOnly && !c.unreadCount) return false
+    if (!q) return true
+    if (otherName(c).toLowerCase().includes(q)) return true
+    if ((c.subject || '').toLowerCase().includes(q)) return true
+    return [c, ...c.replies].some(m => (m.body || '').toLowerCase().includes(q))
+  })
+
   // Auto-resize textarea
   function handleTextareaInput(e) {
     const el = e.target
@@ -342,15 +408,36 @@ export default function LabMessage() {
             <button className="btn btn-primary btn-sm" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => setShowCompose(true)}>+ New</button>
           </div>
 
+          {/* Search + unread filter */}
+          <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, background: 'var(--surface)' }}>
+            <input
+              value={listSearch}
+              onChange={e => setListSearch(e.target.value)}
+              placeholder="Search…"
+              style={{ flex: 1, minWidth: 0, fontSize: 12, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }}
+            />
+            <button
+              onClick={() => setUnreadOnly(v => !v)}
+              title="Show unread only"
+              style={{ fontSize: 11, fontWeight: 600, padding: '5px 10px', borderRadius: 20, cursor: 'pointer', flexShrink: 0, border: `1px solid ${unreadOnly ? 'var(--accent)' : 'var(--border)'}`, background: unreadOnly ? 'var(--accent)' : 'var(--surface)', color: unreadOnly ? '#fff' : 'var(--text2)', transition: 'all 0.15s' }}
+            >
+              Unread{totalUnread > 0 ? ` (${totalUnread})` : ''}
+            </button>
+          </div>
+
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {loading ? (
               <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}><div className="spinner" /></div>
-            ) : conversations.length === 0 ? (
+            ) : visibleConvs.length === 0 ? (
               <div style={{ padding: 24, textAlign: 'center', color: 'var(--text3)' }}>
                 <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
-                <div style={{ fontSize: 13 }}>No conversations yet</div>
+                <div style={{ fontSize: 13 }}>
+                  {conversations.length === 0 ? 'No conversations yet'
+                    : unreadOnly && !q ? 'No unread conversations'
+                    : `No conversations match${q ? ` "${listSearch.trim()}"` : ''}`}
+                </div>
               </div>
-            ) : conversations.map((conv, idx) => {
+            ) : visibleConvs.map((conv, idx) => {
               const name = otherName(conv)
               const selected = conv.id === selectedId
               const preview = (conv.lastMessage?.body || '').slice(0, 52) + ((conv.lastMessage?.body?.length || 0) > 52 ? '…' : '')
@@ -451,6 +538,10 @@ export default function LabMessage() {
                           {!nextSame && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                               <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{fmtDate(m.created_at)}</span>
+                              {/* Seen: last own message, direct (not broadcast), read by recipient */}
+                              {isOwn && m.receiver_id && m.is_read && !all.slice(i + 1).some(x => x.sender_id === session?.userId) && (
+                                <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>✓✓ Seen</span>
+                              )}
                               {canDelete(m) && (
                                 <button onClick={() => setDeleteConfirm(m.id)} title="Delete" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 10, color: 'var(--text3)', padding: 0, opacity: 0.55, lineHeight: 1 }}>✕</button>
                               )}
