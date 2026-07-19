@@ -83,6 +83,12 @@ function getScreenTabs(screen, session) {
     ...(!isSolo ? [{ key: 'exam',   icon: '📝', label: 'Exam' }] : []),
   ]
 
+  if (screen === 'labmanagement') return [
+    { key: 'students',  icon: '👥', label: 'Lab Users' },
+    { key: 'staff',     icon: '👨‍💼', label: 'Lab Managers' },
+    { key: 'approvals', icon: '📋', label: 'Approval Requests' },
+  ]
+
   if (screen === 'equipment') return [
     { key: 'list',        icon: '📋', label: 'List of Equipment' },
     ...((isAdmin || isStaff) ? [

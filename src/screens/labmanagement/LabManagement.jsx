@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { StudentsPanel, StaffPanel, ApprovalRequestsPanel } from '../profile/Profile'
-import ScrollTabs from '../../components/ScrollTabs'
 import { sb } from '../../lib/supabase'
 
+const TAB_TITLES = {
+  students:  'Lab Users',
+  staff:     'Lab Managers',
+  approvals: 'Approval Requests',
+}
+
 export default function LabManagement() {
-  const { session, toast } = useAppStore()
-  const [tab, setTab] = useState('students')
+  const { session, toast, sidebarSubTab } = useAppStore()
   const [pendingCount, setPendingCount] = useState(0)
+
+  // Tabs live in the sidebar (Layout getScreenTabs 'labmanagement')
+  const tab = ['students', 'staff', 'approvals'].includes(sidebarSubTab) ? sidebarSubTab : 'students'
 
   useEffect(() => { loadPendingCount() }, [])
 
@@ -20,27 +27,16 @@ export default function LabManagement() {
     setPendingCount(count || 0)
   }
 
-  const approvalLabel = pendingCount > 0
-    ? `📋 Approval Requests (${pendingCount})`
-    : '📋 Approval Requests'
-
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div className="section-title">Lab Management</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="section-title">Lab Management — {TAB_TITLES[tab] || 'Lab Users'}</div>
+        {pendingCount > 0 && tab !== 'approvals' && (
+          <span style={{ fontSize: 12, fontWeight: 700, background: '#fef3c7', color: '#b91c1c', border: '1px solid #f59e0b', borderRadius: 99, padding: '2px 10px' }}>
+            📋 {pendingCount} pending approval{pendingCount !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
-      <ScrollTabs style={{ borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
-        {[
-          { key: 'students',  label: '👥 Lab Users' },
-          { key: 'staff',     label: '👨‍💼 Lab Managers' },
-          { key: 'approvals', label: approvalLabel },
-        ].map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ padding: '10px 24px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: tab === t.key ? 'var(--accent)' : pendingCount > 0 && t.key === 'approvals' ? '#b91c1c' : 'var(--text2)', borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
-            {t.label}
-          </button>
-        ))}
-      </ScrollTabs>
       {tab === 'students'  && <StudentsPanel toast={toast} session={session} />}
       {tab === 'staff'     && <StaffPanel    toast={toast} session={session} />}
       {tab === 'approvals' && <ApprovalRequestsPanel toast={toast} session={session} onCountChange={setPendingCount} />}
