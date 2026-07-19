@@ -233,7 +233,7 @@ export default function LabMessage() {
     const { data } = await q
     setStaff(data || [])
     // avatar lookup: all org users (photo + gender), keyed by id
-    let uq = sb.from('users').select('id, photo_url, gender').eq('is_active', true)
+    let uq = sb.from('users').select('id, photo_url, gender, role').eq('is_active', true)
     if (session?.organizationId && session?.userId) uq = uq.eq('organization_id', session.organizationId)
     const { data: allUsers } = await uq
     const m = {}
@@ -557,6 +557,9 @@ export default function LabMessage() {
               <div ref={threadRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {[selectedConv, ...selectedConv.replies].map((m, i, all) => {
                   const isOwn = m.sender_id === session?.userId
+                  // Bubble color by sender ROLE: staff/org admin = teal, lab user = light blue
+                  const role = isOwn ? session?.role : userMap[m.sender_id]?.role
+                  const isStaffMsg = role === 'admin' || role === 'user'
                   const newDay = i === 0 || !sameDay(all[i - 1].created_at, m.created_at)
                   const prevSame = i > 0 && all[i - 1].sender_id === m.sender_id && !newDay
                   const nextSame = i < all.length - 1 && all[i + 1].sender_id === m.sender_id && sameDay(m.created_at, all[i + 1].created_at)
@@ -582,16 +585,16 @@ export default function LabMessage() {
                       <div style={{ display: 'flex', justifyContent: isOwn ? 'flex-end' : 'flex-start', marginBottom: nextSame ? 2 : 8 }}>
                         <div style={{ maxWidth: '72%' }}>
                           <div style={{
-                            background: isOwn ? 'var(--accent)' : 'var(--surface)',
-                            color: isOwn ? '#fff' : 'var(--text)',
+                            background: isStaffMsg ? 'var(--accent)' : '#E0F2FE',
+                            color: isStaffMsg ? '#fff' : '#0C4A6E',
                             borderRadius: isOwn
                               ? (prevSame ? '18px 4px 4px 18px' : nextSame ? '18px 18px 4px 18px' : '18px 4px 18px 18px')
                               : (prevSame ? '4px 18px 18px 4px' : nextSame ? '18px 18px 18px 4px' : '4px 18px 18px 18px'),
                             padding: '8px 14px',
                             fontSize: 14, lineHeight: 1.6,
-                            border: isOwn ? 'none' : '1px solid var(--border)',
+                            border: isStaffMsg ? 'none' : '1px solid #BAE6FD',
                             wordBreak: 'break-word', whiteSpace: 'pre-wrap',
-                            boxShadow: isOwn ? '0 2px 8px rgba(29, 158, 117,0.18)' : '0 1px 3px rgba(0,0,0,0.06)',
+                            boxShadow: isStaffMsg ? '0 2px 8px rgba(29, 158, 117,0.18)' : '0 1px 3px rgba(3,105,161,0.10)',
                           }}>
                             {m.body}
                           </div>
