@@ -1430,7 +1430,9 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
     eqQ = eqQ.eq('organization_id', session?.organizationId || '00000000-0000-0000-0000-000000000000')
     eqQ.then(({ data }) => { setEquipment(data || []); setLoadingEq(false) })
     if (session?.organizationId) {
-      sb.from('projects').select('id, name, project_id, pi_user_id, student_ids, project_group').eq('status', 'active').eq('organization_id', session.organizationId).order('project_id')
+      // all statuses — needed to resolve project names on old results;
+      // the Add Result dropdown filters to active below
+      sb.from('projects').select('id, name, project_id, status, pi_user_id, student_ids, project_group').eq('organization_id', session.organizationId).order('project_id')
         .then(({ data }) => setAllProjects(data || []))
     }
   }, [])
@@ -1585,8 +1587,11 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
   // separable: project filter + per-project labels so data never mixes silently
   const projName = id => {
     const p = allProjects.find(x => x.id === id)
-    return p ? (p.project_id || p.name) : '—'
+    if (!p) return 'Deleted project'
+    return (p.project_id || p.name) + (p.status && p.status !== 'active' ? ` (${p.status})` : '')
   }
+  // New results can only go to active projects (names of inactive ones still resolve above)
+  const activeProjects = allProjects.filter(p => !p.status || p.status === 'active')
   const resultProjects = [...new Set(results.map(r => r.project_id).filter(Boolean))]
   const filteredResults = results.filter(r =>
     (!filterDate || r.date === filterDate) && (!filterProject || r.project_id === filterProject)
@@ -1699,12 +1704,12 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                   <select value={addForm.project_id} onChange={e => setAddForm(f => ({ ...f, project_id: e.target.value }))}>
                     <option value="">— Select project —</option>
                     {(session?.userId === null || session?.dbRole === 'user' || session?.dbRole === 'admin'
-                      ? allProjects
+                      ? activeProjects
                       : userAssignedProjectIds
-                        ? allProjects.filter(p => userAssignedProjectIds.includes(p.id))
+                        ? activeProjects.filter(p => userAssignedProjectIds.includes(p.id))
                         : userProjectGroup
-                          ? allProjects.filter(p => !p.project_group || p.project_group === userProjectGroup)
-                          : allProjects
+                          ? activeProjects.filter(p => !p.project_group || p.project_group === userProjectGroup)
+                          : activeProjects
                     ).map(p => <option key={p.id} value={p.id}>{p.project_id ? `${p.project_id} – ${p.name}` : p.name}</option>)}
                   </select>
                 </div>
