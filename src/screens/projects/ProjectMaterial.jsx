@@ -961,7 +961,7 @@ function PointChart({ results, isOutlier, title, svgRef, onDownloadPdf }) {
   const hasPassFail = results.some(r => r.result_type === 'pass_fail')
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
         {/* Chart named after the equipment — every result here is the same test */}
         <div style={{ fontWeight: 600, fontSize: 13 }}>{title ? `${title} — Results by Specimen` : 'Results by Specimen'}</div>
@@ -1504,7 +1504,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
               <PointChart results={filteredResults} isOutlier={isOutlier} title={selected.equipment_name} svgRef={chartSvgRef} onDownloadPdf={downloadPdf} />
 
               {/* Results table + sample info panel */}
-              <div style={{ display: 'grid', gridTemplateColumns: selectedRow ? '1fr 280px' : '1fr', gap: 12, alignItems: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: selectedRow ? '1fr 280px' : '1fr', gap: 12, alignItems: 'start', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
                     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
                       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13 }}>All Results <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400 }}>— click a row for details</span></div>
                       <div style={{ overflowX: 'auto' }}>
