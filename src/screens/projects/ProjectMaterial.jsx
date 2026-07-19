@@ -1840,73 +1840,71 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 16, alignItems: 'start' }}>
-        <div style={{ position: 'sticky', top: 72 }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-          ) : projects.length === 0 ? (
-            <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">🧪</div><div>No projects found.</div></div>
-          ) : projects.map((p, idx) => {
+      {/* ── Project card grid (Training-hub style) ── */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+      ) : projects.length === 0 ? (
+        <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">🧪</div><div>No projects found.</div></div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+          {projects.map(p => {
             const isActive = activeProjectId === p.id
             return (
-              <div key={p.id} onClick={() => { setActiveProjectId(p.id); setSubTab('info') }}
-                style={{ background: isActive ? 'var(--accent3-light)' : 'var(--surface)', border: `1px solid ${isActive ? 'var(--accent3)' : 'var(--border)'}`, borderRadius: 'var(--radius-lg)', padding: '10px 14px', marginBottom: 8, cursor: 'pointer', transition: 'all 0.15s' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginBottom: 1 }}>#{idx + 1}</div>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: isActive ? 'var(--accent3)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    {p.project_id && <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.project_id}</div>}
-                  </div>
-                  <span className={`badge ${statusBadge(p.status)}`} style={{ fontSize: 10, flexShrink: 0, padding: '2px 8px' }}>{p.status}</span>
-                </div>
+              <div key={p.id} className="manage-card"
+                onClick={() => { if (isActive) { setActiveProjectId(null); setActiveProject(null) } else { setActiveProjectId(p.id); setSubTab('info') } }}
+                style={{ width: 176, flexShrink: 0, padding: '16px 12px 14px', cursor: 'pointer', ...(isActive ? { borderColor: 'var(--accent3)', background: 'var(--accent3-light)', boxShadow: '0 6px 18px rgba(83,74,183,0.18)' } : {}) }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>🧪</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: isActive ? 'var(--accent3)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                {p.project_id && <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.project_id}</div>}
+                <div style={{ marginTop: 8 }}><span className={`badge ${statusBadge(p.status)}`} style={{ fontSize: 10, padding: '2px 8px' }}>{p.status}</span></div>
               </div>
             )
           })}
         </div>
+      )}
 
-        <div>
-          {!activeProject ? (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 48, textAlign: 'center', color: 'var(--text3)' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>👈</div>
-              <div>Select a project from the list</div>
-            </div>
-          ) : (
-            <div>
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', marginBottom: 4 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 17 }}>{activeProject.name}</div>
-                    <div style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text3)', marginTop: 2 }}>
-                      {[activeProject.project_id && `Title: ${activeProject.project_id}`, activeProject.cfop && `CFOP: ${activeProject.cfop}`].filter(Boolean).join(' · ')}
-                    </div>
-                    {viewingShared && (
-                      <div style={{ marginTop: 4, display: 'inline-block', fontSize: 11, fontWeight: 600, background: '#EEEDFE', color: '#534AB7', borderRadius: 99, padding: '2px 8px' }}>
-                        {viewingOwnerName}'s workspace
-                      </div>
-                    )}
-                  </div>
-                  {!viewingShared && (
-                    <button className="btn btn-sm btn-danger" onClick={() => deleteProject(activeProject.id)}>Delete</button>
-                  )}
+      {/* ── Detail panel below the grid ── */}
+      {!activeProject ? (
+        !loading && projects.length > 0 && (
+          <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text3)', padding: '8px 0 16px' }}>
+            Select a project above to open it.
+          </div>
+        )
+      ) : (
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 17 }}>{activeProject.name}</div>
+                <div style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text3)', marginTop: 2 }}>
+                  {[activeProject.project_id && `Title: ${activeProject.project_id}`, activeProject.cfop && `CFOP: ${activeProject.cfop}`].filter(Boolean).join(' · ')}
                 </div>
+                {viewingShared && (
+                  <div style={{ marginTop: 4, display: 'inline-block', fontSize: 11, fontWeight: 600, background: '#EEEDFE', color: '#534AB7', borderRadius: 99, padding: '2px 8px' }}>
+                    {viewingOwnerName}'s workspace
+                  </div>
+                )}
               </div>
-              <ScrollTabs style={{ borderBottom: '1px solid var(--border)' }} bg='var(--surface)'>
-                {subTabs.map(t => (
-                  <button key={t.key} onClick={() => setSubTab(t.key)}
-                    style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
-                    {t.label}
-                  </button>
-                ))}
-              </ScrollTabs>
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)', padding: 24 }}>
-                {subTab === 'info'      && <ProjectInfo project={activeProject} users={users} onSaved={loadActiveProject} isSolo={isSolo} readOnly={viewingShared} />}
-                {subTab === 'materials' && <ProjectMaterials project={activeProject} />}
-                {subTab === 'storage'   && <MaterialStorage project={activeProject} />}
-              </div>
+              {!viewingShared && (
+                <button className="btn btn-sm btn-danger" onClick={() => deleteProject(activeProject.id)}>Delete</button>
+              )}
             </div>
-          )}
+          </div>
+          <ScrollTabs style={{ borderBottom: '1px solid var(--border)' }} bg='var(--surface)'>
+            {subTabs.map(t => (
+              <button key={t.key} onClick={() => setSubTab(t.key)}
+                style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: subTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${subTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                {t.label}
+              </button>
+            ))}
+          </ScrollTabs>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)', padding: 24 }}>
+            {subTab === 'info'      && <ProjectInfo project={activeProject} users={users} onSaved={loadActiveProject} isSolo={isSolo} readOnly={viewingShared} />}
+            {subTab === 'materials' && <ProjectMaterials project={activeProject} />}
+            {subTab === 'storage'   && <MaterialStorage project={activeProject} />}
+          </div>
         </div>
-      </div>
+      )}
 
       {showNewModal && (
         <NewProjectModal
