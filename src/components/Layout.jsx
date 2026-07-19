@@ -70,7 +70,6 @@ const MODULE_META = {
 // ── Sidebar sub-tab definitions per screen ─────────────────────
 function getScreenTabs(screen, session) {
   const isSolo    = session?.loginMode === 'solo'
-  const isStudent = session?.role === 'student'
   const isAdmin   = session?.role === 'admin' || session?.userId === null
   const isStaff   = session?.role === 'user'
 
@@ -99,13 +98,13 @@ function getScreenTabs(screen, session) {
   ]
 
   if (screen === 'projects') {
-    const hasProjectAccess = isSolo || !isStudent
+    // Lab users get Results + Workspace too — the screen already scopes them
+    // to their assigned projects and own/teammate data (allowedNames filter),
+    // and Workspace → Project Members is how they team up with classmates.
     return [
       { key: 'inventory', icon: '📦', label: 'Material Inventory' },
-      ...(hasProjectAccess ? [
-        { key: 'results',   icon: '✏️',  label: 'Project Test Results' },
-        { key: 'workspace', icon: '📋', label: 'Workspace' },
-      ] : []),
+      { key: 'results',   icon: '✏️',  label: 'Project Test Results' },
+      { key: 'workspace', icon: '📋', label: 'Workspace' },
     ]
   }
 
