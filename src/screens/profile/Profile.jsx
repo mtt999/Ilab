@@ -1529,21 +1529,8 @@ function StudentModal({ student, session, onClose, onSave }) {
 }
 
 export function StaffPanel({ toast, session }) {
-  const [staffTab, setStaffTab] = useState('list')
-  return (
-    <div>
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
-        {[{ key: 'list', label: '👨‍💼 Lab Managers' }, { key: 'access', label: '🗂️ Access Control' }].map(t => (
-          <button key={t.key} onClick={() => setStaffTab(t.key)}
-            style={{ padding: '8px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: staffTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${staffTab === t.key ? 'var(--accent)' : 'transparent'}`, transition: 'all 0.15s' }}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {staffTab === 'list'   && <StaffListPanel toast={toast} session={session} />}
-      {staffTab === 'access' && <AccessControl toast={toast} session={session} />}
-    </div>
-  )
+  // Access Control merged into the cards — "Access" button per lab manager
+  return <StaffListPanel toast={toast} session={session} />
 }
 
 function StaffListPanel({ toast, session }) {
@@ -1554,6 +1541,7 @@ function StaffListPanel({ toast, session }) {
   const [pendingIconSetup, setPendingIconSetup] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [accessTarget, setAccessTarget] = useState(null)
   useEffect(() => { load() }, [])
   async function load() { setLoading(true); let q = sb.from('users').select('*').in('role', ['user', 'admin']).order('name'); if (session?.organizationId) q = q.eq('organization_id', session.organizationId); const { data } = await q; setStaff(data || []); setLoading(false) }
   async function saveStaff(form, id) {
@@ -1607,6 +1595,9 @@ function StaffListPanel({ toast, session }) {
               </div>
               {!(session?.role === 'user' && s.role === 'admin') && (
                 <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {s.role === 'user' && (
+                    <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} title="Set module access" onClick={() => setAccessTarget(s)}>Access</button>
+                  )}
                   <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => { setEditStaff(s); setShowModal(true) }}>Edit</button>
                   <button className="btn" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => toggleActive(s)}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
                   <button className="btn btn-danger" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => setDeleteTarget(s)}>Delete</button>
@@ -1618,6 +1609,7 @@ function StaffListPanel({ toast, session }) {
         )
       }
       {showModal && <StaffModal staff={editStaff} onClose={() => { setShowModal(false); setEditStaff(null) }} onSave={saveStaff} onRoleChange={setMemberRole} />}
+      {accessTarget && <AccessModal user={accessTarget} toast={toast} session={session} onClose={() => setAccessTarget(null)} />}
       {pendingIconSetup && <IconSetupModal userId={pendingIconSetup.userId} displayName={pendingIconSetup.displayName} organizationId={session?.organizationId} userRole="user" onDone={() => { setPendingIconSetup(null); load(); toast('Lab manager created & icons saved ✓') }} />}
       {deleteTarget && <DeleteUserModal user={{ id: deleteTarget.id, name: deleteTarget.name || 'this member' }} onClose={() => setDeleteTarget(null)} onConfirm={deleteStaff} deleting={deleting} />}
     </div>
@@ -2524,7 +2516,9 @@ export default function Profile() {
   return <UserProfile session={session} />
 }
 
-function AccessControl({ toast, session }) {
+// Per-user module access editor — opened from the "Access" button on a
+// Lab Manager card (replaces the old Access Control sub-tab)
+function AccessModal({ user, toast, session, onClose }) {
   const ALL_SCREENS = [
     { key: 'home',         label: 'Supply Inventory',    icon: '📦', moduleKey: 'supply' },
     { key: 'projects',     label: 'Project Workspace',  icon: '🧪', moduleKey: 'projects' },
@@ -2540,76 +2534,69 @@ function AccessControl({ toast, session }) {
     { key: 'profile',      label: 'Profile',             icon: '👤', moduleKey: 'profile' },
     { key: 'barcodeqr',    label: 'QR Labels',             icon: '🔲', moduleKey: 'barcodeqr' },
   ]
-  const [users, setUsers] = useState([])
-  const [selected, setSelected] = useState(null)
   const [access, setAccess] = useState({})
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [orgPool, setOrgPool] = useState(null)
-  useEffect(() => { loadUsers() }, [])
-  useEffect(() => { if (selected) loadAccess(selected.id) }, [selected])
-  async function loadUsers() {
+  const [visibleScreens, setVisibleScreens] = useState(ALL_SCREENS)
+
+  useEffect(() => { load() }, [])
+
+  async function load() {
     setLoading(true)
-    let q = sb.from('users').select('id, name, role').eq('role', 'user').eq('is_active', true).order('name')
-    if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
-    const [{ data }, orgResRaw] = await Promise.all([
-      q,
-      session?.organizationId
-        ? sb.from('organizations').select('allowed_modules, allowed_modules_labmanagers').eq('id', session.organizationId).maybeSingle()
-        : Promise.resolve(null),
-    ])
-    let orgRes = orgResRaw
-    if (orgResRaw?.error && session?.organizationId) {
-      orgRes = await sb.from('organizations').select('allowed_modules').eq('id', session.organizationId).maybeSingle()
+    let pool = null
+    if (session?.organizationId) {
+      let orgRes = await sb.from('organizations').select('allowed_modules, allowed_modules_labmanagers').eq('id', session.organizationId).maybeSingle()
+      if (orgRes?.error) {
+        orgRes = await sb.from('organizations').select('allowed_modules').eq('id', session.organizationId).maybeSingle()
+      }
+      pool = orgRes?.data?.allowed_modules_labmanagers ?? orgRes?.data?.allowed_modules ?? null
     }
-    const pool = orgRes?.data?.allowed_modules_labmanagers ?? orgRes?.data?.allowed_modules ?? null
-    setOrgPool(pool)
-    setUsers(data || [])
+    const screens = pool ? ALL_SCREENS.filter(s => pool.includes(s.moduleKey)) : ALL_SCREENS
+    setVisibleScreens(screens)
+    const { data } = await sb.from('user_screen_access').select('screen_key').eq('user_id', user.id)
+    const map = {}
+    if (data?.length) { data.forEach(r => { map[r.screen_key] = true }) } else { screens.forEach(s => { map[s.key] = true }) }
+    setAccess(map)
     setLoading(false)
   }
-  const visibleScreens = orgPool
-    ? ALL_SCREENS.filter(s => orgPool.includes(s.moduleKey))
-    : ALL_SCREENS
-  async function loadAccess(userId) {
-    const { data } = await sb.from('user_screen_access').select('screen_key').eq('user_id', userId)
-    const map = {}
-    if (data?.length) { data.forEach(r => { map[r.screen_key] = true }) } else { visibleScreens.forEach(s => { map[s.key] = true }) }
-    setAccess(map)
-  }
+
   async function saveAccess() {
-    if (!selected) return
     setSaving(true)
-    await sb.from('user_screen_access').delete().eq('user_id', selected.id)
-    const rows = Object.entries(access).filter(([, v]) => v).map(([key]) => ({ user_id: selected.id, screen_key: key }))
+    await sb.from('user_screen_access').delete().eq('user_id', user.id)
+    const rows = Object.entries(access).filter(([, v]) => v).map(([key]) => ({ user_id: user.id, screen_key: key }))
     if (rows.length) await sb.from('user_screen_access').insert(rows)
     toast('Access updated ✓'); setSaving(false)
+    onClose()
   }
-  if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+
   return (
-    <div className="card">
-      <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>🗂️ Module Access per Lab Manager</div>
-      <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Control which modules each lab manager can see on their dashboard.</div>
-      <div className="field" style={{ marginBottom: 16 }}>
-        <label>Select lab manager</label>
-        <select value={selected?.id || ''} onChange={e => setSelected(users.find(u => u.id === e.target.value) || null)}>
-          <option value="">— Select —</option>
-          {users.map(u => <option key={u.id} value={u.id}>{u.name} (Staff)</option>)}
-        </select>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 24, maxWidth: 640, width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <div style={{ fontWeight: 600, fontSize: 16 }}>🗂️ Module Access — {user.name}</div>
+          <button onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: 4 }}>✕</button>
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Control which modules this lab manager can see on their dashboard.</div>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 16 }}>
+              {visibleScreens.map(s => (
+                <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 8, border: `1px solid ${access[s.key] ? 'var(--accent)' : 'var(--border)'}`, background: access[s.key] ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', marginBottom: 0 }}>
+                  <input type="checkbox" checked={!!access[s.key]} onChange={e => setAccess(a => ({ ...a, [s.key]: e.target.checked }))} style={{ width: 'auto' }} />
+                  <span style={{ fontSize: 16 }}>{s.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: access[s.key] ? 'var(--accent)' : 'var(--text)' }}>{s.label}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-primary" onClick={saveAccess} disabled={saving}>{saving ? 'Saving…' : 'Save access'}</button>
+              <button className="btn" onClick={onClose}>Cancel</button>
+            </div>
+          </>
+        )}
       </div>
-      {selected && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 16 }}>
-            {visibleScreens.map(s => (
-              <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 8, border: `1px solid ${access[s.key] ? 'var(--accent)' : 'var(--border)'}`, background: access[s.key] ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', marginBottom: 0 }}>
-                <input type="checkbox" checked={!!access[s.key]} onChange={e => setAccess(a => ({ ...a, [s.key]: e.target.checked }))} style={{ width: 'auto' }} />
-                <span style={{ fontSize: 16 }}>{s.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: access[s.key] ? 'var(--accent)' : 'var(--text)' }}>{s.label}</span>
-              </label>
-            ))}
-          </div>
-          <button className="btn btn-primary" onClick={saveAccess} disabled={saving}>{saving ? 'Saving…' : `Save access for ${selected.name}`}</button>
-        </>
-      )}
     </div>
   )
 }
