@@ -1680,7 +1680,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                   <label>Project *</label>
                   <select value={addForm.project_id} onChange={e => setAddForm(f => ({ ...f, project_id: e.target.value }))}>
                     <option value="">— Select project —</option>
-                    {(session?.userId === null || session?.dbRole === 'user'
+                    {(session?.userId === null || session?.dbRole === 'user' || session?.dbRole === 'admin'
                       ? allProjects
                       : userAssignedProjectIds
                         ? allProjects.filter(p => userAssignedProjectIds.includes(p.id))
@@ -2367,8 +2367,8 @@ export default function ProjectMaterial() {
   // userProjectGroup===undefined means still loading — use full list to avoid flash of empty dropdown.
   // null means user has no group assigned — show all projects.
   const assignedProjects = useMemo(() => {
-    // Admins, lab managers (dbRole='user'), and solo users see all projects
-    if (session?.userId === null || session?.dbRole === 'user' || isSolo) return allProjects
+    // Admins (super + org), lab managers (dbRole='user'), and solo users see all projects
+    if (session?.userId === null || session?.dbRole === 'user' || session?.dbRole === 'admin' || isSolo) return allProjects
     // If lab manager assigned specific projects, use that list
     if (userAssignedProjectIds) return allProjects.filter(p => userAssignedProjectIds.includes(p.id))
     // Fall back to project_group matching
