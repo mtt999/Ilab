@@ -1263,6 +1263,21 @@ function DeleteUserModal({ user, onClose, onConfirm, deleting }) {
 }
 
 // ── STUDENTS PANEL ── with 🎛️ icon button per student
+// Round avatar for user cards: profile photo → gender scientist emoji
+// (same fallback chain as the Training hub / Lab Messages)
+function PersonAvatar({ user, size = 56 }) {
+  if (user?.photo_url) {
+    return <img src={user.photo_url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)', flexShrink: 0 }} />
+  }
+  const g = (user?.gender || '').toLowerCase()
+  const emoji = g === 'male' ? '👨‍🔬' : g === 'female' ? '👩‍🔬' : '🧑‍🔬'
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent-light)', border: '2px solid #9FE1CB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(size * 0.5), flexShrink: 0, lineHeight: 1 }}>
+      {emoji}
+    </div>
+  )
+}
+
 export function StudentsPanel({ toast, session }) {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1275,6 +1290,7 @@ export function StudentsPanel({ toast, session }) {
   const [importing, setImporting] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedId, setSelectedId] = useState(null)
   const fileRef = useRef(null)
 
   useEffect(() => { load() }, [])
@@ -1394,36 +1410,72 @@ export function StudentsPanel({ toast, session }) {
       )}
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : filtered.length === 0 ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No lab users match your search.' : 'No lab users yet.'}</div>
-        : filtered.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: s.photo_denial_flagged ? '#fefce8' : idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)', borderLeft: s.photo_denial_flagged ? '3px solid #f59e0b' : undefined }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)' }}>#{idx+1}</span>
-                  {sLastName(s)}{sLastName(s) && sFirstName(s) ? ', ' : ''}{sFirstName(s)}
-                  {!s.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)' }}>Inactive</span>}
-                  {s.photo_denial_flagged && (
-                    <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>⚠️ Declined photo</span>
-                  )}
+        : (
+        <>
+          {/* Avatar card grid — click a card for details + actions */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+            {filtered.map(s => {
+              const selected = s.id === selectedId
+              return (
+                <div key={s.id} className="manage-card" onClick={() => setSelectedId(selected ? null : s.id)}
+                  style={{ width: 176, flexShrink: 0, padding: '16px 12px 14px', cursor: 'pointer', opacity: s.is_active ? 1 : 0.55, ...(selected ? { borderColor: 'var(--accent)', background: 'var(--accent-light)', boxShadow: '0 6px 18px rgba(29,158,117,0.18)' } : {}) }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><PersonAvatar user={s} /></div>
+                  <div style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {sLastName(s)}{sLastName(s) && sFirstName(s) ? ', ' : ''}{sFirstName(s)}
+                  </div>
+                  {sEmail(s) && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sEmail(s)}</div>}
+                  <div style={{ marginTop: 6, display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {!s.is_active && <span style={{ fontSize: 10, color: '#fff', background: 'var(--accent2)', borderRadius: 99, padding: '1px 8px', fontWeight: 700 }}>Inactive</span>}
+                    {s.photo_denial_flagged && <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', padding: '1px 8px', borderRadius: 99, fontWeight: 700 }}>⚠️ Photo</span>}
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
-                  {sEmail(s) && <span>📧 {sEmail(s)}</span>}
-                  {s.password && <span style={{ fontSize: 11, color: 'var(--text3)' }}>🔑 ••••••••</span>}
-                  {s.project_group && <span>{s.project_group}</span>}
+              )
+            })}
+          </div>
+
+          {/* Detail panel for the selected lab user */}
+          {selectedId == null ? (
+            <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text3)', padding: '8px 0 16px' }}>
+              Select a lab user above to view details and manage the account.
+            </div>
+          ) : filtered.filter(s => s.id === selectedId).map(s => (
+            <div key={s.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--surface)', maxWidth: 900, margin: '0 auto 12px' }}>
+              <div style={{ padding: '12px 16px', background: s.photo_denial_flagged ? '#fefce8' : 'var(--row-a-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <PersonAvatar user={s} size={40} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {sLastName(s)}{sLastName(s) && sFirstName(s) ? ', ' : ''}{sFirstName(s)}
+                      {!s.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)' }}>Inactive</span>}
+                      {s.photo_denial_flagged && (
+                        <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>⚠️ Declined photo</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Lab user account</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {s.photo_denial_flagged && (
+                    <button className="btn btn-sm" onClick={() => clearPhotoFlag(s)} title="Clear photo denial flag" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>✕ Clear flag</button>
+                  )}
+                  <button className="btn btn-sm" onClick={() => setIconStudent(s)} title="Set allowed dashboard icons">🎛️ Icons</button>
+                  <button className="btn btn-sm" onClick={() => { setEditStudent(s); setShowModal(true) }}>Edit</button>
+                  <button className="btn btn-sm" onClick={() => toggleActive(s)}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(s)}>Delete</button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {s.photo_denial_flagged && (
-                  <button className="btn btn-sm" onClick={() => clearPhotoFlag(s)} title="Clear photo denial flag" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>✕ Clear flag</button>
-                )}
-                <button className="btn btn-sm" onClick={() => setIconStudent(s)} title="Set allowed dashboard icons">🎛️ Icons</button>
-                <button className="btn btn-sm" onClick={() => { setEditStudent(s); setShowModal(true) }}>Edit</button>
-                <button className="btn btn-sm" onClick={() => toggleActive(s)}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
-                <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(s)}>Delete</button>
+              <div style={{ padding: '12px 16px', display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13 }}>
+                {sEmail(s) && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Email</span><div style={{ fontFamily: 'var(--mono)', fontSize: 12, marginTop: 2 }}>{sEmail(s)}</div></div>}
+                {sSupervisor(s) && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Supervisor</span><div style={{ marginTop: 2 }}>{sSupervisor(s)}</div></div>}
+                {s.year_semester && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Year / Semester</span><div style={{ marginTop: 2 }}>{s.year_semester}</div></div>}
+                {s.project_group && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Project Group</span><div style={{ marginTop: 2 }}>{s.project_group}</div></div>}
+                {s.nickname && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Nickname</span><div style={{ marginTop: 2 }}>{s.nickname}</div></div>}
+                {(s.assigned_project_ids || []).length > 0 && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Projects</span><div style={{ marginTop: 2 }}>{s.assigned_project_ids.length} assigned</div></div>}
               </div>
             </div>
-          </div>
-        ))
+          ))}
+        </>
+        )
       }
       {showModal && <StudentModal student={editStudent} session={session} onClose={() => { setShowModal(false); setEditStudent(null) }} onSave={saveStudent} />}
       {iconStudent && <StudentIconManager student={iconStudent} orgId={session?.organizationId} onClose={(saved) => { setIconStudent(null); if (saved) toast(`Icons updated for ${iconStudent.email || iconStudent.name} ✓`) }} />}
@@ -1538,6 +1590,7 @@ function StaffListPanel({ toast, session }) {
   const [pendingIconSetup, setPendingIconSetup] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedId, setSelectedId] = useState(null)
   useEffect(() => { load() }, [])
   async function load() { setLoading(true); let q = sb.from('users').select('*').in('role', ['user', 'admin']).order('name'); if (session?.organizationId) q = q.eq('organization_id', session.organizationId); const { data } = await q; setStaff(data || []); setLoading(false) }
   async function saveStaff(form, id) {
@@ -1574,30 +1627,62 @@ function StaffListPanel({ toast, session }) {
       </div>
       {loading ? <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : staff.length === 0 ? <div className="empty-state"><div className="empty-icon">👨‍💼</div>No lab managers yet.</div>
-        : staff.map((s, idx) => (
-          <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10, opacity: s.is_active ? 1 : 0.5, background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>
-                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginRight: 6 }}>#{idx+1}</span>
-                  {s.name}<span style={{ marginLeft: 8, fontSize: 11, background: s.role === 'admin' ? '#fce8ff' : '#fff3e0', color: s.role === 'admin' ? '#7e22ce' : '#ff6b00', borderRadius: 3, padding: '1px 6px', fontWeight: 600 }}>{s.role === 'admin' ? 'Org Admin' : 'Lab Manager'}</span>
-                  {!s.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)', marginLeft: 6 }}>Inactive</span>}
+        : (
+        <>
+          {/* Avatar card grid — click a card for details + actions */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+            {staff.map(s => {
+              const selected = s.id === selectedId
+              return (
+                <div key={s.id} className="manage-card" onClick={() => setSelectedId(selected ? null : s.id)}
+                  style={{ width: 176, flexShrink: 0, padding: '16px 12px 14px', cursor: 'pointer', opacity: s.is_active ? 1 : 0.55, ...(selected ? { borderColor: 'var(--accent)', background: 'var(--accent-light)', boxShadow: '0 6px 18px rgba(29,158,117,0.18)' } : {}) }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><PersonAvatar user={s} /></div>
+                  <div style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                  {s.email && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</div>}
+                  <div style={{ marginTop: 6, display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, background: s.role === 'admin' ? '#fce8ff' : '#fff3e0', color: s.role === 'admin' ? '#7e22ce' : '#ff6b00', borderRadius: 99, padding: '1px 8px', fontWeight: 700 }}>{s.role === 'admin' ? 'Org Admin' : 'Lab Manager'}</span>
+                    {!s.is_active && <span style={{ fontSize: 10, color: '#fff', background: 'var(--accent2)', borderRadius: 99, padding: '1px 8px', fontWeight: 700 }}>Inactive</span>}
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
-                  {s.email && <span>📧 {s.email}</span>}
-                  {s.password && <span style={{ fontSize: 11, color: 'var(--text3)' }}>🔑 ••••••••</span>}
-                </div>
-              </div>
-              {!(session?.role === 'user' && s.role === 'admin') && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn btn-sm" onClick={() => { setEditStaff(s); setShowModal(true) }}>Edit</button>
-                <button className="btn btn-sm" onClick={() => toggleActive(s)}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
-                <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(s)}>Delete</button>
-              </div>
-              )}
-            </div>
+              )
+            })}
           </div>
-        ))
+
+          {/* Detail panel for the selected member */}
+          {selectedId == null ? (
+            <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text3)', padding: '8px 0 16px' }}>
+              Select a member above to view details{session?.role !== 'user' ? ' and manage the account' : ''}.
+            </div>
+          ) : staff.filter(s => s.id === selectedId).map(s => (
+            <div key={s.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--surface)', maxWidth: 900, margin: '0 auto 12px' }}>
+              <div style={{ padding: '12px 16px', background: 'var(--row-a-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <PersonAvatar user={s} size={40} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {s.name}
+                      <span style={{ fontSize: 11, background: s.role === 'admin' ? '#fce8ff' : '#fff3e0', color: s.role === 'admin' ? '#7e22ce' : '#ff6b00', borderRadius: 3, padding: '1px 6px', fontWeight: 600 }}>{s.role === 'admin' ? 'Org Admin' : 'Lab Manager'}</span>
+                      {!s.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)' }}>Inactive</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{s.role === 'admin' ? 'Organization admin account' : 'Lab manager account'}</div>
+                  </div>
+                </div>
+                {!(session?.role === 'user' && s.role === 'admin') && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn btn-sm" onClick={() => { setEditStaff(s); setShowModal(true) }}>Edit</button>
+                  <button className="btn btn-sm" onClick={() => toggleActive(s)}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(s)}>Delete</button>
+                </div>
+                )}
+              </div>
+              <div style={{ padding: '12px 16px', display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13 }}>
+                {s.email && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Email</span><div style={{ fontFamily: 'var(--mono)', fontSize: 12, marginTop: 2 }}>{s.email}</div></div>}
+                {s.phone && <div><span style={{ color: 'var(--text3)', fontSize: 12 }}>Phone</span><div style={{ fontFamily: 'var(--mono)', fontSize: 12, marginTop: 2 }}>{s.phone}</div></div>}
+              </div>
+            </div>
+          ))}
+        </>
+        )
       }
       {showModal && <StaffModal staff={editStaff} onClose={() => { setShowModal(false); setEditStaff(null) }} onSave={saveStaff} onRoleChange={setMemberRole} />}
       {pendingIconSetup && <IconSetupModal userId={pendingIconSetup.userId} displayName={pendingIconSetup.displayName} organizationId={session?.organizationId} userRole="user" onDone={() => { setPendingIconSetup(null); load(); toast('Lab manager created & icons saved ✓') }} />}
