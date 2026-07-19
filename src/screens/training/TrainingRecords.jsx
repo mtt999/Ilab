@@ -875,6 +875,14 @@ function EquipmentTraining({ students, session, hideChrome = false, onChanged })
           {!canEdit(session) && (
             <RetrainingRequestPanel session={session} equipment={equipment} pendingRetraining={pendingRetraining} onSubmit={submitRetrainingRequest} />
           )}
+          {/* Managers: request queue lives here now (sidebar Requests tab removed) —
+              per-user in the hub panel, full org queue in All-users audit mode */}
+          {canEdit(session) && !isSolo && (
+            <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>📋 Training Requests</div>
+              <TrainingRequestsPanel session={session} forUserId={hideChrome ? students[0]?.id : null} compact />
+            </div>
+          )}
           {!hideChrome && canEdit(session) && (
             <input
               value={search}
@@ -1743,11 +1751,9 @@ export default function TrainingRecords() {
         </div>
       )}
 
-      {subTab === 'requests' && <TrainingRequestsPanel session={session} />}
-
       {subTab === 'exam' && <ExamTab session={session} />}
 
-      {subTab !== 'requests' && subTab !== 'exam' && (
+      {subTab !== 'exam' && (
         loading ? (
           <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         ) : students.length === 0 ? (

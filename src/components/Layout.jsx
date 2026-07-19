@@ -79,7 +79,6 @@ function getScreenTabs(screen, session) {
     ...(!isSolo ? [{ key: 'golf',  icon: '🚗', label: 'Vehicle' }] : []),
     { key: 'equipment', icon: '🔧', label: 'Equipment' },
     ...(!isSolo ? [{ key: 'alarm', icon: '🔔', label: 'Building Alarm' }] : []),
-    ...((isAdmin || isStaff) ? [{ key: 'requests', icon: '📋', label: 'Training Requests' }] : []),
     ...(!isSolo ? [{ key: 'exam',   icon: '📝', label: 'Exam' }] : []),
     ...(!isSolo ? [{ key: 'locker', icon: '🗄️', label: 'Lab User Locker' }] : []),
   ]

@@ -29,8 +29,10 @@ function fmtDT(d) {
 
 // ══════════════════════════════════════════════════════════════
 // TRAINING REQUESTS PANEL (admin/staff view in Training Records)
+// forUserId: only show requests from that user (hub Equipment tab,
+// "This user" mode). compact: small empty state instead of the big one.
 // ══════════════════════════════════════════════════════════════
-export function TrainingRequestsPanel({ session }) {
+export function TrainingRequestsPanel({ session, forUserId = null, compact = false }) {
   const { toast } = useAppStore()
   const [requests, setRequests] = useState([])
   const [schedules, setSchedules] = useState([])
@@ -111,8 +113,10 @@ export function TrainingRequestsPanel({ session }) {
     toast('Training confirmed ✓'); load()
   }
 
-  const pending = requests.filter(r => r.status === 'pending')
-  const others = requests.filter(r => r.status !== 'pending')
+  // Filter at render time so switching the selected user doesn't refetch
+  const visible = forUserId ? requests.filter(r => String(r.user_id) === String(forUserId)) : requests
+  const pending = visible.filter(r => r.status === 'pending')
+  const others = visible.filter(r => r.status !== 'pending')
 
   if (loading) return <div style={{ textAlign: 'center', padding: 24 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
 
@@ -217,7 +221,9 @@ export function TrainingRequestsPanel({ session }) {
       )}
 
       {pending.length === 0 && others.length === 0 && (
-        <div className="empty-state"><div className="empty-icon">📋</div>No training requests yet.</div>
+        compact
+          ? <div style={{ fontSize: 13, color: 'var(--text3)', fontStyle: 'italic' }}>No training requests{forUserId ? ' from this user' : ''} yet.</div>
+          : <div className="empty-state"><div className="empty-icon">📋</div>No training requests yet.</div>
       )}
     </div>
   )
