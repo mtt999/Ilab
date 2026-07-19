@@ -882,7 +882,15 @@ async function chartSvgToPng(svgEl, w, h) {
   return canvas.toDataURL('image/png')
 }
 
-function PointChart({ results, isOutlier, title, svgRef, onDownloadPdf }) {
+const NUM_TYPES = ['number', 'percentage', 'temperature', 'ratio']
+
+const ChartNote = ({ children }) => (
+  <div style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '24px 0' }}>{children}</div>
+)
+
+const CHART_SVG_STYLE = { width: '100%', maxWidth: 960, height: 'auto', overflow: 'visible', display: 'block', margin: '0 auto' }
+
+function PointChart({ results, isOutlier, svgRef }) {
   if (!results.length) return null
 
   const W = 560, H = 220
@@ -961,15 +969,8 @@ function PointChart({ results, isOutlier, title, svgRef, onDownloadPdf }) {
   const hasPassFail = results.some(r => r.result_type === 'pass_fail')
 
   return (
-    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-        {/* Chart named after the equipment — every result here is the same test */}
-        <div style={{ fontWeight: 600, fontSize: 13 }}>{title ? `${title} — Results by Specimen` : 'Results by Specimen'}</div>
-        {onDownloadPdf && (
-          <button className="btn btn-sm" style={{ fontSize: 12 }} onClick={onDownloadPdf} title="Download chart + results as PDF">⬇ PDF</button>
-        )}
-      </div>
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 960, height: 'auto', overflow: 'visible', display: 'block', margin: '0 auto' }}>
+    <div>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={CHART_SVG_STYLE}>
         {/* Gridlines + Y-axis ticks */}
         {tickVals.map((v, i) => (
           <g key={i}>
@@ -1119,6 +1120,267 @@ function PointChart({ results, isOutlier, title, svgRef, onDownloadPdf }) {
   )
 }
 
+// ── Box plot: per-specimen median/quartiles/whiskers/outliers ──
+function BoxPlotChart({ results, svgRef }) {
+  const W = 560, H = 220
+  const pad = { t: 20, r: 20, b: 52, l: 50 }
+  const cW = W - pad.l - pad.r
+  const cH = H - pad.t - pad.b
+
+  const getSpecimen = r => r.specimen_name || r.sample_name || 'Unknown'
+  const bySpec = {}
+  results.filter(r => NUM_TYPES.includes(r.result_type)).forEach(r => {
+    const v = parseFloat(r.result_value)
+    if (!isNaN(v)) (bySpec[getSpecimen(r)] = bySpec[getSpecimen(r)] || []).push(v)
+  })
+  const specimens = Object.keys(bySpec)
+  if (!specimens.length) return <ChartNote>No numeric results to plot.</ChartNote>
+
+  const quant = (sorted, p) => {
+    const i = (sorted.length - 1) * p
+    const lo = Math.floor(i), hi = Math.ceil(i)
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo)
+  }
+  const stats = specimens.map(sp => {
+    const vals = [...bySpec[sp]].sort((a, b) => a - b)
+    const q1 = quant(vals, 0.25), med = quant(vals, 0.5), q3 = quant(vals, 0.75)
+    const iqr = q3 - q1
+    const loF = q1 - 1.5 * iqr, hiF = q3 + 1.5 * iqr
+    const inliers = vals.filter(v => v >= loF && v <= hiF)
+    return { sp, vals, q1, med, q3, wLo: Math.min(...inliers), wHi: Math.max(...inliers), outliers: vals.filter(v => v < loF || v > hiF) }
+  })
+
+  const allY = stats.flatMap(s => s.vals)
+  const rawMin = Math.min(...allY), rawMax = Math.max(...allY)
+  const padY = (rawMax - rawMin) * 0.15 || 0.5
+  const yMin = rawMin - padY, yMax = rawMax + padY
+  const toY = v => pad.t + ((yMax - v) / (yMax - yMin)) * cH
+  const xOf = i => pad.l + (specimens.length <= 1 ? cW / 2 : (i / (specimens.length - 1)) * cW * 0.9 + cW * 0.05)
+  const boxW = Math.max(14, Math.min(34, (cW / specimens.length) * 0.5))
+  const ticks = 4
+  const tickVals = Array.from({ length: ticks + 1 }, (_, i) => yMin + (i / ticks) * (yMax - yMin))
+  const anyBox = stats.some(s => s.vals.length >= 3)
+
+  return (
+    <div>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={CHART_SVG_STYLE}>
+        {tickVals.map((v, i) => (
+          <g key={i}>
+            <line x1={pad.l} y1={toY(v)} x2={W - pad.r} y2={toY(v)} stroke="var(--border)" strokeWidth={0.8} strokeDasharray="3 3" />
+            <text x={pad.l - 5} y={toY(v)} textAnchor="end" dominantBaseline="middle" fontSize={9} fill="var(--text3)">
+              {Math.abs(v) < 100 ? (v % 1 === 0 ? v : v.toFixed(1)) : Math.round(v)}
+            </text>
+          </g>
+        ))}
+        <line x1={pad.l} y1={pad.t} x2={pad.l} y2={H - pad.b} stroke="var(--text3)" strokeWidth={1} />
+        <line x1={pad.l} y1={H - pad.b} x2={W - pad.r} y2={H - pad.b} stroke="var(--text3)" strokeWidth={1} />
+
+        {stats.map((s, i) => {
+          const x = xOf(i)
+          if (s.vals.length < 3) {
+            return (
+              <g key={s.sp}>
+                {s.vals.map((v, j) => (
+                  <circle key={j} cx={x} cy={toY(v)} r={4} fill="#0d47a1" stroke="white" strokeWidth={1.2}>
+                    <title>{s.sp}: {v} (n&lt;3 — box needs 3+ results)</title>
+                  </circle>
+                ))}
+              </g>
+            )
+          }
+          return (
+            <g key={s.sp}>
+              <line x1={x} y1={toY(s.wLo)} x2={x} y2={toY(s.q1)} stroke="#0d47a1" strokeWidth={1.2} strokeOpacity={0.6} />
+              <line x1={x} y1={toY(s.q3)} x2={x} y2={toY(s.wHi)} stroke="#0d47a1" strokeWidth={1.2} strokeOpacity={0.6} />
+              <line x1={x - boxW / 3} y1={toY(s.wLo)} x2={x + boxW / 3} y2={toY(s.wLo)} stroke="#0d47a1" strokeWidth={1.5} strokeOpacity={0.7} />
+              <line x1={x - boxW / 3} y1={toY(s.wHi)} x2={x + boxW / 3} y2={toY(s.wHi)} stroke="#0d47a1" strokeWidth={1.5} strokeOpacity={0.7} />
+              <rect x={x - boxW / 2} y={toY(s.q3)} width={boxW} height={Math.max(1, toY(s.q1) - toY(s.q3))}
+                fill="rgba(29,158,117,0.18)" stroke="#1D9E75" strokeWidth={1.5} rx={2}>
+                <title>{s.sp}: median={s.med.toFixed(3)}, Q1={s.q1.toFixed(3)}, Q3={s.q3.toFixed(3)}, n={s.vals.length}</title>
+              </rect>
+              <line x1={x - boxW / 2} y1={toY(s.med)} x2={x + boxW / 2} y2={toY(s.med)} stroke="#085041" strokeWidth={2.5} />
+              {s.outliers.map((v, j) => (
+                <circle key={j} cx={x} cy={toY(v)} r={4.5} fill="#c84b2f" stroke="white" strokeWidth={1.2}>
+                  <title>{s.sp}: {v} ⚠️ outlier (outside 1.5×IQR)</title>
+                </circle>
+              ))}
+            </g>
+          )
+        })}
+
+        {specimens.map((sp, i) => (
+          <text key={i} x={xOf(i)} y={H - pad.b + 13} textAnchor="middle" fontSize={9} fill="var(--text2)"
+            transform={specimens.length > 5 ? `rotate(-32,${xOf(i)},${H - pad.b + 13})` : ''}>
+            {sp.length > 12 ? sp.slice(0, 11) + '…' : sp}
+          </text>
+        ))}
+      </svg>
+      <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 6 }}>
+        Box = Q1–Q3 (IQR) · Dark line = median · Whiskers = range within 1.5×IQR · Red = outlier
+        {!anyBox && ' · Boxes appear once a specimen has 3+ results'}
+      </div>
+    </div>
+  )
+}
+
+// ── Control chart: results over time vs mean ±2σ/±3σ limits ──
+function ControlChart({ results, svgRef }) {
+  const W = 560, H = 220
+  const pad = { t: 20, r: 34, b: 52, l: 50 }
+  const cW = W - pad.l - pad.r
+  const cH = H - pad.t - pad.b
+
+  const pts = results.filter(r => NUM_TYPES.includes(r.result_type))
+    .map(r => ({ v: parseFloat(r.result_value), date: r.date || '', sp: r.specimen_name || r.sample_name || '' }))
+    .filter(p => !isNaN(p.v))
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  if (pts.length < 2) return <ChartNote>Need at least 2 numeric results for a control chart.</ChartNote>
+
+  const mean = pts.reduce((a, p) => a + p.v, 0) / pts.length
+  const sd = Math.sqrt(pts.reduce((s, p) => s + (p.v - mean) ** 2, 0) / pts.length)
+  const allY = [...pts.map(p => p.v), mean + 3 * sd, mean - 3 * sd]
+  const rawMin = Math.min(...allY), rawMax = Math.max(...allY)
+  const padY = (rawMax - rawMin) * 0.1 || 0.5
+  const yMin = rawMin - padY, yMax = rawMax + padY
+  const toY = v => pad.t + ((yMax - v) / (yMax - yMin)) * cH
+  const xOf = i => pad.l + (i / (pts.length - 1)) * cW
+
+  const fmtD = d => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return isNaN(dt) ? d : `${dt.getMonth() + 1}/${dt.getDate()}`
+  }
+  const labelEvery = Math.max(1, Math.ceil(pts.length / 6))
+  const limits = [
+    { v: mean, color: '#1D9E75', dash: '', label: 'x̄' },
+    { v: mean + 2 * sd, color: '#d97706', dash: '5 3', label: '+2σ' },
+    { v: mean - 2 * sd, color: '#d97706', dash: '5 3', label: '-2σ' },
+    { v: mean + 3 * sd, color: '#c84b2f', dash: '3 3', label: '+3σ' },
+    { v: mean - 3 * sd, color: '#c84b2f', dash: '3 3', label: '-3σ' },
+  ]
+  const zoneColor = v => Math.abs(v - mean) > 3 * sd ? '#c84b2f' : Math.abs(v - mean) > 2 * sd ? '#d97706' : '#0d47a1'
+
+  return (
+    <div>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={CHART_SVG_STYLE}>
+        <line x1={pad.l} y1={pad.t} x2={pad.l} y2={H - pad.b} stroke="var(--text3)" strokeWidth={1} />
+        <line x1={pad.l} y1={H - pad.b} x2={W - pad.r} y2={H - pad.b} stroke="var(--text3)" strokeWidth={1} />
+
+        {limits.map((l, i) => (
+          <g key={i}>
+            <line x1={pad.l} y1={toY(l.v)} x2={W - pad.r} y2={toY(l.v)} stroke={l.color} strokeWidth={l.label === 'x̄' ? 1.5 : 1.2} strokeDasharray={l.dash} strokeOpacity={0.75} />
+            <text x={W - pad.r + 3} y={toY(l.v)} dominantBaseline="middle" fontSize={8} fill={l.color} fontWeight="600">{l.label}</text>
+          </g>
+        ))}
+
+        <polyline points={pts.map((p, i) => `${xOf(i)},${toY(p.v)}`).join(' ')}
+          fill="none" stroke="#0d47a1" strokeWidth={1.2} strokeOpacity={0.45} />
+
+        {pts.map((p, i) => (
+          <circle key={i} cx={xOf(i)} cy={toY(p.v)} r={4} fill={zoneColor(p.v)} stroke="white" strokeWidth={1.2}>
+            <title>{p.sp ? `${p.sp}: ` : ''}{p.v} ({p.date || `#${i + 1}`}){Math.abs(p.v - mean) > 3 * sd ? ' ⚠️ beyond 3σ' : Math.abs(p.v - mean) > 2 * sd ? ' ⚠ beyond 2σ' : ''}</title>
+          </circle>
+        ))}
+
+        {pts.map((p, i) => i % labelEvery === 0 ? (
+          <text key={i} x={xOf(i)} y={H - pad.b + 13} textAnchor="middle" fontSize={8} fill="var(--text2)"
+            transform={`rotate(-32,${xOf(i)},${H - pad.b + 13})`}>
+            {fmtD(p.date) || `#${i + 1}`}
+          </text>
+        ) : null)}
+
+        {[yMin, (yMin + yMax) / 2, yMax].map((v, i) => (
+          <text key={i} x={pad.l - 5} y={toY(v)} textAnchor="end" dominantBaseline="middle" fontSize={9} fill="var(--text3)">
+            {Math.abs(v) < 100 ? v.toFixed(1) : Math.round(v)}
+          </text>
+        ))}
+      </svg>
+      <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 6 }}>
+        Results in date order · Green = mean · Amber = ±2σ warning · Red = ±3σ control limit · Point color shows zone
+      </div>
+    </div>
+  )
+}
+
+// ── Histogram: value distribution + fitted normal curve ──
+function HistogramChart({ results, svgRef }) {
+  const W = 560, H = 220
+  const pad = { t: 20, r: 20, b: 40, l: 50 }
+  const cW = W - pad.l - pad.r
+  const cH = H - pad.t - pad.b
+
+  const vals = results.filter(r => NUM_TYPES.includes(r.result_type))
+    .map(r => parseFloat(r.result_value)).filter(v => !isNaN(v))
+  if (vals.length < 5) return <ChartNote>Need at least 5 numeric results for a histogram.</ChartNote>
+
+  const n = vals.length
+  let lo = Math.min(...vals), hi = Math.max(...vals)
+  if (hi === lo) { lo -= 0.5; hi += 0.5 }
+  const bins = Math.max(5, Math.min(12, Math.ceil(Math.sqrt(n))))
+  const bw = (hi - lo) / bins
+  const counts = Array(bins).fill(0)
+  vals.forEach(v => { counts[Math.min(bins - 1, Math.floor((v - lo) / bw))]++ })
+
+  const mean = vals.reduce((a, b) => a + b, 0) / n
+  const sd = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / n)
+  const curve = sd > 0 ? Array.from({ length: 61 }, (_, i) => {
+    const x = lo + (i / 60) * (hi - lo)
+    return { x, y: n * bw * (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-((x - mean) ** 2) / (2 * sd * sd)) }
+  }) : null
+  const yTop = Math.max(...counts, ...(curve ? curve.map(c => c.y) : [0])) * 1.15
+  const toY = c => pad.t + ((yTop - c) / yTop) * cH
+  const toX = x => pad.l + ((x - lo) / (hi - lo)) * cW
+
+  const yTicks = Array.from({ length: 4 }, (_, i) => Math.round((yTop / 3) * i)).filter((v, i, a) => a.indexOf(v) === i)
+
+  return (
+    <div>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={CHART_SVG_STYLE}>
+        {yTicks.map((v, i) => (
+          <g key={i}>
+            <line x1={pad.l} y1={toY(v)} x2={W - pad.r} y2={toY(v)} stroke="var(--border)" strokeWidth={0.8} strokeDasharray="3 3" />
+            <text x={pad.l - 5} y={toY(v)} textAnchor="end" dominantBaseline="middle" fontSize={9} fill="var(--text3)">{v}</text>
+          </g>
+        ))}
+        <line x1={pad.l} y1={pad.t} x2={pad.l} y2={H - pad.b} stroke="var(--text3)" strokeWidth={1} />
+        <line x1={pad.l} y1={H - pad.b} x2={W - pad.r} y2={H - pad.b} stroke="var(--text3)" strokeWidth={1} />
+
+        {counts.map((c, i) => {
+          const x0 = toX(lo + i * bw)
+          const barW = cW / bins - 2
+          return (
+            <rect key={i} x={x0 + 1} y={toY(c)} width={barW} height={Math.max(0, toY(0) - toY(c))}
+              fill="rgba(29,158,117,0.35)" stroke="#1D9E75" strokeWidth={1} rx={1.5}>
+              <title>{(lo + i * bw).toFixed(2)} – {(lo + (i + 1) * bw).toFixed(2)}: {c} result{c !== 1 ? 's' : ''}</title>
+            </rect>
+          )
+        })}
+
+        {curve && (
+          <polyline points={curve.map(c => `${toX(c.x)},${toY(c.y)}`).join(' ')}
+            fill="none" stroke="#b45309" strokeWidth={1.8} strokeOpacity={0.85} />
+        )}
+
+        {Array.from({ length: 6 }, (_, i) => lo + (i / 5) * (hi - lo)).map((v, i) => (
+          <text key={i} x={toX(v)} y={H - pad.b + 13} textAnchor="middle" fontSize={9} fill="var(--text2)">
+            {Math.abs(v) < 100 ? v.toFixed(1) : Math.round(v)}
+          </text>
+        ))}
+      </svg>
+      <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 6 }}>
+        Bars = result frequency ({bins} bins, n={n}){sd > 0 ? ` · Curve = normal fit (μ=${mean.toFixed(2)}, σ=${sd.toFixed(2)})` : ''} · Two peaks usually mean two operators, batches or methods
+      </div>
+    </div>
+  )
+}
+
+const CHART_TYPES = [
+  { key: 'points',  label: 'Points',    title: 'Results by Specimen' },
+  { key: 'box',     label: 'Box plot',  title: 'Box Plot by Specimen' },
+  { key: 'control', label: 'Control',   title: 'Control Chart' },
+  { key: 'hist',    label: 'Histogram', title: 'Distribution Histogram' },
+]
+
 // ── Data Analysis ─────────────────────────────────────────────
 function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }) {
   const { session, toast } = useAppStore()
@@ -1150,6 +1412,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
   const emptyAddForm = { test_name: '', specimen_name: '', project_id: '', result_type: 'number', result_value: '', description: '', result_date: new Date().toISOString().split('T')[0] }
   const [addForm, setAddForm] = useState(emptyAddForm)
   const chartSvgRef = useRef(null)
+  const [chartType, setChartType] = useState('points')
 
   useEffect(() => {
     const isSolo = session?.loginMode === 'solo'
@@ -1252,7 +1515,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
 
       doc.setFontSize(16)
       doc.setFont(undefined, 'bold')
-      doc.text(`${selected.equipment_name} — Test Results`, 40, 48)
+      doc.text(`${selected.equipment_name} — ${CHART_TYPES.find(t => t.key === chartType)?.title || 'Test Results'}`, 40, 48)
       doc.setFontSize(10)
       doc.setFont(undefined, 'normal')
       doc.setTextColor(120)
@@ -1500,8 +1763,26 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
                 ))}
               </div>
 
-              {/* Chart: point graph */}
-              <PointChart results={filteredResults} isOutlier={isOutlier} title={selected.equipment_name} svgRef={chartSvgRef} onDownloadPdf={downloadPdf} />
+              {/* Chart card: type toggle + active chart */}
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                  {/* Chart named after the equipment — every result here is the same test */}
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{selected.equipment_name} — {CHART_TYPES.find(t => t.key === chartType)?.title}</div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {CHART_TYPES.map(t => (
+                      <button key={t.key} onClick={() => setChartType(t.key)}
+                        style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, cursor: 'pointer', border: `1px solid ${chartType === t.key ? 'var(--accent)' : 'var(--border)'}`, background: chartType === t.key ? 'var(--accent)' : 'var(--surface)', color: chartType === t.key ? '#fff' : 'var(--text2)', transition: 'all 0.15s' }}>
+                        {t.label}
+                      </button>
+                    ))}
+                    <button className="btn btn-sm" style={{ fontSize: 12 }} onClick={downloadPdf} title="Download chart + results as PDF">⬇ PDF</button>
+                  </div>
+                </div>
+                {chartType === 'points'  && <PointChart results={filteredResults} isOutlier={isOutlier} svgRef={chartSvgRef} />}
+                {chartType === 'box'     && <BoxPlotChart results={filteredResults} svgRef={chartSvgRef} />}
+                {chartType === 'control' && <ControlChart results={filteredResults} svgRef={chartSvgRef} />}
+                {chartType === 'hist'    && <HistogramChart results={filteredResults} svgRef={chartSvgRef} />}
+              </div>
 
               {/* Results table + sample info panel */}
               <div style={{ display: 'grid', gridTemplateColumns: selectedRow ? '1fr 280px' : '1fr', gap: 12, alignItems: 'start', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
