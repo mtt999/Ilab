@@ -1572,7 +1572,7 @@ function DataAnalysis({ allowedNames, userProjectGroup, userAssignedProjectIds }
           )}
 
           {/* Discussion */}
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', maxWidth: 1000, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13 }}>💬 Team Discussion</div>
             <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 300, overflowY: 'auto' }}>
               {comments.length === 0
