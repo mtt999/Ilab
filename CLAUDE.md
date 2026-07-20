@@ -765,6 +765,16 @@ Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f
 
 ## Build — obfuscator vs dynamic imports (July 2026)
 
+**Route-level code splitting:** every screen in `App.jsx` is `React.lazy`-loaded
+(one `<Suspense>` wrapper inside `<Layout>`). This cut the entry bundle from
+~3 MB to ~520 KB (146 KB gzip). Do NOT convert screens back to static imports —
+it re-merges everything into one chunk. New screens must follow the same
+`const X = lazy(() => import('./screens/...'))` pattern in App.jsx.
+
+**Obfuscator `stringArray` is OFF** (base64-encoding every string doubled the
+bundle and added per-call decode overhead; compact + identifier mangling stay).
+If it is ever re-enabled, the rule below is what keeps code splitting alive:
+
 The prod obfuscator (`vite.config.js`) MUST keep `reservedStrings` covering every
 dynamically-imported package (`jspdf`, `jspdf-autotable`, `exceljs`, `xlsx`,
 `@capacitor/*`, …) plus relative paths (`^\./`, `^\.\./`). Without it, string

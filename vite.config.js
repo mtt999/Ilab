@@ -13,9 +13,12 @@ export default defineConfig({
       options: {
         compact: true,
         controlFlowFlattening: false,
-        stringArray: true,
-        stringArrayEncoding: ['base64'],
-        stringArrayThreshold: 0.75,
+        // stringArray disabled (July 2026): base64-encoding every string
+        // inflated the bundle ~2x and added per-call decode overhead at
+        // runtime — identifier mangling + compact still obscure the logic.
+        // If ever re-enabled, reservedStrings below is what keeps dynamic
+        // imports (code splitting) alive — do not drop it.
+        stringArray: false,
         renameGlobals: false,
         selfDefending: false,
         // CRITICAL: never obfuscate import specifiers. String-encoding them

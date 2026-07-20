@@ -1,34 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useAppStore } from './store/useAppStore'
 import { sb } from './lib/supabase'
 import Login from './screens/auth/Login'
 import AdminLogin from './screens/auth/AdminLogin'
 import Layout from './components/Layout'
-import Dashboard from './screens/dashboard/Dashboard'
-import LabMessage from './screens/messaging/LabMessage'
-import Home from './screens/inspection/Home'
-import Inspection from './screens/inspection/Inspection'
-import Results from './screens/inspection/Results'
-import Projects from './screens/projects/Projects'
-import ProjectMaterial from './screens/projects/ProjectMaterial'
-import ProjectDetail from './screens/projects/ProjectDetail'
-import History from './screens/inspection/History'
-import TrainingRecords from './screens/training/TrainingRecords'
-import TrainingRecordsProto from './screens/training/TrainingRecordsProto'
-import LayoutProto from './screens/proto/LayoutProto'
-import Profile from './screens/profile/Profile'
-import EquipmentInventory from './screens/equipment/EquipmentInventory'
-import EquipmentHub from './screens/equipment/EquipmentHub'
-import BookingEquipment from './screens/equipment/BookingEquipment'
-import PM from './screens/maintenance/PM'
 import Toast from './components/Toast'
 import DashboardIconPicker from './components/DashboardIconPicker'
 import ForcePasswordChange from './components/ForcePasswordChange'
-import BarcodeScannerScreen from './screens/barcode/BarcodeScannerScreen'
-import BarcodeManager from './screens/barcode/BarcodeManager'
-import EquipmentScan from './screens/equipment/EquipmentScan'
-import Admin from './screens/admin/Admin'
-import LabManagement from './screens/labmanagement/LabManagement'
 import { isNative } from './lib/scanner.js'
 import { providers as storageProviders } from './lib/storage/StorageService'
 import { logAdminError } from './lib/logAdminError'
@@ -36,6 +14,32 @@ import CustomerServiceModal from './components/CustomerServiceModal'
 import TermsAcceptance from './components/TermsAcceptance'
 import { CURRENT_TERMS_VERSION } from './lib/termsVersion'
 import CookieConsent from './components/CookieConsent'
+
+// Route-level code splitting: every screen is its own lazy chunk, so the
+// initial download is only the core app + login. The obfuscator's
+// reservedStrings ('^\./', '^\.\./') MUST keep these specifiers intact or
+// Rollup emits no chunks (see "Build — obfuscator vs dynamic imports").
+const Dashboard            = lazy(() => import('./screens/dashboard/Dashboard'))
+const LabMessage           = lazy(() => import('./screens/messaging/LabMessage'))
+const Home                 = lazy(() => import('./screens/inspection/Home'))
+const Inspection           = lazy(() => import('./screens/inspection/Inspection'))
+const Results              = lazy(() => import('./screens/inspection/Results'))
+const ProjectMaterial      = lazy(() => import('./screens/projects/ProjectMaterial'))
+const ProjectDetail        = lazy(() => import('./screens/projects/ProjectDetail'))
+const History              = lazy(() => import('./screens/inspection/History'))
+const TrainingRecords      = lazy(() => import('./screens/training/TrainingRecords'))
+const TrainingRecordsProto = lazy(() => import('./screens/training/TrainingRecordsProto'))
+const LayoutProto          = lazy(() => import('./screens/proto/LayoutProto'))
+const Profile              = lazy(() => import('./screens/profile/Profile'))
+const EquipmentInventory   = lazy(() => import('./screens/equipment/EquipmentInventory'))
+const EquipmentHub         = lazy(() => import('./screens/equipment/EquipmentHub'))
+const BookingEquipment     = lazy(() => import('./screens/equipment/BookingEquipment'))
+const PM                   = lazy(() => import('./screens/maintenance/PM'))
+const BarcodeScannerScreen = lazy(() => import('./screens/barcode/BarcodeScannerScreen'))
+const BarcodeManager       = lazy(() => import('./screens/barcode/BarcodeManager'))
+const EquipmentScan        = lazy(() => import('./screens/equipment/EquipmentScan'))
+const Admin                = lazy(() => import('./screens/admin/Admin'))
+const LabManagement        = lazy(() => import('./screens/labmanagement/LabManagement'))
 
 window.addEventListener('error', (e) => {
   logAdminError(`JS Error: ${e.message}`, `${e.filename}:${e.lineno}`)
@@ -400,7 +404,11 @@ export default function App() {
 
   return (
     <>
-      <Layout>{screens[screen] || <Dashboard />}</Layout>
+      <Layout>
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>}>
+          {screens[screen] || <Dashboard />}
+        </Suspense>
+      </Layout>
       <Toast />
       {!termsAccepted && session && <TermsAcceptance session={session} onAccept={() => setTermsAccepted(true)} />}
       {termsAccepted && session?.mustChangePassword && <ForcePasswordChange />}
