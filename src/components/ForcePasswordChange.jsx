@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAppStore } from '../store/useAppStore'
 import { sb } from '../lib/supabase'
 import { PasswordStrengthHint } from './PasswordStrengthHint'
+import { passwordError } from '../lib/passwordPolicy'
 
 export default function ForcePasswordChange() {
   const { session, setSession, clearSession, toast } = useAppStore()
@@ -14,11 +15,9 @@ export default function ForcePasswordChange() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (next.length < 8)            { setError('New password must be at least 8 characters.'); return }
-    if (!/[A-Z]/.test(next))        { setError('New password must contain an uppercase letter.'); return }
-    if (!/[a-z]/.test(next))        { setError('New password must contain a lowercase letter.'); return }
-    if (!/[^A-Za-z0-9]/.test(next)) { setError('New password must contain a symbol (e.g. !@#$%).'); return }
-    if (next !== confirm)           { setError('Passwords do not match.'); return }
+    const perr = passwordError(next)
+    if (perr)             { setError(perr); return }
+    if (next !== confirm) { setError('Passwords do not match.'); return }
     setLoading(true)
 
     const { error: updateErr } = await sb.auth.updateUser({ password: next })

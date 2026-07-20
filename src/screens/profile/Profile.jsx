@@ -2,6 +2,7 @@ import HelpPanel from '../../components/HelpPanel'
 import ScrollTabs from '../../components/ScrollTabs'
 import StorageProviderModal from '../../components/StorageProviderModal'
 import { PasswordStrengthHint } from '../../components/PasswordStrengthHint'
+import { passwordError } from '../../lib/passwordPolicy'
 import { useAppStore } from '../../store/useAppStore'
 import { sb } from '../../lib/supabase'
 import { useState, useEffect, useRef } from 'react'
@@ -102,7 +103,7 @@ function SoloProfile({ session }) {
   async function savePassword() {
     setPinError('')
     if (!pinForm.current) { setPinError('Enter your current password.'); return }
-    if (!pinForm.newPin || pinForm.newPin.length < 6) { setPinError('Min 6 characters.'); return }
+    { const perr = passwordError(pinForm.newPin); if (perr) { setPinError(perr); return } }
     if (pinForm.newPin !== pinForm.confirm) { setPinError('Passwords do not match.'); return }
     const { error: reAuthErr } = await sb.auth.signInWithPassword({ email: session.email, password: pinForm.current })
     if (reAuthErr) { setPinError('Current password is incorrect.'); return }
@@ -1109,7 +1110,7 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
     if (!form.currentPassword) { setError('Enter your current password.'); return }
     if (!form.newPassword) { setError('Enter a new password.'); return }
     if (form.newPassword !== form.confirmPassword) { setError('Passwords do not match.'); return }
-    if (form.newPassword.length < 6) { setError('Password must be at least 6 characters.'); return }
+    { const perr = passwordError(form.newPassword); if (perr) { setError(perr); return } }
     setSaving(true)
     const email = session?.email || (await sb.auth.getUser()).data?.user?.email
     if (!email) { setError('Cannot verify identity. Sign out and back in.'); setSaving(false); return }
@@ -1316,6 +1317,10 @@ export function StudentsPanel({ toast, session }) {
       if (!form.password) { toast('Password is required.'); return }
       if (!actualEmail) { toast('Email is required for student login.'); return }
     }
+    if (form.password) {
+      const perr = passwordError(form.password)
+      if (perr) { toast(perr); return }
+    }
     if (!form.selectedProjectIds || form.selectedProjectIds.length === 0) { toast('Please assign at least one project.'); return }
     const payload = { name: form.lastName.trim(), email: form.firstName.trim() || null, phone: actualEmail || null, degree: form.supervisor || null, year_semester: form.year_semester || null, project_group: form.project_group || null, assigned_project_ids: form.selectedProjectIds || [], nickname: form.nickname || null, organization_id: session?.organizationId || null, role: 'student', is_active: true, admin_level: 0, pin: '', must_change_password: !id && !!form.password, terms_accepted_version: null }
     if (!id && form.password && actualEmail) {
@@ -1490,7 +1495,8 @@ function StudentModal({ student, session, onClose, onSave }) {
         </div>
         <div className="field">
           <label>Password{student ? ' (leave blank to keep current)' : ' *'}</label>
-          <input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={student ? 'Leave blank to keep unchanged' : 'Min. 6 chars'} />
+          <input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={student ? 'Leave blank to keep unchanged' : 'e.g. Lab2026! — upper, lower, number, symbol'} />
+          <PasswordStrengthHint password={form.password} />
         </div>
         <div className="grid-2">
           <div className="field"><label>Supervisor</label><input value={form.supervisor} onChange={e=>setForm(f=>({...f,supervisor:e.target.value}))} placeholder="e.g. Prof. James Carter" /></div>
@@ -1550,6 +1556,10 @@ function StaffListPanel({ toast, session }) {
     if (!id) {
       if (!form.password) { toast('Password is required.'); return }
       if (!actualEmail) { toast('Email is required for staff login.'); return }
+    }
+    if (form.password) {
+      const perr = passwordError(form.password)
+      if (perr) { toast(perr); return }
     }
     const payload = { name: form.name.trim(), email: actualEmail || null, phone: form.phone || null, role: 'user', is_active: true, admin_level: 0, pin: '', organization_id: session?.organizationId || null, must_change_password: !id && !!form.password, terms_accepted_version: null }
     if (!id && form.password && actualEmail) {
@@ -1635,7 +1645,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
           <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="netid@illinois.edu" /></div>
         </div>
         <div className="grid-2">
-          <div className="field"><label>Password{staff ? ' (leave blank to keep)' : ' *'}</label><input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={staff ? 'Type to change' : 'Min. 6 chars'} /></div>
+          <div className="field"><label>Password{staff ? ' (leave blank to keep)' : ' *'}</label><input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={staff ? 'Type to change' : 'e.g. Lab2026! — upper, lower, number, symbol'} /><PasswordStrengthHint password={form.password} /></div>
           <div className="field"><label>Phone</label><input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} /></div>
         </div>
         {staff && onRoleChange && (
@@ -1883,7 +1893,7 @@ function PasswordChangePanel({ session, toast }) {
   async function save() {
     setError('')
     if (!form.current) { setError('Enter your current password.'); return }
-    if (!form.newPin || form.newPin.length < 6) { setError('New password must be at least 6 characters.'); return }
+    { const perr = passwordError(form.newPin); if (perr) { setError(perr); return } }
     if (form.newPin !== form.confirm) { setError('Passwords do not match.'); return }
     setSaving(true)
     const email = session?.email || (await sb.auth.getUser()).data?.user?.email
