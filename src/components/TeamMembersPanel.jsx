@@ -7,14 +7,19 @@ function firstName(name) {
   return name?.split(' ')[0] || name || 'Unknown'
 }
 
+// Returns an error message string when the in-app notification could not be
+// stored (so callers can surface it), or null on success.
 async function sendNotification(userId, type, title, body) {
-  if (!userId) return
+  if (!userId) return null
+  // NOTE: this runs on the SENDER's session — reading the recipient's prefs
+  // needs the notification_prefs_select_org RLS policy (rls_phase1.sql)
   const { data: prefs } = await sb.from('notification_prefs').select('*').eq('user_id', userId).maybeSingle()
 
+  let notifError = null
   // in-app notification (default ON unless explicitly disabled)
   if (!prefs || prefs[type] !== false) {
     const { error } = await sb.from('notifications').insert({ user_id: userId, type, title, body, read: false })
-    if (error) console.warn('Notification insert failed:', error.message)
+    if (error) { console.warn('Notification insert failed:', error.message); notifError = error.message }
   }
 
   // email notification (opt-in — only if user enabled it)
@@ -32,6 +37,7 @@ async function sendNotification(userId, type, title, body) {
         .then(({ error: emailErr }) => { if (emailErr) console.warn('Email queue insert failed:', emailErr.message) })
     }
   }
+  return notifError
 }
 
 // Returns display name for a user row: "FirstName LastName" or nickname hint
@@ -123,8 +129,22 @@ export default function TeamMembersPanel({ session }) {
 
   async function sendInvite() {
     if (!selectedUser) return
-    if (outgoing.some(i => i.invitee_id === selectedUser.id && i.status !== 'declined')) {
-      toast('Already invited this person.'); return
+    const inviterName = firstName(session.username)
+    const existing = outgoing.find(i => i.invitee_id === selectedUser.id && i.status !== 'declined')
+    if (existing) {
+      // Pending invite → re-send the in-app notification as a reminder
+      if (existing.status === 'pending') {
+        const notifErr = await sendNotification(
+          selectedUser.id,
+          'team_invite',
+          `Reminder: ${inviterName} invited you to their project team`,
+          'Open Profile → Project Team to accept or decline.'
+        )
+        toast(notifErr ? `Reminder failed: ${notifErr}` : 'Invite already pending — reminder sent.')
+      } else {
+        toast('This person already accepted your invite.')
+      }
+      return
     }
     setSending(true)
     const { error } = await sb.from('team_workspace_invites').insert({
@@ -138,14 +158,13 @@ export default function TeamMembersPanel({ session }) {
       setSending(false)
       return
     }
-    const inviterName = firstName(session.username)
-    await sendNotification(
+    const notifErr = await sendNotification(
       selectedUser.id,
       'team_invite',
       `${inviterName} invited you to their project team`,
       'Open Profile → Project Team to accept or decline.'
     )
-    toast('Invite sent!')
+    toast(notifErr ? `Invite sent, but notifying failed: ${notifErr}` : 'Invite sent!')
     setSelectedUser(null)
     setSearch('')
     setSending(false)
