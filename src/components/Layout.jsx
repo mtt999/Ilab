@@ -98,13 +98,14 @@ function getScreenTabs(screen, session) {
   ]
 
   if (screen === 'projects') {
-    // Lab users get Results + Workspace too — the screen already scopes them
-    // to their assigned projects and own/teammate data (allowedNames filter),
-    // and Workspace → Project Members is how they team up with classmates.
+    // Lab users get all tabs — the screen scopes them to assigned projects
+    // and own/teammate data (allowedNames filter). Project Members is a
+    // top-level tab: teaming up is what makes shared data visible.
     return [
       { key: 'inventory', icon: '📦', label: 'Material Inventory' },
       { key: 'results',   icon: '✏️',  label: 'Project Test Results' },
-      { key: 'workspace', icon: '📋', label: 'Workspace' },
+      { key: 'workspace', icon: '📊', label: 'Workspace' },
+      { key: 'members',   icon: '👥', label: 'Project Members' },
     ]
   }
 

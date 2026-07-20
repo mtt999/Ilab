@@ -261,122 +261,6 @@ function SubmitResultPanel({ projects, session }) {
   )
 }
 
-// ── Links Panel ────────────────────────────────────────────────
-function LinksPanel({ projects, readOnly, allowedNames }) {
-  const { toast, session } = useAppStore()
-  const [links, setLinks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ project_id: '', title: '', url: '' })
-  const [showForm, setShowForm] = useState(false)
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => { if (allowedNames !== undefined) loadLinks() }, [projects.length, allowedNames])
-
-  async function loadLinks() {
-    setLoading(true)
-    const ids = projects.map(p => p.id)
-    if (!ids.length) { setLinks([]); setLoading(false); return }
-    const { data } = await sb.from('project_links').select('*').in('project_id', ids).order('created_at', { ascending: false })
-    const all = data || []
-    // null = admin (show all); Set = filter (keep !l.created_by for legacy links without attribution)
-    const visible = allowedNames !== null
-      ? all.filter(l => !l.created_by || allowedNames.has(l.created_by))
-      : all
-    setLinks(visible)
-    setLoading(false)
-  }
-
-  async function addLink() {
-    if (!form.project_id) { toast('Select a project.'); return }
-    if (!form.title.trim()) { toast('Title is required.'); return }
-    if (!form.url.trim()) { toast('URL is required.'); return }
-    setSaving(true)
-    const { error } = await sb.from('project_links').insert({
-      project_id: form.project_id,
-      title: form.title.trim(),
-      url: form.url.trim(),
-      created_by: session?.username || session?.name || session?.email || null,
-    })
-    if (error) {
-      toast('Could not save. Run the SQL migration in Supabase first.')
-    } else {
-      toast('Link added!')
-      setForm({ project_id: '', title: '', url: '' })
-      setShowForm(false)
-      loadLinks()
-    }
-    setSaving(false)
-  }
-
-  async function deleteLink(id) {
-    if (!confirm('Delete this link?')) return
-    await sb.from('project_links').delete().eq('id', id)
-    toast('Link deleted.')
-    loadLinks()
-  }
-
-  const projectMap = Object.fromEntries(projects.map(p => [p.id, p.name]))
-
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontWeight: 600, fontSize: 15 }}>Project Links</div>
-        {!readOnly && (
-          <button className="btn btn-sm btn-primary" onClick={() => setShowForm(s => !s)}>
-            {showForm ? 'Cancel' : '+ Add Link'}
-          </button>
-        )}
-      </div>
-
-      {showForm && (
-        <div className="card" style={{ marginBottom: 16, border: '1.5px solid var(--accent)' }}>
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>Add a project link</div>
-          <div className="field">
-            <label>Project *</label>
-            <select value={form.project_id} onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))}>
-              <option value="">— Select project —</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div className="grid-2">
-            <div className="field"><label>Title *</label><input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Lab Report, AASHTO Reference" /></div>
-            <div className="field"><label>URL *</label><input type="url" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} placeholder="https://…" /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="btn btn-primary btn-sm" onClick={addLink} disabled={saving}>{saving ? 'Saving…' : 'Add Link'}</button>
-            <button className="btn btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-      ) : links.length === 0 ? (
-        <div className="empty-state"><div className="empty-icon">🔗</div><div>No links added yet.</div></div>
-      ) : (
-        <div>
-          {links.map(l => (
-            <div key={l.id} className="card" style={{ marginBottom: 8, padding: '12px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 500, marginBottom: 2 }}>{projectMap[l.project_id] || '—'}</div>
-                  <a href={l.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', textDecoration: 'none' }}>
-                    🔗 {l.title}
-                  </a>
-                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.url}</div>
-                </div>
-                {!readOnly && (
-                  <button className="btn btn-sm btn-danger" onClick={() => deleteLink(l.id)}>Delete</button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── Adaptive result input ──────────────────────────────────────
 function ResultValueInput({ type, value, onChange }) {
   if (type === 'pass_fail') return (
@@ -2094,47 +1978,20 @@ function RecordsPanel({ projects, allowedNames, session }) {
 }
 
 // ── Workspace Tab (members / data analysis / links) ────────────
-function WorkspaceTab({ session, projects, isSolo, readOnly, allowedNames, userProjectGroup, userAssignedProjectIds }) {
-  const [wsTab, setWsTab] = useState('analysis')
-
+// Workspace = Data Analysis directly. Records merged into Project Test
+// Results; Links removed; Project Members promoted to its own sidebar tab.
+function WorkspaceTab({ session, isSolo, allowedNames, userProjectGroup, userAssignedProjectIds }) {
   const isLabUser = !isSolo && session?.dbRole === 'student'
   const hasProjectAccess = !isLabUser || !!userAssignedProjectIds
 
-  const wsTabs = [
-    ...(hasProjectAccess ? [
-      { key: 'analysis', label: '📊 Data Analysis' },
-      { key: 'records',  label: '📂 Records' },
-      { key: 'links',    label: '🔗 Links' },
-    ] : []),
-    { key: 'members',  label: '👥 Project Members' },
-  ]
-
-  return (
-    <div>
-      <ScrollTabs style={{ borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
-        {wsTabs.map(t => (
-          <button key={t.key} onClick={() => setWsTab(t.key)}
-            style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 500, cursor: 'pointer', color: wsTab === t.key ? 'var(--accent)' : 'var(--text2)', borderBottom: `2px solid ${wsTab === t.key ? 'var(--accent)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
-            {t.label}
-          </button>
-        ))}
-      </ScrollTabs>
-
-      {wsTab === 'members' && (
-        isSolo
-          ? <TeammatesPanel session={session} />
-          : <TeamMembersPanel session={session} />
-      )}
-
-      {wsTab === 'analysis' && <DataAnalysis allowedNames={allowedNames} userProjectGroup={userProjectGroup} userAssignedProjectIds={userAssignedProjectIds} />}
-
-      {wsTab === 'records' && <RecordsPanel projects={projects} allowedNames={allowedNames} session={session} />}
-
-      {wsTab === 'links' && (
-        <LinksPanel projects={projects} readOnly={readOnly} allowedNames={allowedNames} />
-      )}
+  if (!hasProjectAccess) return (
+    <div className="empty-state" style={{ padding: 32 }}>
+      <div className="empty-icon">📊</div>
+      <div>No assigned projects yet — ask your lab manager to assign you to a project to see its data analysis.</div>
     </div>
   )
+
+  return <DataAnalysis allowedNames={allowedNames} userProjectGroup={userProjectGroup} userAssignedProjectIds={userAssignedProjectIds} />
 }
 
 // ── Material Inventory Tab ─────────────────────────────────────
@@ -2451,11 +2308,22 @@ export default function ProjectMaterial() {
       )}
 
       {mainTab === 'results' && (
-        <ResultsTab projects={assignedProjects} session={session} allowedNames={allowedNames} />
+        <>
+          <ResultsTab projects={assignedProjects} session={session} allowedNames={allowedNames} />
+          {/* Records merged in from the old Workspace → Records tab */}
+          <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>📂 Record Files</div>
+            <RecordsPanel projects={assignedProjects} allowedNames={allowedNames} session={session} />
+          </div>
+        </>
       )}
 
       {mainTab === 'workspace' && (
-        <WorkspaceTab session={session} projects={assignedProjects} isSolo={isSolo} readOnly={viewingShared} allowedNames={allowedNames} userProjectGroup={userProjectGroup} userAssignedProjectIds={userAssignedProjectIds} />
+        <WorkspaceTab session={session} isSolo={isSolo} allowedNames={allowedNames} userProjectGroup={userProjectGroup} userAssignedProjectIds={userAssignedProjectIds} />
+      )}
+
+      {mainTab === 'members' && (
+        isSolo ? <TeammatesPanel session={session} /> : <TeamMembersPanel session={session} />
       )}
     </div>
   )
