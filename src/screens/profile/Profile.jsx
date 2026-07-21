@@ -47,10 +47,12 @@ async function createAuthUser(email, password) {
       const { data: retryData, error: retryError } = await sb.auth.signUp({ email: emailLC, password })
       if (prev) await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token })
       if (retryError) throw retryError
+      await sb.rpc('confirm_auth_user_email', { p_email: emailLC })
       return retryData.user
     }
     throw error
   }
+  await sb.rpc('confirm_auth_user_email', { p_email: emailLC })
   return data.user
 }
 
