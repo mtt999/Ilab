@@ -35,10 +35,20 @@ const sEmail      = s => s?.phone  || ''
 const sSupervisor = s => s?.degree || s?.supervisor || ''
 
 async function createAuthUser(email, password) {
+  const emailLC = email.trim().toLowerCase()
   const { data: { session: prev } } = await sb.auth.getSession()
-  const { data, error } = await sb.auth.signUp({ email: email.trim().toLowerCase(), password })
+  const { data, error } = await sb.auth.signUp({ email: emailLC, password })
   if (prev) await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token })
-  if (error) throw error
+  if (error) {
+    if (error.message?.toLowerCase().includes('already registered') || error.message?.toLowerCase().includes('already been registered')) {
+      // Deleted user's auth account still exists — reset password so new temp password works
+      try { await sb.rpc('reset_auth_user_password', { p_email: emailLC, p_password: password }) } catch (_) {}
+      let existingId = null
+      try { ({ data: existingId } = await sb.rpc('get_auth_user_id_by_email', { p_email: emailLC })) } catch (_) {}
+      return { id: existingId || null }
+    }
+    throw error
+  }
   return data.user
 }
 
@@ -1349,8 +1359,10 @@ export function StudentsPanel({ toast, session }) {
   async function clearPhotoFlag(s) { await sb.from('users').update({ photo_denial_flagged: false }).eq('id', s.id); load(); toast('Photo flag cleared.') }
   async function deleteStudent(id) {
     setDeleting(true)
+    const { data: u } = await sb.from('users').select('auth_id').eq('id', id).maybeSingle()
     await sb.from('user_screen_access').delete().eq('user_id', id)
     await sb.from('user_dashboard_prefs').delete().eq('user_id', id)
+    if (u?.auth_id) try { await sb.rpc('delete_auth_user', { p_auth_id: u.auth_id }) } catch (_) {}
     await sb.from('users').delete().eq('id', id)
     setDeleting(false); setDeleteTarget(null); load(); toast('Lab user deleted.')
   }
@@ -1577,8 +1589,10 @@ function StaffListPanel({ toast, session }) {
   async function toggleActive(s) { await sb.from('users').update({ is_active: !s.is_active }).eq('id', s.id); load(); toast(s.is_active ? 'Deactivated.' : 'Activated.') }
   async function deleteStaff(id) {
     setDeleting(true)
+    const { data: u } = await sb.from('users').select('auth_id').eq('id', id).maybeSingle()
     await sb.from('user_screen_access').delete().eq('user_id', id)
     await sb.from('user_dashboard_prefs').delete().eq('user_id', id)
+    if (u?.auth_id) try { await sb.rpc('delete_auth_user', { p_auth_id: u.auth_id }) } catch (_) {}
     await sb.from('users').delete().eq('id', id)
     setDeleting(false); setDeleteTarget(null); load(); toast('Member deleted.')
   }
