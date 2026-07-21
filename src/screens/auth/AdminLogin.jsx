@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { sb } from '../../lib/supabase'
+import { IconEye, IconEyeOff } from '../../components/Icons'
 
 export default function AdminLogin() {
   const { setSession } = useAppStore()
@@ -63,9 +64,9 @@ export default function AdminLogin() {
                   autoComplete="current-password"
                   style={{ paddingRight: 44 }}
                 />
-                <button type="button" onClick={() => setShow(s => !s)}
-                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text3)', padding: 4 }}>
-                  {show ? '🙈' : '👁️'}
+                <button type="button" onClick={() => setShow(s => !s)} title={show ? 'Hide password' : 'Show password'}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                  {show ? <IconEyeOff size={17} /> : <IconEye size={17} />}
                 </button>
               </div>
             </div>

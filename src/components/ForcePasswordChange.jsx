@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore'
 import { sb } from '../lib/supabase'
 import { PasswordStrengthHint } from './PasswordStrengthHint'
 import { passwordError } from '../lib/passwordPolicy'
+import { IconKey, IconEye, IconEyeOff } from './Icons'
 
 export default function ForcePasswordChange() {
   const { session, setSession, clearSession, toast } = useAppStore()
@@ -46,11 +47,11 @@ export default function ForcePasswordChange() {
           </button>
         </div>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>🔑</div>
+          <div style={{ marginBottom: 8, color: 'var(--accent)' }}><IconKey size={36} /></div>
           <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>Set your new password</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>
             Your admin set a temporary password. You must change it before you can use the app.<br/>
-            Min. 8 characters with uppercase, lowercase & symbol.
+            Needs upper &amp; lower case, a number and a symbol.
           </div>
         </div>
 
@@ -67,9 +68,9 @@ export default function ForcePasswordChange() {
                 style={{ paddingRight: 44 }}
                 autoFocus
               />
-              <button type="button" onClick={() => setShowNext(s => !s)}
-                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--text3)', padding: 4 }}>
-                {showNext ? '🙈' : '👁️'}
+              <button type="button" onClick={() => setShowNext(s => !s)} title={showNext ? 'Hide password' : 'Show password'}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                {showNext ? <IconEyeOff size={17} /> : <IconEye size={17} />}
               </button>
             </div>
             <PasswordStrengthHint password={next} />

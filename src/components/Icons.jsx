@@ -94,6 +94,13 @@ export const IconChat = (p) => (
   </Icon>
 )
 
+export const IconKey = (p) => (
+  <Icon {...p}>
+    <circle cx="8" cy="15.5" r="4.5"/>
+    <path d="m11.2 12.3 8.3-8.3M16.5 7l3 3M13.5 10l2.2 2.2"/>
+  </Icon>
+)
+
 export const IconMegaphone = (p) => (
   <Icon {...p}>
     <path d="M3 10.5v3a1.5 1.5 0 0 0 1.5 1.5H7l9.5 5V5.5L7 10.5H4.5A1.5 1.5 0 0 0 3 12z"/>
