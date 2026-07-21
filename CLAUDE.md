@@ -615,7 +615,38 @@ CREATE TABLE IF NOT EXISTS user_out_of_lab (id UUID DEFAULT gen_random_uuid() PR
 -- RLS policy applied by rls_phase1.sql (org/owner scoped). Do NOT use allow_all.
 
 -- All tables: run rls_phase1.sql for the full org/owner-scoped RLS policy set.
+
+-- Notifications (applied July 2026 — was broken for a month without these):
+-- app inserts title/body but table only had "message"
+ALTER TABLE notifications
+  ADD COLUMN IF NOT EXISTS title text,
+  ADD COLUMN IF NOT EXISTS body  text;
+-- notification_prefs needs one boolean column per event key the Profile →
+-- Notifications panel saves ({key} default true, email_{key} default false):
+-- booking_confirmed/reminder/cancelled, training_approved/expiring/submitted,
+-- task_assigned, task_comment, meeting_added, task_status_changed,
+-- deadline_reminder, reminder_daily, reminder_items, team_invite, message_reply
+-- (see July 2026 chat or git history for the full ALTER block)
 ```
+
+### Notifications & email pipeline (July 2026 — WORKING, do not regress)
+
+- **In-app**: insert into `notifications` (`user_id, type, title, body, read`);
+  bell (NotificationBell) reads `notifications` + `booking_notifications`, has
+  realtime INSERT subscriptions. RLS: INSERT open to authenticated, SELECT own.
+- **Email**: opt-in per event. Sender-side code reads the RECIPIENT's
+  `notification_prefs` — this requires the `notification_prefs_select_org`
+  RLS policy (org-wide SELECT) in rls_phase1.sql, or no email is ever queued.
+- **Queue**: rows go to `email_notifications_queue`; a pg_cron job
+  (`send-emails-every-minute`) POSTs the **`send-emails`** Edge Function
+  (NOT the old `send-email-queue` one) which sends via **Resend** and marks
+  `sent/sent_at/attempts/error`. `MAX_ATTEMPTS = 5` — after 5 failures a row
+  is abandoned; reset with `UPDATE email_notifications_queue SET attempts=0,
+  error=NULL WHERE sent=false` to retry.
+- **Resend**: domain `labhive.app` verified (DNS on Cloudflare). Secrets on
+  Edge Functions: `RESEND_API_KEY`, `RESEND_FROM` = `LabHive <noreply@labhive.app>`.
+- Setup lives in `email_queue_setup.sql` (idempotent; marks stale backlog sent
+  before scheduling so users don't get flooded).
 
 ---
 
