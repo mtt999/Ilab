@@ -3,6 +3,7 @@ import ScrollTabs from '../../components/ScrollTabs'
 import StorageProviderModal from '../../components/StorageProviderModal'
 import { PasswordStrengthHint } from '../../components/PasswordStrengthHint'
 import { passwordError } from '../../lib/passwordPolicy'
+import { queueWelcomeEmail } from '../../lib/welcomeEmail'
 import { useAppStore } from '../../store/useAppStore'
 import { sb } from '../../lib/supabase'
 import { useState, useEffect, useRef } from 'react'
@@ -1337,8 +1338,9 @@ export function StudentsPanel({ toast, session }) {
       const { data: newUser, error } = await sb.from('users').insert(payload).select('id').single()
       if (error) { toast('Error: ' + error.message); return }
       if (session?.organizationId) notifyOrgManagers(session.organizationId, `New lab user added: ${payload.name}`, 'new_user', session.userId)
-      setShowModal(false); setEditStudent(null)
       const dispName = `${form.firstName} ${form.lastName}`.trim() || form.emailAddr || 'New user'
+      queueWelcomeEmail(sb, { name: dispName, toEmail: actualEmail, orgId: session?.organizationId, userId: newUser.id, password: form.password })
+      setShowModal(false); setEditStudent(null)
       setPendingIconSetup({ userId: newUser.id, displayName: dispName })
     }
   }
@@ -1570,7 +1572,7 @@ function StaffListPanel({ toast, session }) {
       } catch (err) { toast('Error creating login account: ' + (err.message || 'Try again.')); return }
     }
     if (id) { const { error } = await sb.from('users').update(payload).eq('id', id); if (error) { toast('Error: ' + error.message); return }; setShowModal(false); setEditStaff(null); load(); toast('Staff saved ✓') }
-    else { const { data: newUser, error } = await sb.from('users').insert(payload).select('id').single(); if (error) { toast('Error: ' + error.message); return }; if (session?.organizationId) notifyOrgManagers(session.organizationId, `New lab manager added: ${fullName}`, 'new_manager', session.userId); setShowModal(false); setEditStaff(null); setPendingIconSetup({ userId: newUser.id, displayName: fullName }) }
+    else { const { data: newUser, error } = await sb.from('users').insert(payload).select('id').single(); if (error) { toast('Error: ' + error.message); return }; if (session?.organizationId) notifyOrgManagers(session.organizationId, `New lab manager added: ${fullName}`, 'new_manager', session.userId); queueWelcomeEmail(sb, { name: fullName, toEmail: actualEmail, orgId: session?.organizationId, userId: newUser.id, password: form.password }); setShowModal(false); setEditStaff(null); setPendingIconSetup({ userId: newUser.id, displayName: fullName }) }
   }
   async function toggleActive(s) { await sb.from('users').update({ is_active: !s.is_active }).eq('id', s.id); load(); toast(s.is_active ? 'Deactivated.' : 'Activated.') }
   async function deleteStaff(id) {

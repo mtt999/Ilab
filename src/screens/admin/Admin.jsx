@@ -5,6 +5,7 @@ import Modal from '../../components/Modal'
 import { ALL_MODULES_META } from '../../components/DashboardIconPicker'
 import { PasswordStrengthHint } from '../../components/PasswordStrengthHint'
 import FloorPlanEditor from '../../components/FloorPlanEditor'
+import { queueWelcomeEmail } from '../../lib/welcomeEmail'
 
 async function createAuthUser(email, password) {
   const { data: { session: prev } } = await sb.auth.getSession()
@@ -543,11 +544,10 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
       })
       if (error) { toast('Error creating user: ' + error.message); return }
 
-      // Fetch the new user's ID to save icon prefs
-      if (role === 'student') {
-        const { data: newUser } = await sb.from('users').select('id').ilike('email', emailLC).maybeSingle()
-        if (newUser?.id) await saveIconPrefs(newUser.id)
-      }
+      // Fetch the new user's ID to save icon prefs and queue welcome email
+      const { data: newUser } = await sb.from('users').select('id').ilike('email', emailLC).maybeSingle()
+      if (role === 'student' && newUser?.id) await saveIconPrefs(newUser.id)
+      queueWelcomeEmail(sb, { name: name.trim(), toEmail: emailLC, orgId, userId: newUser?.id ?? null, password: tempPassword })
       setSavedCreds({ name: name.trim(), email: emailLC, password: tempPassword })
       onSaved()
     }

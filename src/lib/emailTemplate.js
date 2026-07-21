@@ -1,7 +1,24 @@
 const LOGO_URL = 'https://labhive.app/logo.svg'
 const APP_URL  = 'https://labhive.app/'
 
-export function buildEmailHtml({ title, body, ctaLabel = 'View in LabHive →', ctaUrl = APP_URL, prefsUrl = APP_URL, orgContact = null }) {
+export function buildEmailHtml({ title, body, ctaLabel = 'View in LabHive →', ctaUrl = APP_URL, prefsUrl = APP_URL, orgContact = null, credentials = null }) {
+  const credentialsBlock = credentials ? `
+        <tr>
+          <td style="padding:0 36px 20px;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;">
+              <div style="margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">Email</div>
+                <div style="font-size:14px;font-weight:600;color:#111827;font-family:monospace;">${escHtml(credentials.email)}</div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">Temporary Password</div>
+                <div style="font-size:14px;font-weight:600;color:#111827;font-family:monospace;">${escHtml(credentials.password)}</div>
+              </div>
+            </div>
+            <p style="margin:8px 0 0;font-size:12px;color:#9CA3AF;text-align:center;">These credentials expire in 72 hours if unused.</p>
+          </td>
+        </tr>` : ''
+
   const contactBlock = orgContact?.contact_email ? `
         <tr>
           <td style="padding:0 36px 24px;">
@@ -39,8 +56,14 @@ export function buildEmailHtml({ title, body, ctaLabel = 'View in LabHive →', 
           <td style="padding:32px 36px 24px;">
             <h2 style="margin:0 0 14px;font-size:17px;font-weight:700;color:#111827;line-height:1.4;">${escHtml(title)}</h2>
             <p style="margin:0 0 28px;font-size:14px;color:#4B5563;line-height:1.7;">${escHtml(body)}</p>
+          </td>
+        </tr>
 
-            <!-- CTA button -->
+        ${credentialsBlock}
+
+        <!-- CTA button -->
+        <tr>
+          <td style="padding:0 36px 24px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
               <tr><td align="center">
                 <a href="${ctaUrl}" style="display:inline-block;background:#1D9E75;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:13px 32px;border-radius:8px;letter-spacing:0.1px;">${escHtml(ctaLabel)}</a>
