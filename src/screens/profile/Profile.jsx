@@ -1551,7 +1551,8 @@ function StaffListPanel({ toast, session }) {
   useEffect(() => { load() }, [])
   async function load() { setLoading(true); let q = sb.from('users').select('*').in('role', ['user', 'admin']).order('name'); if (session?.organizationId) q = q.eq('organization_id', session.organizationId); const { data } = await q; setStaff(data || []); setLoading(false) }
   async function saveStaff(form, id) {
-    if (!form.name.trim()) { toast('Name is required.'); return }
+    const fullName = [form.firstName?.trim(), form.lastName?.trim()].filter(Boolean).join(' ')
+    if (!fullName) { toast('Name is required.'); return }
     const actualEmail = form.email?.trim().toLowerCase()
     if (!id) {
       if (!form.password) { toast('Password is required.'); return }
@@ -1561,7 +1562,7 @@ function StaffListPanel({ toast, session }) {
       const perr = passwordError(form.password)
       if (perr) { toast(perr); return }
     }
-    const payload = { name: form.name.trim(), email: actualEmail || null, phone: form.phone || null, role: 'user', is_active: true, admin_level: 0, pin: '', organization_id: session?.organizationId || null, must_change_password: !id && !!form.password, terms_accepted_version: null }
+    const payload = { name: fullName, email: actualEmail || null, phone: form.phone || null, role: 'user', is_active: true, admin_level: 0, pin: '', organization_id: session?.organizationId || null, must_change_password: !id && !!form.password, terms_accepted_version: null }
     if (!id && form.password && actualEmail) {
       try {
         const authUser = await createAuthUser(actualEmail, form.password)
@@ -1569,7 +1570,7 @@ function StaffListPanel({ toast, session }) {
       } catch (err) { toast('Error creating login account: ' + (err.message || 'Try again.')); return }
     }
     if (id) { const { error } = await sb.from('users').update(payload).eq('id', id); if (error) { toast('Error: ' + error.message); return }; setShowModal(false); setEditStaff(null); load(); toast('Staff saved ✓') }
-    else { const { data: newUser, error } = await sb.from('users').insert(payload).select('id').single(); if (error) { toast('Error: ' + error.message); return }; if (session?.organizationId) notifyOrgManagers(session.organizationId, `New lab manager added: ${form.name.trim()}`, 'new_manager', session.userId); setShowModal(false); setEditStaff(null); setPendingIconSetup({ userId: newUser.id, displayName: form.name.trim() }) }
+    else { const { data: newUser, error } = await sb.from('users').insert(payload).select('id').single(); if (error) { toast('Error: ' + error.message); return }; if (session?.organizationId) notifyOrgManagers(session.organizationId, `New lab manager added: ${fullName}`, 'new_manager', session.userId); setShowModal(false); setEditStaff(null); setPendingIconSetup({ userId: newUser.id, displayName: fullName }) }
   }
   async function toggleActive(s) { await sb.from('users').update({ is_active: !s.is_active }).eq('id', s.id); load(); toast(s.is_active ? 'Deactivated.' : 'Activated.') }
   async function deleteStaff(id) {
@@ -1579,7 +1580,32 @@ function StaffListPanel({ toast, session }) {
     await sb.from('users').delete().eq('id', id)
     setDeleting(false); setDeleteTarget(null); load(); toast('Member deleted.')
   }
-  async function setMemberRole(u, newRole) { await sb.from('users').update({ role: newRole, admin_level: 0 }).eq('id', u.id); toast(`${u.name} updated to ${newRole === 'user' ? 'Staff' : 'Student'} ✓`); load() }
+  // Role change must REMAP name/email columns: staff store name=full,
+  // email=login; lab users (legacy student convention) store email=firstName,
+  // name=lastName, phone=login email. Without this, a converted user shows
+  // their email as first name and loses their login email display.
+  async function setMemberRole(u, newRole) {
+    let payload = { role: newRole, admin_level: 0 }
+    if (newRole === 'student') {
+      const parts = (u.name || '').trim().split(/\s+/)
+      payload = {
+        ...payload,
+        email: parts[0] || null,                                  // first name
+        name: parts.slice(1).join(' ') || null,                   // last name
+        phone: u.email || u.phone || null,                        // login email
+      }
+    } else if (newRole === 'user') {
+      payload = {
+        ...payload,
+        name: [u.email, u.name].filter(Boolean).join(' ') || u.name,  // full name
+        email: u.phone || u.email || null,                            // login email
+        phone: null,
+      }
+    }
+    await sb.from('users').update(payload).eq('id', u.id)
+    toast(`${u.name} updated to ${newRole === 'user' ? 'Lab Manager' : 'Lab User'} ✓`)
+    load()
+  }
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -1627,7 +1653,13 @@ function StaffListPanel({ toast, session }) {
 }
 
 function StaffModal({ staff, onClose, onSave, onRoleChange }) {
-  const [form, setForm] = useState(staff ? { name: staff.name||'', password: '', email: staff.email||'', phone: staff.phone||'' } : { name: '', password: '', email: '', phone: '' })
+  // First/Last collected separately (stored joined in `name`) so role
+  // conversions to lab user can split reliably
+  const [form, setForm] = useState(() => {
+    if (!staff) return { firstName: '', lastName: '', password: '', email: '', phone: '' }
+    const parts = (staff.name || '').trim().split(/\s+/)
+    return { firstName: parts[0] || '', lastName: parts.slice(1).join(' '), password: '', email: staff.email || '', phone: staff.phone || '' }
+  })
   const [confirmDowngrade, setConfirmDowngrade] = useState(false)
 
   function handleRoleClick(opt) {
@@ -1641,9 +1673,10 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
       <div style={{ background:'var(--surface)', borderRadius:'var(--radius-lg)', padding:28, maxWidth:480, width:'100%', border:'1px solid var(--border)' }}>
         <div style={{ fontWeight:600, fontSize:16, marginBottom:20 }}>{staff ? 'Edit lab manager' : 'Add lab manager'}</div>
         <div className="grid-2">
-          <div className="field"><label>Full Name *</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} autoFocus /></div>
-          <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="netid@illinois.edu" /></div>
+          <div className="field"><label>First Name *</label><input value={form.firstName} onChange={e=>setForm(f=>({...f,firstName:e.target.value}))} placeholder="e.g. Sara" autoFocus /></div>
+          <div className="field"><label>Last Name *</label><input value={form.lastName} onChange={e=>setForm(f=>({...f,lastName:e.target.value}))} placeholder="e.g. Chen" /></div>
         </div>
+        <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="netid@illinois.edu" /></div>
         <div className="grid-2">
           <div className="field"><label>Password{staff ? ' (leave blank to keep)' : ' *'}</label><input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={staff ? 'Type to change' : 'e.g. Lab2026! — upper, lower, number, symbol'} /><PasswordStrengthHint password={form.password} /></div>
           <div className="field"><label>Phone</label><input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} /></div>
