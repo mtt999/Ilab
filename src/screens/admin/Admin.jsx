@@ -8,22 +8,22 @@ import FloorPlanEditor from '../../components/FloorPlanEditor'
 import { queueWelcomeEmail } from '../../lib/welcomeEmail'
 
 async function createAuthUser(email, password) {
+  const emailLC = email.trim().toLowerCase()
   const { data: { session: prev } } = await sb.auth.getSession()
-  const { data, error } = await sb.auth.signUp({ email: email.trim().toLowerCase(), password })
+  const { data, error } = await sb.auth.signUp({ email: emailLC, password })
   if (prev) await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token })
   if (error) {
     if (error.message?.toLowerCase().includes('already registered') || error.message?.toLowerCase().includes('already been registered')) {
-      // Check if it's an ACTIVE user in our DB — if so, block reuse
-      const { data: activeUser } = await sb.from('users').select('id, auth_id').ilike('email', email).eq('is_active', true).maybeSingle()
+      // Block reuse if an active DB row still exists
+      const { data: activeUser } = await sb.from('users').select('id').ilike('email', emailLC).eq('is_active', true).maybeSingle()
       if (activeUser) throw new Error('This email is already in use by an active account.')
-      // It's a deleted user — reset the auth password so the new temp password works
-      // Try to reset the password on the existing auth record
-      try { await sb.rpc('reset_auth_user_password', { p_email: email.trim().toLowerCase(), p_password: password }) } catch (_) {}
-      // Try to get the existing auth UUID to link the new DB row
-      let existingId = null
-      try { ({ data: existingId } = await sb.rpc('get_auth_user_id_by_email', { p_email: email.trim().toLowerCase() })) } catch (_) {}
-      // Return the existing auth id if found, otherwise null (user can still log in via custom auth)
-      return { id: existingId || null }
+      // Orphaned auth user — delete it then retry signUp so the new password is correct
+      const { data: orphanId } = await sb.rpc('get_auth_user_id_by_email', { p_email: emailLC })
+      if (orphanId) try { await sb.rpc('delete_auth_user', { p_auth_id: orphanId }) } catch (_) {}
+      const { data: retryData, error: retryError } = await sb.auth.signUp({ email: emailLC, password })
+      if (prev) await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token })
+      if (retryError) throw retryError
+      return retryData.user
     }
     throw error
   }

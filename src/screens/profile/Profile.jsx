@@ -41,11 +41,13 @@ async function createAuthUser(email, password) {
   if (prev) await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token })
   if (error) {
     if (error.message?.toLowerCase().includes('already registered') || error.message?.toLowerCase().includes('already been registered')) {
-      // Deleted user's auth account still exists — reset password so new temp password works
-      try { await sb.rpc('reset_auth_user_password', { p_email: emailLC, p_password: password }) } catch (_) {}
-      let existingId = null
-      try { ({ data: existingId } = await sb.rpc('get_auth_user_id_by_email', { p_email: emailLC })) } catch (_) {}
-      return { id: existingId || null }
+      // Orphaned auth user — delete it then retry signUp so the new password is correct
+      const { data: orphanId } = await sb.rpc('get_auth_user_id_by_email', { p_email: emailLC })
+      if (orphanId) try { await sb.rpc('delete_auth_user', { p_auth_id: orphanId }) } catch (_) {}
+      const { data: retryData, error: retryError } = await sb.auth.signUp({ email: emailLC, password })
+      if (prev) await sb.auth.setSession({ access_token: prev.access_token, refresh_token: prev.refresh_token })
+      if (retryError) throw retryError
+      return retryData.user
     }
     throw error
   }
