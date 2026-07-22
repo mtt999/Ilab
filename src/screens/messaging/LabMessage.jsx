@@ -66,6 +66,70 @@ function isImageFile(name, url) {
   return IMG_EXT.test(name || '') || IMG_EXT.test((url || '').split('?')[0])
 }
 
+// Students store firstName in email col, lastName in name col
+function getUserDisplayName(u) {
+  if (!u) return ''
+  if (u.role === 'student') return [u.email, u.name].filter(Boolean).join(' ').trim() || 'Lab User'
+  return u.name || '—'
+}
+function getRoleLabel(u) {
+  if (u.role === 'admin') return 'Admin'
+  if (u.role === 'student') return 'Lab User'
+  return 'Staff'
+}
+
+function UserSearchDropdown({ users, value, onChange, isStudent }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+
+  useEffect(() => {
+    function onDown(e) { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
+  useEffect(() => {
+    if (!value) setQuery('')
+    else { const u = users.find(x => x.id === value); if (u) setQuery(getUserDisplayName(u)) }
+  }, [value, users])
+
+  const q = query.toLowerCase()
+  const filtered = q ? users.filter(u => getUserDisplayName(u).toLowerCase().includes(q) || getRoleLabel(u).toLowerCase().includes(q)) : users
+
+  function pick(u) { onChange(u?.id || ''); setQuery(u ? getUserDisplayName(u) : ''); setOpen(false) }
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <input
+        value={query}
+        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange('') }}
+        onFocus={() => setOpen(true)}
+        placeholder={isStudent ? 'Search by name…' : 'Search by name, or leave blank to broadcast…'}
+        autoComplete="off"
+      />
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 200, maxHeight: 220, overflowY: 'auto' }}>
+          {!isStudent && (
+            <div onClick={() => pick(null)} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 500, color: 'var(--accent)', background: !value ? 'var(--accent-light)' : undefined }}>
+              — All staff (broadcast) —
+            </div>
+          )}
+          {filtered.length === 0
+            ? <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text3)' }}>No users found</div>
+            : filtered.map(u => (
+              <div key={u.id} onClick={() => pick(u)} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: value === u.id ? 'var(--accent-light)' : undefined }}>
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{getUserDisplayName(u)}</span>
+                <span style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 4, padding: '2px 6px' }}>{getRoleLabel(u)}</span>
+              </div>
+            ))
+          }
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Profile photo → gender scientist emoji → initial letter (same fallback
 // chain as the Training hub's UserAvatar for app-wide consistency)
 function Avatar({ name, user, size = 32 }) {
@@ -113,7 +177,7 @@ function NewConvModal({ session, staff, onSent, onClose }) {
     const { error } = await sb.from('re_messages').insert({
       sender_id: session.userId, sender_name: session.username,
       receiver_id: form.receiverId || null,
-      receiver_name: receiver?.name || (!form.receiverId ? 'All Staff' : null),
+      receiver_name: receiver ? getUserDisplayName(receiver) : (!form.receiverId ? 'All Staff' : null),
       subject: form.subject || null, body: form.body.trim(),
       organization_id: session?.organizationId || null,
       ...(fileUrl ? { file_url: fileUrl, file_name: fileName } : {}),
@@ -137,10 +201,7 @@ function NewConvModal({ session, staff, onSent, onClose }) {
         </div>
         <div className="field">
           <label>To {isStudent ? '*' : '(leave blank to broadcast to all staff)'}</label>
-          <select value={form.receiverId} onChange={e => setForm(f => ({ ...f, receiverId: e.target.value }))}>
-            <option value="">— {isStudent ? 'Select recipient' : 'All staff (broadcast)'} —</option>
-            {staff.map(s => <option key={s.id} value={s.id}>{s.name} ({s.role === 'admin' ? 'Admin' : 'Staff'})</option>)}
-          </select>
+          <UserSearchDropdown users={staff} value={form.receiverId} onChange={id => setForm(f => ({ ...f, receiverId: id }))} isStudent={isStudent} />
         </div>
         <div className="field">
           <label>Subject (optional)</label>
@@ -226,9 +287,9 @@ export default function LabMessage() {
   }, [selectedId, selectedConv?.replies?.length])
 
   async function loadStaff() {
-    // Lab managers see lab managers + org admins; lab users and org admins see only lab managers
-    const roles = isStaff ? ['user', 'admin'] : ['user']
-    let q = sb.from('users').select('id, name, role').in('role', roles).eq('is_active', true).order('name')
+    // Students message staff/admins only; staff/admins can message everyone incl. lab users
+    const roles = (isAdmin || isStaff) ? ['user', 'admin', 'student'] : ['user', 'admin']
+    let q = sb.from('users').select('id, name, email, role').in('role', roles).eq('is_active', true).order('name')
     if (session?.organizationId && session?.userId) q = q.eq('organization_id', session.organizationId)
     const { data } = await q
     setStaff(data || [])
