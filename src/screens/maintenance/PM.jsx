@@ -1377,7 +1377,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
 
       {showAddTask && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 18, border: '1px solid var(--border)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', overflowX: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 0' }}>
               <div style={{ fontWeight: 700, fontSize: 17 }}>Add new task</div>
@@ -1410,19 +1410,21 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
               {/* Private toggle */}
               <div
                 onClick={() => setNewTask(prev => ({ ...prev, is_private: !prev.is_private }))}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.is_private ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s' }}
+                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.is_private ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s' }}
               >
-                <input
-                  type="checkbox"
-                  checked={newTask.is_private}
-                  onClick={e => e.stopPropagation()}
-                  onChange={e => setNewTask(prev => ({ ...prev, is_private: e.target.checked }))}
-                  style={{ marginTop: 2, flexShrink: 0, accentColor: 'var(--accent)' }}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>🔒 Private task</div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2, lineHeight: 1.4 }}>
-                    {isStudent ? 'Hidden from group members.' : 'Others see this as "Personal task" — title and notes stay private.'}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={newTask.is_private}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => setNewTask(prev => ({ ...prev, is_private: e.target.checked }))}
+                    style={{ marginTop: 2, flexShrink: 0, accentColor: 'var(--accent)' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>🔒 Private task</div>
+                    <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2, lineHeight: 1.4 }}>
+                      {isStudent ? 'Hidden from group members.' : 'Others see this as "Personal task" — title and notes stay private.'}
+                    </div>
                   </div>
                 </div>
               </div>
