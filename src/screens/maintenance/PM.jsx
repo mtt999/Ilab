@@ -232,7 +232,8 @@ function MiniCalendar({ tasks, onDayClick, initialCal, outOfLabDays }) {
 // SQL: CREATE TABLE IF NOT EXISTS user_out_of_lab (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, user_id UUID, date DATE NOT NULL, note TEXT, organization_id UUID, login_mode TEXT DEFAULT 'team', created_at TIMESTAMPTZ DEFAULT NOW()); ALTER TABLE user_out_of_lab ENABLE ROW LEVEL SECURITY; CREATE POLICY "allow_all" ON user_out_of_lab FOR ALL USING (true) WITH CHECK (true);
 function OutOfLabPanel({ userId, isSolo, orgId, onChanged }) {
   const [entries, setEntries] = useState([])
-  const [newDate, setNewDate] = useState('')
+  const [newDateStart, setNewDateStart] = useState('')
+  const [newDateEnd, setNewDateEnd] = useState('')
   const [newNote, setNewNote] = useState('')
   const [saving, setSaving] = useState(false)
   const { toast } = useAppStore()
@@ -245,14 +246,28 @@ function OutOfLabPanel({ userId, isSolo, orgId, onChanged }) {
     setEntries(data || [])
   }
 
+  function datesBetween(start, end) {
+    const dates = []
+    const cur = new Date(start + 'T12:00:00')
+    const last = new Date((end || start) + 'T12:00:00')
+    while (cur <= last) {
+      dates.push(cur.toISOString().split('T')[0])
+      cur.setDate(cur.getDate() + 1)
+    }
+    return dates
+  }
+
   async function add() {
-    if (!newDate) { toast('Pick a date first.'); return }
+    if (!newDateStart) { toast('Pick a start date first.'); return }
+    if (newDateEnd && newDateEnd < newDateStart) { toast('End date must be after start date.'); return }
     setSaving(true)
-    const { data, error } = await sb.from('user_out_of_lab').insert({ user_id: userId, date: newDate, note: newNote.trim() || null, organization_id: isSolo ? null : orgId, login_mode: isSolo ? 'solo' : 'team' }).select().single()
+    const dates = datesBetween(newDateStart, newDateEnd)
+    const rows = dates.map(d => ({ user_id: userId, date: d, note: newNote.trim() || null, organization_id: isSolo ? null : orgId, login_mode: isSolo ? 'solo' : 'team' }))
+    const { data, error } = await sb.from('user_out_of_lab').insert(rows).select()
     if (error) { toast('Could not save: ' + error.message); setSaving(false); return }
-    setEntries(prev => [...prev, data].sort((a, b) => a.date.localeCompare(b.date)))
-    setNewDate(''); setNewNote('')
-    toast('Out of lab day saved.')
+    setEntries(prev => [...prev, ...(data || [])].sort((a, b) => a.date.localeCompare(b.date)))
+    setNewDateStart(''); setNewDateEnd(''); setNewNote('')
+    toast(dates.length > 1 ? `${dates.length} days marked as out of lab.` : 'Out of lab day saved.')
     setSaving(false)
     onChanged?.()
   }
@@ -264,15 +279,22 @@ function OutOfLabPanel({ userId, isSolo, orgId, onChanged }) {
     onChanged?.()
   }
 
+  const inputStyle = { fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', width: 'auto' }
+
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, marginTop: 14 }}>
       <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Out of Lab</div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: newDate ? 8 : 0 }}>
-        <input type="date" value={newDate} min={today} onChange={e => setNewDate(e.target.value)} style={{ flex: 1, fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
-        <button className="btn btn-sm" onClick={add} disabled={saving || !newDate} style={{ fontSize: 11, flexShrink: 0 }}>+ Add</button>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>From</span>
+        <input type="date" value={newDateStart} min={today} onChange={e => { setNewDateStart(e.target.value); if (newDateEnd && e.target.value > newDateEnd) setNewDateEnd('') }} style={{ ...inputStyle, flex: 1 }} />
       </div>
-      {newDate && (
-        <input value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Reason (optional)" style={{ width: '100%', fontSize: 12, padding: '4px 8px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', marginBottom: 8, boxSizing: 'border-box' }} />
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: newDateStart ? 6 : 0 }}>
+        <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>To</span>
+        <input type="date" value={newDateEnd} min={newDateStart || today} onChange={e => setNewDateEnd(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+        <button className="btn btn-sm" onClick={add} disabled={saving || !newDateStart} style={{ fontSize: 11, flexShrink: 0 }}>+ Add</button>
+      </div>
+      {newDateStart && (
+        <input value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Reason (optional)" style={{ ...inputStyle, width: '100%', marginBottom: 8, boxSizing: 'border-box' }} />
       )}
       {entries.length === 0
         ? <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', padding: '8px 0' }}>No upcoming out-of-lab days.</div>
