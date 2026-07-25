@@ -7,6 +7,7 @@ import { queueWelcomeEmail } from '../../lib/welcomeEmail'
 import { useAppStore } from '../../store/useAppStore'
 import { sb } from '../../lib/supabase'
 import { useState, useEffect, useRef } from 'react'
+import { IconEye, IconEyeOff } from '../../components/Icons'
 import DashboardIconPicker, { ALL_MODULES_META, PINNED_MODULES, STAFF_PINNED_MODULES } from '../../components/DashboardIconPicker'
 import StudentIconManager from '../../components/StudentIconManager'
 import TeammatesPanel from '../../components/TeammatesPanel'
@@ -76,6 +77,8 @@ function SoloProfile({ session }) {
   const [pinForm, setPinForm] = useState({ current: '', newPin: '', confirm: '' })
   const [pinError, setPinError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [showPinCur, setShowPinCur] = useState(false)
+  const [showPinNew, setShowPinNew] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef(null)
 
@@ -248,14 +251,32 @@ function SoloProfile({ session }) {
         <div className="card">
           <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Change password</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Min. 8 characters with uppercase, lowercase &amp; symbol.</div>
-          <div className="field"><label>Current password</label><input type="password" autoComplete="current-password" value={pinForm.current} onChange={e => { setPinForm(f => ({ ...f, current: e.target.value })); setPinError('') }} /></div>
-          <div className="grid-2">
-            <div className="field"><label>New password</label><input type="password" autoComplete="new-password" value={pinForm.newPin} onChange={e => { setPinForm(f => ({ ...f, newPin: e.target.value })); setPinError('') }} /></div>
-            <div className="field"><label>Confirm</label><input type="password" autoComplete="new-password" value={pinForm.confirm} onChange={e => { setPinForm(f => ({ ...f, confirm: e.target.value })); setPinError('') }} /></div>
-          </div>
-          <PasswordStrengthHint password={pinForm.newPin} />
-          {pinError && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {pinError}</div>}
-          <button className="btn btn-primary" onClick={savePassword} disabled={!pinForm.current || !pinForm.newPin || !pinForm.confirm}>Update password</button>
+          <form onSubmit={e => { e.preventDefault(); savePassword() }} autoComplete="on">
+            <div className="field">
+              <label>Current password</label>
+              <div style={{ position: 'relative' }}>
+                <input type={showPinCur ? 'text' : 'password'} autoComplete="current-password" value={pinForm.current} onChange={e => { setPinForm(f => ({ ...f, current: e.target.value })); setPinError('') }} placeholder="••••••••" style={{ paddingRight: 40 }} />
+                <button type="button" onClick={() => setShowPinCur(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                  {showPinCur ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                </button>
+              </div>
+            </div>
+            <div className="grid-2">
+              <div className="field">
+                <label>New password</label>
+                <div style={{ position: 'relative' }}>
+                  <input type={showPinNew ? 'text' : 'password'} autoComplete="new-password" value={pinForm.newPin} onChange={e => { setPinForm(f => ({ ...f, newPin: e.target.value })); setPinError('') }} style={{ paddingRight: 40 }} />
+                  <button type="button" onClick={() => setShowPinNew(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                    {showPinNew ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div className="field"><label>Confirm</label><input type="password" autoComplete="new-password" value={pinForm.confirm} onChange={e => { setPinForm(f => ({ ...f, confirm: e.target.value })); setPinError('') }} /></div>
+            </div>
+            <PasswordStrengthHint password={pinForm.newPin} />
+            {pinError && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {pinError}</div>}
+            <button type="submit" className="btn btn-primary" disabled={!pinForm.current || !pinForm.newPin || !pinForm.confirm}>Update password</button>
+          </form>
         </div>
       )}
 
@@ -1105,6 +1126,9 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
   const [error, setError] = useState('')
   const [notifEmail, setNotifEmail] = useState('')
   const [emailSaving, setEmailSaving] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
     if (!isSuperAdmin) return
@@ -1154,12 +1178,38 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
       <div className="card">
         <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>🔑 Account Settings</div>
         <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>Update the admin password.</div>
-        <div className="field"><label>Current password</label><input type="password" autoComplete="current-password" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} placeholder="••••••••" /></div>
-        <div className="field"><label>New password</label><input type="password" autoComplete="new-password" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" /></div>
-        <PasswordStrengthHint password={form.newPassword} />
-        <div className="field"><label>Confirm new password</label><input type="password" autoComplete="new-password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="••••••••" /></div>
-        {error && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {error}</div>}
-        <button className="btn btn-primary" onClick={savePassword} disabled={saving}>{saving ? 'Saving…' : 'Update password'}</button>
+        <form onSubmit={e => { e.preventDefault(); savePassword() }} autoComplete="on">
+          <div className="field">
+            <label>Current password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showCurrent ? 'text' : 'password'} autoComplete="current-password" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} placeholder="••••••••" style={{ paddingRight: 40 }} />
+              <button type="button" onClick={() => setShowCurrent(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                {showCurrent ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+              </button>
+            </div>
+          </div>
+          <div className="field">
+            <label>New password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showNew ? 'text' : 'password'} autoComplete="new-password" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" style={{ paddingRight: 40 }} />
+              <button type="button" onClick={() => setShowNew(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                {showNew ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+              </button>
+            </div>
+          </div>
+          <PasswordStrengthHint password={form.newPassword} />
+          <div className="field">
+            <label>Confirm new password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showConfirm ? 'text' : 'password'} autoComplete="new-password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="••••••••" style={{ paddingRight: 40 }} />
+              <button type="button" onClick={() => setShowConfirm(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                {showConfirm ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+              </button>
+            </div>
+          </div>
+          {error && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {error}</div>}
+          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Update password'}</button>
+        </form>
       </div>
     </div>
   )
@@ -1480,6 +1530,7 @@ function StudentModal({ student, session, onClose, onSave }) {
     nickname: student.nickname || '',
   } : { firstName: '', lastName: '', emailAddr: '', supervisor: '', password: '', year_semester: '', project_group: '', selectedProjectIds: [], nickname: '' })
   const [orgProjects, setOrgProjects] = useState([])
+  const [showPw, setShowPw] = useState(false)
 
   useEffect(() => {
     if (!session?.organizationId) return
@@ -1501,7 +1552,7 @@ function StudentModal({ student, session, onClose, onSave }) {
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'var(--surface)', borderRadius:'var(--radius-lg)', padding:28, maxWidth:520, width:'100%', maxHeight:'90vh', overflowY:'auto', border:'1px solid var(--border)' }}>
+      <form onSubmit={e => e.preventDefault()} autoComplete="on" style={{ background:'var(--surface)', borderRadius:'var(--radius-lg)', padding:28, maxWidth:520, width:'100%', maxHeight:'90vh', overflowY:'auto', border:'1px solid var(--border)' }}>
         <div style={{ fontWeight:600, fontSize:16, marginBottom:20 }}>{student ? 'Edit lab user' : 'Add lab user'}</div>
         <div className="grid-2">
           <div className="field"><label>First Name *</label><input value={form.firstName} onChange={e=>setForm(f=>({...f,firstName:e.target.value}))} placeholder="e.g. Ivan" autoFocus /></div>
@@ -1513,7 +1564,12 @@ function StudentModal({ student, session, onClose, onSave }) {
         </div>
         <div className="field">
           <label>Password{student ? ' (leave blank to keep current)' : ' *'}</label>
-          <input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={student ? 'Leave blank to keep unchanged' : 'e.g. Lab2026! — upper, lower, number, symbol'} />
+          <div style={{ position: 'relative' }}>
+            <input type={showPw ? 'text' : 'password'} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={student ? 'Leave blank to keep unchanged' : 'e.g. Lab2026! — upper, lower, number, symbol'} autoComplete="new-password" style={{ paddingRight: 40 }} />
+            <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              {showPw ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+            </button>
+          </div>
           <PasswordStrengthHint password={form.password} />
         </div>
         <div className="grid-2">
@@ -1544,10 +1600,10 @@ function StudentModal({ student, session, onClose, onSave }) {
           </div>
         )}
         <div style={{ display:'flex', gap:10, marginTop:8 }}>
-          <button className="btn btn-primary" onClick={()=>onSave(form, student?.id)}>Save</button>
-          <button className="btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={()=>onSave(form, student?.id)}>Save</button>
+          <button type="button" className="btn" onClick={onClose}>Cancel</button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
@@ -1681,6 +1737,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
     return { firstName: parts[0] || '', lastName: parts.slice(1).join(' '), password: '', email: staff.email || '', phone: staff.phone || '' }
   })
   const [confirmDowngrade, setConfirmDowngrade] = useState(false)
+  const [showPw, setShowPw] = useState(false)
 
   function handleRoleClick(opt) {
     if (opt.role === staff.role) return
@@ -1690,7 +1747,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'var(--surface)', borderRadius:'var(--radius-lg)', padding:28, maxWidth:480, width:'100%', border:'1px solid var(--border)' }}>
+      <form onSubmit={e => e.preventDefault()} autoComplete="on" style={{ background:'var(--surface)', borderRadius:'var(--radius-lg)', padding:28, maxWidth:480, width:'100%', border:'1px solid var(--border)' }}>
         <div style={{ fontWeight:600, fontSize:16, marginBottom:20 }}>{staff ? 'Edit lab manager' : 'Add lab manager'}</div>
         <div className="grid-2">
           <div className="field"><label>First Name *</label><input value={form.firstName} onChange={e=>setForm(f=>({...f,firstName:e.target.value}))} placeholder="e.g. Sara" autoFocus /></div>
@@ -1698,7 +1755,16 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
         </div>
         <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="netid@illinois.edu" /></div>
         <div className="grid-2">
-          <div className="field"><label>Password{staff ? ' (leave blank to keep)' : ' *'}</label><input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={staff ? 'Type to change' : 'e.g. Lab2026! — upper, lower, number, symbol'} /><PasswordStrengthHint password={form.password} /></div>
+          <div className="field">
+            <label>Password{staff ? ' (leave blank to keep)' : ' *'}</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showPw ? 'text' : 'password'} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={staff ? 'Type to change' : 'e.g. Lab2026! — upper, lower, number, symbol'} autoComplete="new-password" style={{ paddingRight: 40 }} />
+              <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                {showPw ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+              </button>
+            </div>
+            <PasswordStrengthHint password={form.password} />
+          </div>
           <div className="field"><label>Phone</label><input value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} /></div>
         </div>
         {staff && onRoleChange && (
@@ -1729,10 +1795,10 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
           </div>
         )}
         <div style={{ display:'flex', gap:10, marginTop:8 }}>
-          <button className="btn btn-primary" onClick={()=>onSave(form, staff?.id)}>Save</button>
-          <button className="btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={()=>onSave(form, staff?.id)}>Save</button>
+          <button type="button" className="btn" onClick={onClose}>Cancel</button>
         </div>
-      </div>
+      </form>
     </div>
   )
 }
@@ -1942,6 +2008,8 @@ function PasswordChangePanel({ session, toast }) {
   const [form, setForm] = useState({ current: '', newPin: '', confirm: '' })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [showCur, setShowCur] = useState(false)
+  const [showNew, setShowNew] = useState(false)
 
   async function save() {
     setError('')
@@ -1963,14 +2031,32 @@ function PasswordChangePanel({ session, toast }) {
     <div className="card" style={{ maxWidth: 480 }}>
       <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Change password</div>
       <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>Min. 8 characters with uppercase, lowercase &amp; symbol.</div>
-      <div className="field"><label>Current password</label><input type="password" autoComplete="current-password" value={form.current} onChange={e => { setForm(f => ({ ...f, current: e.target.value })); setError('') }} /></div>
-      <div className="grid-2">
-        <div className="field"><label>New password</label><input type="password" autoComplete="new-password" value={form.newPin} onChange={e => { setForm(f => ({ ...f, newPin: e.target.value })); setError('') }} /></div>
-        <div className="field"><label>Confirm</label><input type="password" autoComplete="new-password" value={form.confirm} onChange={e => { setForm(f => ({ ...f, confirm: e.target.value })); setError('') }} /></div>
-      </div>
-      <PasswordStrengthHint password={form.newPin} />
-      {error && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {error}</div>}
-      <button className="btn btn-primary" onClick={save} disabled={saving || !form.current || !form.newPin || !form.confirm}>{saving ? 'Saving…' : 'Update password'}</button>
+      <form onSubmit={e => { e.preventDefault(); save() }} autoComplete="on">
+        <div className="field">
+          <label>Current password</label>
+          <div style={{ position: 'relative' }}>
+            <input type={showCur ? 'text' : 'password'} autoComplete="current-password" value={form.current} onChange={e => { setForm(f => ({ ...f, current: e.target.value })); setError('') }} placeholder="••••••••" style={{ paddingRight: 40 }} />
+            <button type="button" onClick={() => setShowCur(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              {showCur ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div className="grid-2">
+          <div className="field">
+            <label>New password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showNew ? 'text' : 'password'} autoComplete="new-password" value={form.newPin} onChange={e => { setForm(f => ({ ...f, newPin: e.target.value })); setError('') }} style={{ paddingRight: 40 }} />
+              <button type="button" onClick={() => setShowNew(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                {showNew ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+              </button>
+            </div>
+          </div>
+          <div className="field"><label>Confirm</label><input type="password" autoComplete="new-password" value={form.confirm} onChange={e => { setForm(f => ({ ...f, confirm: e.target.value })); setError('') }} /></div>
+        </div>
+        <PasswordStrengthHint password={form.newPin} />
+        {error && <div style={{ fontSize: 13, color: 'var(--accent2)', marginBottom: 12 }}>⚠️ {error}</div>}
+        <button type="submit" className="btn btn-primary" disabled={saving || !form.current || !form.newPin || !form.confirm}>{saving ? 'Saving…' : 'Update password'}</button>
+      </form>
     </div>
   )
 }

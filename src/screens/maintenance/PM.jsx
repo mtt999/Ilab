@@ -1408,9 +1408,9 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
                 <textarea rows={3} style={{ resize: 'vertical' }} value={newTask.notes} onChange={e => setNewTask({ ...newTask, notes: e.target.value })} placeholder="Optional notes…" />
               </div>
               {/* Private toggle */}
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.is_private ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.is_private ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s', width: '100%', boxSizing: 'border-box' }}>
                 <input type="checkbox" checked={newTask.is_private} onChange={e => setNewTask({ ...newTask, is_private: e.target.checked })} style={{ marginTop: 2, flexShrink: 0, accentColor: 'var(--accent)' }} />
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>🔒 Private task</div>
                   <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2, lineHeight: 1.4 }}>
                     {isStudent ? 'Hidden from group members.' : 'Others see this as "Personal task" — title and notes stay private.'}
