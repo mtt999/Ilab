@@ -948,7 +948,7 @@ function TaskModal({ task, onClose, onUpdate, onDelete, currentUserId, currentUs
   )
 }
 
-function Overview({ userId, isOwnerAdmin, isSolo, orgId }) {
+function Overview({ userId, isOwnerAdmin, isSolo, orgId, onTaskClick }) {
   const [tasks, setTasks] = useState([])
   const [staffMap, setStaffMap] = useState({})
   const [loading, setLoading] = useState(true)
@@ -1050,7 +1050,9 @@ function Overview({ userId, isOwnerAdmin, isSolo, orgId }) {
             📅 Upcoming (next 7 days) <span style={{ background: '#e3f2fd', color: BLUE, borderRadius: 99, padding: '1px 8px', fontSize: 12 }}>{upcoming.length}</span>
           </div>
           {upcoming.length === 0 ? <div style={{ fontSize: 13, color: 'var(--text3)' }}>No tasks due in the next 7 days.</div> : upcoming.map(t => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid var(--surface2)' }}>
+            <div key={t.id} onClick={() => onTaskClick?.(t)} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid var(--surface2)', cursor: 'pointer', borderRadius: 8, padding: '8px 6px', margin: '0 -6px 2px', transition: 'background 0.13s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: progressColor(t.progress || 0), flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
@@ -1072,7 +1074,9 @@ function Overview({ userId, isOwnerAdmin, isSolo, orgId }) {
             ⚠ Overdue <span style={{ background: '#fde8e8', color: '#c84b2f', borderRadius: 99, padding: '1px 8px', fontSize: 12 }}>{overdueTasks.length}</span>
           </div>
           {overdueTasks.length === 0 ? <div style={{ fontSize: 13, color: '#2e7d32' }}>All your tasks are on track! ✓</div> : overdueTasks.map(t => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid var(--surface2)' }}>
+            <div key={t.id} onClick={() => onTaskClick?.(t)} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid var(--surface2)', cursor: 'pointer', borderRadius: 8, padding: '8px 6px', margin: '0 -6px 2px', transition: 'background 0.13s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#fff5f5'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c84b2f', flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
@@ -2800,7 +2804,7 @@ export default function PM() {
         </div>
         <HelpPanel screen="pm" />
       </div>
-      {activeTab === 'overview'  && <Overview userId={userId} isOwnerAdmin={isOwnerAdmin} isSolo={isSolo} orgId={orgId} />}
+      {activeTab === 'overview'  && <Overview userId={userId} isOwnerAdmin={isOwnerAdmin} isSolo={isSolo} orgId={orgId} onTaskClick={task => { setPendingTask(task); setSidebarSubTab('tasks') }} />}
       {activeTab === 'tasks'     && <MyTasks userId={userId} isAdmin={isAdmin || isStudent} isOwnerAdmin={isOwnerAdmin} userName={userName} isSolo={isSolo} orgId={orgId} isStudent={isStudent} pendingTask={pendingTask} onPendingTaskConsumed={() => setPendingTask(null)} onGroupChange={gid => { setStudentGroupId(gid || null); if (!gid && activeTab === 'team') setSidebarSubTab('tasks') }} />}
       {activeTab === 'team'      && !isStudent && <Team orgId={orgId} isSolo={isSolo} />}
       {activeTab === 'team'      && isStudent && studentGroupId && <StudentTeamView userId={userId} groupId={studentGroupId} orgId={orgId} />}
