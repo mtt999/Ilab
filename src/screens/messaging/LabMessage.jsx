@@ -61,6 +61,16 @@ function sameDay(a, b) {
   return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate()
 }
 
+const CHAT_BACKGROUNDS = [
+  { key: 'default',   label: 'Default',   preview: '#f3f4f6', style: { background: 'var(--bg)' } },
+  { key: 'sky',       label: 'Sky',       preview: '#bae6fd', style: { background: 'linear-gradient(160deg,#e0f2fe 0%,#f0f9ff 100%)' } },
+  { key: 'mint',      label: 'Mint',      preview: '#6ee7b7', style: { background: 'linear-gradient(160deg,#d1fae5 0%,#ecfdf5 100%)' } },
+  { key: 'warm',      label: 'Warm',      preview: '#fcd34d', style: { background: 'linear-gradient(160deg,#fef3c7 0%,#fffbeb 100%)' } },
+  { key: 'lavender',  label: 'Lavender',  preview: '#c4b5fd', style: { background: 'linear-gradient(160deg,#ede9fe 0%,#f5f3ff 100%)' } },
+  { key: 'slate',     label: 'Slate',     preview: '#475569', style: { background: 'linear-gradient(160deg,#1e293b 0%,#0f172a 100%)' } },
+  { key: 'dotgrid',   label: 'Dot Grid',  preview: '#94a3b8', style: { background: '#f8fafc', backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' } },
+]
+
 const IMG_EXT = /\.(png|jpe?g|gif|webp|bmp|svg)$/i
 function isImageFile(name, url) {
   return IMG_EXT.test(name || '') || IMG_EXT.test((url || '').split('?')[0])
@@ -241,6 +251,8 @@ export default function LabMessage() {
   const [confirmAction, setConfirmAction] = useState(null) // { type:'conv', conv } | { type:'all' }
   const [listSearch, setListSearch] = useState('')
   const [unreadOnly, setUnreadOnly] = useState(false)
+  const [showBgPicker, setShowBgPicker] = useState(false)
+  const [chatBg, setChatBg] = useState(() => localStorage.getItem('ilab_chat_bg') || 'default')
   const threadRef = useRef(null)
   const replyFileRef = useRef(null)
   const textareaRef = useRef(null)
@@ -513,7 +525,7 @@ export default function LabMessage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 68px)' }}>
       {/* Page header */}
       <div className={mobileShowThread ? 'msg-header-hide-mobile' : ''} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10, flexShrink: 0 }}>
         <div>
@@ -644,6 +656,34 @@ export default function LabMessage() {
                 <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
                   {selectedConv.replies.length + 1} msg{selectedConv.replies.length !== 0 ? 's' : ''}
                 </div>
+                {/* Background picker button */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <button
+                    onClick={() => setShowBgPicker(v => !v)}
+                    title="Chat background"
+                    style={{ border: '1px solid var(--border)', background: 'var(--surface2)', borderRadius: 8, padding: '4px 10px', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text2)' }}
+                  >
+                    🎨
+                  </button>
+                  {showBgPicker && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, zIndex: 200, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', minWidth: 220 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Chat background</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {CHAT_BACKGROUNDS.map(bg => (
+                          <button
+                            key={bg.key}
+                            onClick={() => { setChatBg(bg.key); localStorage.setItem('ilab_chat_bg', bg.key); setShowBgPicker(false) }}
+                            title={bg.label}
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                          >
+                            <div style={{ width: 36, height: 36, borderRadius: 8, background: bg.preview, border: chatBg === bg.key ? '2px solid var(--accent)' : '2px solid var(--border)', boxShadow: chatBg === bg.key ? '0 0 0 2px var(--accent-light)' : 'none', transition: 'all 0.15s' }} />
+                            <span style={{ fontSize: 10, color: chatBg === bg.key ? 'var(--accent)' : 'var(--text3)', fontWeight: chatBg === bg.key ? 700 : 400 }}>{bg.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {isOrgAdmin && (
                   <button
                     onClick={() => setConfirmAction({ type: 'conv', conv: selectedConv })}
@@ -656,7 +696,7 @@ export default function LabMessage() {
               </div>
 
               {/* Bubbles */}
-              <div ref={threadRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div ref={threadRef} onClick={() => showBgPicker && setShowBgPicker(false)} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 6, ...CHAT_BACKGROUNDS.find(b => b.key === chatBg)?.style }}>
                 {[selectedConv, ...selectedConv.replies].map((m, i, all) => {
                   // Admins viewing a conversation they didn't participate in:
                   // put the conversation initiator on the right so both sides are visible.

@@ -34,6 +34,25 @@ not a full transcript of every conversation.
 
 ## Log
 
+### 2026-07-25 — Lab Messages: delete convs, bubble fix, chat background picker, Sara
+
+**Tool used:** Claude Code
+
+**What I asked for (summary, not full transcript):**
+- Remove the duplicate "+ New" button from the top-right of Lab Messages (keep sidebar one)
+- Give org admin the ability to delete conversations one-by-one or all at once
+- Fix bubble alignment in Lab Messages for org admin viewing others' conversations (all bubbles were showing on the left)
+- Add optional chat background picker (7 themes) for all users, saved to localStorage
+- Make the chat window shorter so Sara's floating icon fits on the page
+
+**Resulting changes (files/features affected):**
+- `src/screens/messaging/LabMessage.jsx` — removed page-header + New button; `isOrgAdmin` flag; `deleteConv()` / `deleteAllConvs()` with confirm modal; 🗑 Delete button in thread header and "Delete all" in sidebar footer; `adminObserving` flag + corrected `isOwn` logic; `CHAT_BACKGROUNDS` constant with 7 themes; 🎨 picker button + popover in thread header; background applied to bubbles container; height changed to `calc(100% - 68px)` to leave room for Sara
+- `src/components/Layout.jsx` — removed `screen !== 'remessages'` Sara exclusion
+
+**Related git commit(s):** (current session)
+
+---
+
 ### 2026-07-25 — App versioning, Overview interactivity, provenance kit (v2.0.0)
 
 **Tool used:** Claude Code

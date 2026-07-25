@@ -213,4 +213,86 @@ Files added:
 
 ---
 
+## Session 3 — July 25, 2026
+
+### Remove duplicate + New button in Lab Messages
+
+> "remove the big +new icon at top right of lab message icon. there is
+> another one in the left sidebar next to conversations title."
+
+Removed the page-header "+ New Conversation" button from the top-right area
+of the LabMessage screen. The sidebar "+ New" button (next to "Conversations"
+title) is the primary entry point and was kept.
+
+---
+
+### Org admin: delete conversations in Lab Messages
+
+> "give access to org admin for deleting chat in lab message. only org admin
+> can do that either one by one or all in once"
+
+`isOrgAdmin = isAdmin && !!session?.userId` (excludes super admin whose
+`userId === null`).
+- Per-conversation: 🗑 Delete button appears in the thread header when org
+  admin is viewing a conversation; confirms via `confirmAction` modal.
+- Bulk: "🗑 Delete all conversations" button in sidebar footer (shown only
+  when there are conversations); same confirm modal mechanism.
+- `deleteConv()` removes replies then parent; `deleteAllConvs()` removes all
+  rows with the org's `organization_id`.
+
+---
+
+### Fix bubble sides for org admin observing others' conversations
+
+> "i've noticed for org admin in lab message icon, the sender and receiver
+> are in the same side of chat. i tought you have made this changes long
+> time ago for all users including org admin"
+
+Root cause: `isOwn = m.sender_id === session?.userId` is always false when the
+admin is not a participant in the conversation, so all bubbles landed on the
+left side.
+
+Fixed with `adminObserving` flag:
+```js
+const adminObserving = isAdmin &&
+  selectedConv.sender_id !== session?.userId &&
+  selectedConv.receiver_id !== session?.userId
+const isOwn = adminObserving
+  ? m.sender_id === selectedConv.sender_id
+  : m.sender_id === session?.userId
+```
+When observing, the conversation initiator's messages appear on the right
+(as "sent") and the recipient's on the left (as "received"). Both sender
+labels show the actual name rather than "You".
+
+---
+
+### Chat background picker for all users
+
+> "please make the background chat optional for users to select from menu.
+> you suggest some — this will be for all users"
+
+🎨 palette button added in the thread header. Clicking it opens a popover
+with 7 color-swatch options:
+- Default, Sky (blue gradient), Mint (green gradient), Warm (amber gradient),
+  Lavender, Slate (dark), Dot Grid (white with radial dot pattern)
+
+Selection is saved to `localStorage('ilab_chat_bg')` and restored on next
+visit. The bubbles container applies the selected background style. Clicking
+the bubbles area dismisses the picker.
+
+---
+
+### Sara chatbot visible on Lab Messages screen
+
+> "the chat window can be smaller so the sara icon can be fit in the page"
+
+Sara was previously hidden on `remessages` because her FAB overlapped the
+message send button. Fixed by:
+1. Removing the `screen !== 'remessages'` exclusion in `Layout.jsx`
+2. Reducing LabMessage's outer wrapper height to `calc(100% - 68px)` so Sara's
+   FAB sits below the chat panel without overlap.
+
+---
+
 *Next update: when v2.0.1 is cut or at the end of August 2026, whichever comes first.*

@@ -650,10 +650,7 @@ export default function Layout({ children }) {
       {showAbout   && <AboutModal onClose={() => setShowAbout(false)} onContact={() => { setShowAbout(false); setShowContact(true) }} />}
       {showContact && <CustomerServiceModal onClose={() => setShowContact(false)} />}
       <FeedbackWidget bottomOffset={isMobile ? 80 : 24} />
-      {/* Sara hidden on Lab Messages — her launcher sits exactly on the send button */}
-      {screen !== 'remessages' && (
-        <SaraChat bottomOffset={isMobile ? 80 : 24} color={accentColor} onContact={() => setShowContact(true)} />
-      )}
+      <SaraChat bottomOffset={isMobile ? 80 : 24} color={accentColor} onContact={() => setShowContact(true)} />
     </div>
   )
 }
