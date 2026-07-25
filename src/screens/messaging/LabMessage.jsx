@@ -658,7 +658,14 @@ export default function LabMessage() {
               {/* Bubbles */}
               <div ref={threadRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {[selectedConv, ...selectedConv.replies].map((m, i, all) => {
-                  const isOwn = m.sender_id === session?.userId
+                  // Admins viewing a conversation they didn't participate in:
+                  // put the conversation initiator on the right so both sides are visible.
+                  const adminObserving = isAdmin &&
+                    selectedConv.sender_id !== session?.userId &&
+                    selectedConv.receiver_id !== session?.userId
+                  const isOwn = adminObserving
+                    ? m.sender_id === selectedConv.sender_id
+                    : m.sender_id === session?.userId
                   const newDay = i === 0 || !sameDay(all[i - 1].created_at, m.created_at)
                   const prevSame = i > 0 && all[i - 1].sender_id === m.sender_id && !newDay
                   const nextSame = i < all.length - 1 && all[i + 1].sender_id === m.sender_id && sameDay(m.created_at, all[i + 1].created_at)
@@ -676,8 +683,9 @@ export default function LabMessage() {
                       {!prevSame && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: `${i === 0 || newDay ? 0 : 10}px 0 6px`, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                           {!isOwn && <Avatar name={m.sender_name} user={userMap[m.sender_id]} size={22} />}
+                          {isOwn && adminObserving && <Avatar name={m.sender_name} user={userMap[m.sender_id]} size={22} />}
                           <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>
-                            {isOwn ? 'You' : m.sender_name}
+                            {isOwn && !adminObserving ? 'You' : m.sender_name}
                           </span>
                         </div>
                       )}
