@@ -1417,7 +1417,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
                   checked={newTask.is_private}
                   onClick={e => e.stopPropagation()}
                   onChange={e => setNewTask(prev => ({ ...prev, is_private: e.target.checked }))}
-                  style={{ verticalAlign: 'middle', marginRight: 8, accentColor: 'var(--accent)' }}
+                  style={{ verticalAlign: 'middle', marginRight: 8, accentColor: 'var(--accent)', width: 'auto' }}
                 />
                 <span style={{ verticalAlign: 'middle', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>🔒 Private task</span>
                 <span style={{ verticalAlign: 'middle', fontSize: 11, color: 'var(--text2)', marginLeft: 6 }}>
