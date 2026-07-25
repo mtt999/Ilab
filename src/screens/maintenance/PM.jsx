@@ -952,6 +952,7 @@ function Overview({ userId, isOwnerAdmin, isSolo, orgId, onTaskClick }) {
   const [tasks, setTasks] = useState([])
   const [staffMap, setStaffMap] = useState({})
   const [loading, setLoading] = useState(true)
+  const [activePriority, setActivePriority] = useState(null)
   const { toast } = useAppStore()
 
   useEffect(() => {
@@ -1034,14 +1035,57 @@ function Overview({ userId, isOwnerAdmin, isSolo, orgId, onTaskClick }) {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {Object.entries(byPriority).map(([key, count]) => {
             const p = PRIORITY[key]
+            const isActive = activePriority === key
             return (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, background: p.bg, borderRadius: 10, padding: '10px 16px' }}>
+              <div
+                key={key}
+                onClick={() => setActivePriority(isActive ? null : key)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, background: p.bg, borderRadius: 10, padding: '10px 16px', cursor: 'pointer', border: `2px solid ${isActive ? p.color : 'transparent'}`, transition: 'border-color 0.15s, opacity 0.15s', opacity: activePriority && !isActive ? 0.5 : 1 }}
+              >
                 <span style={{ fontSize: 22, fontWeight: 700, color: p.color }}>{count}</span>
                 <span style={{ fontSize: 13, color: p.color, fontWeight: 600 }}>{p.label}</span>
+                {isActive && <span style={{ fontSize: 11, color: p.color, marginLeft: 2 }}>▲</span>}
               </div>
             )
           })}
         </div>
+
+        {activePriority && (() => {
+          const p = PRIORITY[activePriority]
+          const filtered = tasks.filter(t => t.status !== 'done' && (t.priority || 'medium') === activePriority)
+          return (
+            <div style={{ marginTop: 14, borderTop: `2px solid ${p.bg}`, paddingTop: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: p.color, marginBottom: 8 }}>
+                {filtered.length} {p.label} priority task{filtered.length !== 1 ? 's' : ''}
+              </div>
+              {filtered.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text3)' }}>No open {p.label.toLowerCase()} priority tasks.</div>
+              ) : filtered.map((t, idx) => (
+                <div
+                  key={t.id}
+                  onClick={() => onTaskClick?.(t)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 8px', borderRadius: 8, cursor: 'pointer', background: idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)', marginBottom: 2, transition: 'background 0.13s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = p.bg}
+                  onMouseLeave={e => e.currentTarget.style.background = idx % 2 === 0 ? 'var(--row-a-strong)' : 'var(--row-b-strong)'}
+                >
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
+                      {t.deadline && <span style={{ fontSize: 11, color: 'var(--text3)' }}>Due {t.deadline}</span>}
+                      {t.assigned_to && t.assigned_to !== userId && staffMap[t.assigned_to] && (
+                        <span style={{ fontSize: 11, color: 'var(--text3)' }}>→ {staffMap[t.assigned_to]}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 10, background: t.status === 'in_progress' ? '#fff3e0' : 'var(--surface2)', color: t.status === 'in_progress' ? ORANGE : 'var(--text3)', borderRadius: 4, padding: '2px 6px', fontWeight: 600, flexShrink: 0 }}>
+                    {t.status === 'in_progress' ? 'In Progress' : 'To Do'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
