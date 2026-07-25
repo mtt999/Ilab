@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { APP_VERSION, CHANGELOG } from '../lib/version.js'
+
 const FEATURES = [
   { icon: '📦', label: 'Supply Inventory',  desc: 'Track supplies, run weekly inspections & export reports' },
   { icon: '🔧', label: 'Equipment List',    desc: 'Manage and track all lab equipment inventory' },
@@ -12,6 +15,7 @@ const FEATURES = [
 const WHO = ['University research labs', 'Independent researchers', 'Lab managers & admins', 'Multi-user lab teams']
 
 export default function AboutModal({ onClose, onContact }) {
+  const [showChangelog, setShowChangelog] = useState(false)
   return (
     <div
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.52)', zIndex: 9999, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '24px 16px 40px' }}
@@ -44,6 +48,9 @@ export default function AboutModal({ onClose, onContact }) {
           <img src={import.meta.env.BASE_URL + 'labhive_logo.svg'} width={264} height={264} alt="LabHive" style={{ display: 'block', margin: '-40px auto -89px', objectFit: 'contain' }} />
           <div style={{ color: '#fff', fontSize: 24, fontWeight: 700, letterSpacing: '-0.4px' }}>LabHive</div>
           <div style={{ color: '#ffb380', fontSize: 11, fontWeight: 400, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 6 }}>The All-in-One Research Lab Platform</div>
+          <div style={{ marginTop: 10 }}>
+            <span style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '3px 12px', letterSpacing: '0.04em' }}>v{APP_VERSION}</span>
+          </div>
         </div>
 
         {/* ── Body ── */}
@@ -76,6 +83,33 @@ export default function AboutModal({ onClose, onContact }) {
               ))}
             </div>
           </div>
+
+          {/* Changelog */}
+          <button
+            onClick={() => setShowChangelog(s => !s)}
+            style={{ width: '100%', background: 'none', border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, color: '#374151', fontSize: 13 }}
+          >
+            <span style={{ fontWeight: 600 }}>📋 What's new in each version</span>
+            <span style={{ fontSize: 11, color: '#9ca3af' }}>{showChangelog ? '▲ hide' : '▼ show'}</span>
+          </button>
+          {showChangelog && (
+            <div style={{ marginBottom: 16 }}>
+              {CHANGELOG.map((entry, i) => (
+                <div key={entry.version} style={{ marginBottom: i < CHANGELOG.length - 1 ? 14 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <span style={{ background: i === 0 ? '#1D9E75' : '#6b7280', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '2px 10px' }}>v{entry.version}</span>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>{entry.date}</span>
+                    {i === 0 && <span style={{ fontSize: 10, background: '#E1F5EE', color: '#085041', borderRadius: 4, padding: '1px 6px', fontWeight: 600 }}>Current</span>}
+                  </div>
+                  <ul style={{ margin: 0, padding: '0 0 0 18px', listStyle: 'disc' }}>
+                    {entry.highlights.map(h => (
+                      <li key={h} style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.7 }}>{h}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Contact button */}
           {onContact && (
