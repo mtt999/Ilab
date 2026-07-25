@@ -238,6 +238,7 @@ export default function LabMessage() {
   const [sendingReply, setSendingReply] = useState(false)
   const [mobileShowThread, setMobileShowThread] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [confirmAction, setConfirmAction] = useState(null) // { type:'conv', conv } | { type:'all' }
   const [listSearch, setListSearch] = useState('')
   const [unreadOnly, setUnreadOnly] = useState(false)
   const threadRef = useRef(null)
@@ -254,6 +255,7 @@ export default function LabMessage() {
 
   const isAdmin = session?.role === 'admin'
   const isStaff = session?.role === 'user'
+  const isOrgAdmin = isAdmin && !!session?.userId  // excludes super admin (userId===null)
   const selectedConv = conversations.find(c => c.id === selectedId) || null
 
   useEffect(() => { load(); loadStaff() }, [])
@@ -443,6 +445,27 @@ export default function LabMessage() {
     }
   }
 
+  async function deleteConv(conv) {
+    await sb.from('re_messages').delete().eq('parent_id', conv.id)
+    await sb.from('re_messages').delete().eq('id', conv.id)
+    setConversations(cs => cs.filter(c => c.id !== conv.id))
+    setSelectedId(null)
+    setMobileShowThread(false)
+    setConfirmAction(null)
+    toast('Conversation deleted.')
+  }
+
+  async function deleteAllConvs() {
+    const orgId = session?.organizationId
+    if (!orgId) return
+    await sb.from('re_messages').delete().eq('organization_id', orgId)
+    setConversations([])
+    setSelectedId(null)
+    setMobileShowThread(false)
+    setConfirmAction(null)
+    toast('All conversations deleted.')
+  }
+
   function canDelete(m) {
     return isAdmin || isStaff ? m.sender_id === session?.userId || isAdmin : m.sender_id === session?.userId
   }
@@ -585,6 +608,16 @@ export default function LabMessage() {
               )
             })}
           </div>
+          {isOrgAdmin && conversations.length > 0 && (
+            <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', background: 'var(--surface2)', flexShrink: 0 }}>
+              <button
+                onClick={() => setConfirmAction({ type: 'all' })}
+                style={{ width: '100%', padding: '6px 0', background: '#fde8e8', color: '#c84b2f', border: '1px solid #fca5a5', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              >
+                🗑 Delete all conversations
+              </button>
+            </div>
+          )}
         </div>
 
         {/* RIGHT — thread */}
@@ -611,6 +644,15 @@ export default function LabMessage() {
                 <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
                   {selectedConv.replies.length + 1} msg{selectedConv.replies.length !== 0 ? 's' : ''}
                 </div>
+                {isOrgAdmin && (
+                  <button
+                    onClick={() => setConfirmAction({ type: 'conv', conv: selectedConv })}
+                    title="Delete entire conversation"
+                    style={{ border: 'none', background: '#fde8e8', color: '#c84b2f', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    🗑 Delete
+                  </button>
+                )}
               </div>
 
               {/* Bubbles */}
@@ -742,6 +784,37 @@ export default function LabMessage() {
               <button className="btn" onClick={() => setDeleteConfirm(null)}>Cancel</button>
               <button className="btn btn-danger" onClick={() => deleteMsg(deleteConfirm)}>Delete</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 24, maxWidth: 340, width: '100%', border: '1px solid var(--border)', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🗑️</div>
+            {confirmAction.type === 'conv' ? (
+              <>
+                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>Delete entire conversation?</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>
+                  This will permanently delete all {confirmAction.conv.replies.length + 1} message{confirmAction.conv.replies.length !== 0 ? 's' : ''} in this thread. Cannot be undone.
+                </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                  <button className="btn" onClick={() => setConfirmAction(null)}>Cancel</button>
+                  <button className="btn btn-danger" onClick={() => deleteConv(confirmAction.conv)}>Delete conversation</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>Delete ALL conversations?</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>
+                  This permanently removes every message in this organization. Cannot be undone.
+                </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                  <button className="btn" onClick={() => setConfirmAction(null)}>Cancel</button>
+                  <button className="btn btn-danger" onClick={deleteAllConvs}>Delete all</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
