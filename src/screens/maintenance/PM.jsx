@@ -2470,8 +2470,33 @@ function AssignOthers({ userId, orgId }) {
   )
 }
 
+function TaskReminderRow({ task, today, onTurnOff }) {
+  const isUpcoming = task.start_date && task.start_date > today
+  const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--surface2)', background: 'transparent' }}>
+      <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #d97706', background: '#fef3c7', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 10 }}>⏰</span>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>{task.title}</span>
+          <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', borderRadius: 4, padding: '1px 6px', fontWeight: 600, flexShrink: 0 }}>Task · Daily 8 AM</span>
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+          {task.start_date && <span style={{ fontSize: 11, color: 'var(--text3)' }}>📅 {isUpcoming ? 'Starts ' : ''}{fmtDate(task.start_date)}{task.deadline ? ` → ${fmtDate(task.deadline)}` : ''}</span>}
+          {!task.start_date && task.deadline && <span style={{ fontSize: 11, color: 'var(--text3)' }}>📅 Due {fmtDate(task.deadline)}</span>}
+          <span style={{ fontSize: 11, color: 'var(--text3)' }}>{task.progress || 0}% complete</span>
+        </div>
+        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>Daily notification until done · <span style={{ color: '#d97706', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => onTurnOff(task.id)}>Turn off</span></div>
+      </div>
+    </div>
+  )
+}
+
 function Reminders({ userId }) {
   const [reminders, setReminders] = useState([])
+  const [taskReminders, setTaskReminders] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [editId, setEditId] = useState(null)
@@ -2488,11 +2513,24 @@ function Reminders({ userId }) {
   }, [userId])
 
   async function load() {
-    const { data } = await sb.from('reminders').select('*').eq('user_id', userId)
-      .order('start_day', { ascending: true, nullsFirst: false })
-      .order('start_time', { ascending: true, nullsFirst: false })
-    setReminders(data || [])
+    const [{ data: rems }, { data: tasks }] = await Promise.all([
+      sb.from('reminders').select('*').eq('user_id', userId)
+        .order('start_day', { ascending: true, nullsFirst: false })
+        .order('start_time', { ascending: true, nullsFirst: false }),
+      sb.from('tasks').select('id, title, deadline, start_date, status, progress')
+        .eq('remind_daily', true)
+        .neq('status', 'done')
+        .or(`assigned_to.eq.${userId},created_by.eq.${userId}`)
+    ])
+    setReminders(rems || [])
+    setTaskReminders(tasks || [])
     setLoading(false)
+  }
+
+  async function turnOffTaskReminder(taskId) {
+    await sb.from('tasks').update({ remind_daily: false }).eq('id', taskId)
+    setTaskReminders(prev => prev.filter(t => t.id !== taskId))
+    toast('Daily reminder turned off.')
   }
 
   async function checkNotifications() {
@@ -2590,6 +2628,8 @@ function Reminders({ userId }) {
 
   const activeItems = reminders.filter(r => !r.is_done && isActiveToday(r))
   const futureItems = reminders.filter(r => !r.is_done && r.start_day && r.start_day > today)
+  const activeTaskItems = taskReminders.filter(t => !t.start_date || t.start_date <= today)
+  const upcomingTaskItems = taskReminders.filter(t => t.start_date && t.start_date > today)
   // Past = completed items + undone items whose end_day has passed, newest first
   const pastItems = reminders
     .filter(r => r.is_done || (!r.is_done && r.end_day && r.end_day < today))
@@ -2687,23 +2727,25 @@ function Reminders({ userId }) {
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
         <div style={{ padding: '10px 16px', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>Today &amp; Active</span>
-          <span style={{ fontSize: 11, background: BLUE, color: 'white', borderRadius: 99, padding: '1px 8px', fontWeight: 600 }}>{activeItems.length}</span>
+          <span style={{ fontSize: 11, background: BLUE, color: 'white', borderRadius: 99, padding: '1px 8px', fontWeight: 600 }}>{activeItems.length + activeTaskItems.length}</span>
         </div>
-        {activeItems.length === 0
-          ? <div style={{ padding: '20px 16px', fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>No active reminders for today. 🎉</div>
-          : activeItems.map(r => <ReminderCard key={r.id} r={r} />)
-        }
+        {activeItems.map(r => <ReminderCard key={r.id} r={r} />)}
+        {activeTaskItems.map(t => <TaskReminderRow key={t.id} task={t} today={today} onTurnOff={turnOffTaskReminder} />)}
+        {activeItems.length === 0 && activeTaskItems.length === 0 && (
+          <div style={{ padding: '20px 16px', fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>No active reminders for today. 🎉</div>
+        )}
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
         <div style={{ padding: '10px 16px', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>📅 Upcoming</span>
-          <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400 }}>{futureItems.length} reminder{futureItems.length !== 1 ? 's' : ''}</span>
+          <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400 }}>{futureItems.length + upcomingTaskItems.length} item{futureItems.length + upcomingTaskItems.length !== 1 ? 's' : ''}</span>
         </div>
-        {futureItems.length === 0
-          ? <div style={{ padding: '16px', fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>No upcoming reminders.</div>
-          : futureItems.map(r => <ReminderCard key={r.id} r={r} isFuture />)
-        }
+        {futureItems.map(r => <ReminderCard key={r.id} r={r} isFuture />)}
+        {upcomingTaskItems.map(t => <TaskReminderRow key={t.id} task={t} today={today} onTurnOff={turnOffTaskReminder} />)}
+        {futureItems.length === 0 && upcomingTaskItems.length === 0 && (
+          <div style={{ padding: '16px', fontSize: 13, color: 'var(--text3)', textAlign: 'center' }}>No upcoming reminders.</div>
+        )}
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
