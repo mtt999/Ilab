@@ -1410,19 +1410,19 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
               {/* Private toggle */}
               <div
                 onClick={() => setNewTask(prev => ({ ...prev, is_private: !prev.is_private }))}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.is_private ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s' }}
+                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.is_private ? 'var(--accent-light)' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s', textAlign: 'left' }}
               >
                 <input
                   type="checkbox"
                   checked={newTask.is_private}
                   onClick={e => e.stopPropagation()}
                   onChange={e => setNewTask(prev => ({ ...prev, is_private: e.target.checked }))}
-                  style={{ verticalAlign: 'middle', marginRight: 10, accentColor: 'var(--accent)' }}
+                  style={{ verticalAlign: 'middle', marginRight: 8, accentColor: 'var(--accent)' }}
                 />
                 <span style={{ verticalAlign: 'middle', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>🔒 Private task</span>
-                <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 4, lineHeight: 1.4, paddingLeft: 24 }}>
-                  {isStudent ? 'Hidden from group members.' : 'Others see this as "Personal task" — title and notes stay private.'}
-                </div>
+                <span style={{ verticalAlign: 'middle', fontSize: 11, color: 'var(--text2)', marginLeft: 6 }}>
+                  — {isStudent ? 'Hidden from group members.' : 'Others see this as "Personal task" — title and notes stay private.'}
+                </span>
               </div>
             </div>
             {/* Footer */}
