@@ -237,7 +237,8 @@ function OutOfLabPanel({ userId, isSolo, orgId, onChanged }) {
   const [newNote, setNewNote] = useState('')
   const [saving, setSaving] = useState(false)
   const { toast } = useAppStore()
-  const today = new Date().toISOString().split('T')[0]
+  const _od = new Date()
+  const today = [_od.getFullYear(), String(_od.getMonth()+1).padStart(2,'0'), String(_od.getDate()).padStart(2,'0')].join('-')
 
   useEffect(() => { if (userId) load() }, [userId])
 
@@ -2504,7 +2505,8 @@ function Reminders({ userId }) {
   const [saving, setSaving] = useState(false)
   const [showDone, setShowDone] = useState(false)
   const { toast } = useAppStore()
-  const today = new Date().toISOString().split('T')[0]
+  const _d = new Date()
+  const today = [_d.getFullYear(), String(_d.getMonth()+1).padStart(2,'0'), String(_d.getDate()).padStart(2,'0')].join('-')
 
   useEffect(() => {
     if (!userId) { setLoading(false); return }
@@ -2534,7 +2536,8 @@ function Reminders({ userId }) {
   }
 
   async function checkNotifications() {
-    const todayStr = new Date().toISOString().split('T')[0]
+    const _n = new Date()
+    const todayStr = [_n.getFullYear(), String(_n.getMonth()+1).padStart(2,'0'), String(_n.getDate()).padStart(2,'0')].join('-')
     const hour = new Date().getHours()
     const min = new Date().getMinutes()
 
