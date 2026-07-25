@@ -505,7 +505,6 @@ export default function LabMessage() {
           </div>
           <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 2 }}>Notes, ideas, questions &amp; issue reports</div>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowCompose(true)}>+ New</button>
       </div>
 
       {/* Two-panel container */}
