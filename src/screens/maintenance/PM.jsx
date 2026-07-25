@@ -2548,16 +2548,19 @@ function Reminders({ userId }) {
     if (!form.title.trim()) { toast('Please enter a title.'); return }
     setSaving(true)
     const payload = { user_id: userId, title: form.title.trim(), notes: form.notes.trim(), start_day: form.start_day || null, end_day: form.end_day || null, start_time: form.start_time || null, end_time: form.end_time || null }
-    if (editId) {
-      const { data } = await sb.from('reminders').update(payload).eq('id', editId).select().single()
-      if (data) setReminders(prev => prev.map(r => r.id === editId ? data : r))
+    const isEdit = !!editId
+    if (isEdit) {
+      const { error } = await sb.from('reminders').update(payload).eq('id', editId)
+      if (error) { toast('Could not save: ' + error.message); setSaving(false); return }
       setEditId(null)
     } else {
-      const { data } = await sb.from('reminders').insert({ ...payload, is_done: false }).select().single()
-      if (data) setReminders(prev => [...prev, data])
+      const { error } = await sb.from('reminders').insert({ ...payload, is_done: false })
+      if (error) { toast('Could not save: ' + error.message); setSaving(false); return }
     }
     setForm({ title: '', notes: '', start_day: '', end_day: '', start_time: '', end_time: '' })
-    setShowAdd(false); setSaving(false); toast(editId ? 'Reminder updated!' : 'Reminder added!')
+    setShowAdd(false); setSaving(false)
+    await load()
+    toast(isEdit ? 'Reminder updated!' : 'Reminder added!')
   }
 
   async function toggleDone(r) {
