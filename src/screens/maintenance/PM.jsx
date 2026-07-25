@@ -895,6 +895,30 @@ function TaskModal({ task, onClose, onUpdate, onDelete, currentUserId, currentUs
             <textarea rows={3} style={{ resize: 'vertical', width: '100%', boxSizing: 'border-box', fontSize: 13 }}
               value={localTask.notes || ''} onChange={e => setLocalTask({ ...localTask, notes: e.target.value })} placeholder="Add notes about this task…" />
           </div>
+          {(currentUserId === localTask.assigned_to || currentUserId === localTask.created_by) && (
+            <div
+              onClick={async () => {
+                const next = !localTask.remind_daily
+                await sb.from('tasks').update({ remind_daily: next }).eq('id', localTask.id)
+                const updated = { ...localTask, remind_daily: next }
+                setLocalTask(updated); onUpdate(updated)
+                toast(next ? '⏰ Daily 8 AM reminder enabled.' : 'Reminder turned off.')
+              }}
+              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: localTask.remind_daily ? '#fef3c7' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s', textAlign: 'left', marginTop: 10 }}
+            >
+              <input
+                type="checkbox"
+                checked={localTask.remind_daily || false}
+                readOnly
+                onClick={e => e.stopPropagation()}
+                style={{ verticalAlign: 'middle', marginRight: 8, accentColor: '#d97706', width: 'auto' }}
+              />
+              <span style={{ verticalAlign: 'middle', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>⏰ Daily reminder at 8 AM</span>
+              <span style={{ verticalAlign: 'middle', fontSize: 11, color: 'var(--text2)', marginLeft: 6 }}>
+                {localTask.remind_daily ? '— on (for you)' : '— click to enable for yourself'}
+              </span>
+            </div>
+          )}
           <button className="btn btn-primary" style={{ marginTop: 10, fontSize: 12, padding: '6px 16px' }} onClick={saveDetails} disabled={saving}>{saving ? 'Saving…' : 'Save details'}</button>
         </div>
         <div style={{ borderTop: '1px solid var(--border)', marginBottom: 16 }} />
@@ -1235,7 +1259,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
   const [calDayPopup, setCalDayPopup] = useState(null)
   const [desktop, setDesktop] = useState(isDesktop())
   const [showAddTask, setShowAddTask] = useState(false)
-  const [newTask, setNewTask] = useState({ title: '', start_date: '', start_time: '', deadline: '', deadline_time: '', notes: '', priority: 'medium', is_private: isStudent ? true : false })
+  const [newTask, setNewTask] = useState({ title: '', start_date: '', start_time: '', deadline: '', deadline_time: '', notes: '', priority: 'medium', is_private: isStudent ? true : false, remind_daily: false })
   const [saving, setSaving] = useState(false)
   const { toast } = useAppStore()
 
@@ -1332,7 +1356,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
     if (!newTask.title.trim()) { toast('Please enter a task title.'); return }
     setSaving(true)
     try {
-      const payload = { title: newTask.title, start_date: newTask.start_date || null, start_time: newTask.start_time || null, deadline: newTask.deadline || null, deadline_time: newTask.deadline_time || null, notes: newTask.notes || '', status: 'todo', progress: 0, is_meeting_task: false, priority: newTask.priority || 'medium', is_private: newTask.is_private || false, login_mode: isSolo ? 'solo' : 'team', organization_id: !isSolo ? (orgId || null) : null }
+      const payload = { title: newTask.title, start_date: newTask.start_date || null, start_time: newTask.start_time || null, deadline: newTask.deadline || null, deadline_time: newTask.deadline_time || null, notes: newTask.notes || '', status: 'todo', progress: 0, is_meeting_task: false, priority: newTask.priority || 'medium', is_private: newTask.is_private || false, remind_daily: newTask.remind_daily || false, login_mode: isSolo ? 'solo' : 'team', organization_id: !isSolo ? (orgId || null) : null }
       if (userId) { payload.assigned_to = userId; payload.created_by = userId }
       const { data, error } = await sb.from('tasks').insert(payload).select().single()
       if (error) throw error
@@ -1345,7 +1369,7 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
         })
         return next
       })
-      setNewTask({ title: '', start_date: '', start_time: '', deadline: '', deadline_time: '', notes: '', priority: 'medium', is_private: isStudent ? true : false })
+      setNewTask({ title: '', start_date: '', start_time: '', deadline: '', deadline_time: '', notes: '', priority: 'medium', is_private: isStudent ? true : false, remind_daily: false })
       setShowAddTask(false); toast('Task added!')
     } catch (err) { toast('Could not add task: ' + (err?.message || 'Check tasks table')) }
     setSaving(false)
@@ -1428,6 +1452,21 @@ function MyTasks({ userId, isAdmin, isOwnerAdmin, userName, isSolo, orgId, isStu
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>Notes <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: 11 }}>(opt)</span></label>
                 <textarea rows={3} style={{ resize: 'vertical' }} value={newTask.notes} onChange={e => setNewTask({ ...newTask, notes: e.target.value })} placeholder="Optional notes…" />
+              </div>
+              {/* Daily reminder toggle */}
+              <div
+                onClick={() => setNewTask(prev => ({ ...prev, remind_daily: !prev.remind_daily }))}
+                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: newTask.remind_daily ? '#fef3c7' : 'var(--surface2)', cursor: 'pointer', transition: 'background 0.15s', textAlign: 'left' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={newTask.remind_daily || false}
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => setNewTask(prev => ({ ...prev, remind_daily: e.target.checked }))}
+                  style={{ verticalAlign: 'middle', marginRight: 8, accentColor: '#d97706', width: 'auto' }}
+                />
+                <span style={{ verticalAlign: 'middle', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>⏰ Remind me daily at 8 AM</span>
+                <span style={{ verticalAlign: 'middle', fontSize: 11, color: 'var(--text2)', marginLeft: 6 }}>— until this task is done</span>
               </div>
               {/* Private toggle */}
               <div
