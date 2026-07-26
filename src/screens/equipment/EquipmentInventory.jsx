@@ -883,7 +883,7 @@ function CalibrationTab({ session }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 720 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border)' }}>
-              {['Equipment', 'Last Calibrated', 'Next Due', 'Status', 'Lab Manager', ''].map(h => (
+              {['Equipment', 'Last Calibrated', 'Due in (days)', 'Next Due', 'Status', ''].map(h => (
                 <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 600, color: 'var(--text2)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
@@ -907,6 +907,18 @@ function CalibrationTab({ session }) {
                     </div>
                   </td>
                   <td style={{ padding: '10px 10px', fontFamily: 'var(--mono)', fontSize: 12 }}>{rec?.start_date || '—'}</td>
+                  <td style={{ padding: '10px 10px' }}>
+                    {rec?.next_due_date ? (() => {
+                      const days = Math.ceil((new Date(rec.next_due_date) - new Date()) / 86400000)
+                      const color = days < 0 ? '#c0392b' : days <= 30 ? '#b45309' : '#065f46'
+                      const bg = days < 0 ? '#fde8e8' : days <= 30 ? '#fef3c7' : '#d1fae5'
+                      return (
+                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 12, fontWeight: 600, color, background: bg, fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
+                          {days < 0 ? `${Math.abs(days)}d overdue` : `${days}d`}
+                        </span>
+                      )
+                    })() : <span style={{ color: 'var(--text3)' }}>—</span>}
+                  </td>
                   <td style={{ padding: '10px 10px', fontFamily: 'var(--mono)', fontSize: 12, fontWeight: status === 'overdue' ? 700 : 400, color: status === 'overdue' ? '#c0392b' : 'inherit' }}>
                     {rec?.next_due_date || '—'}
                   </td>
@@ -915,7 +927,6 @@ function CalibrationTab({ session }) {
                       {badge.label}
                     </span>
                   </td>
-                  <td style={{ padding: '10px 10px', fontSize: 12, color: 'var(--text2)' }}>{rec?.lab_manager_name || '—'}</td>
                   <td style={{ padding: '10px 10px', textAlign: 'right' }}>
                     <button className="btn btn-sm" onClick={() => openModal(eq)}>
                       {history.length > 0 ? `Records (${history.length})` : 'Set Up'}
