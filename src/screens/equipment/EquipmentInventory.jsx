@@ -80,8 +80,15 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
     setForm(f => {
       const cur = f.maintenance_assignees || []
       const exists = cur.find(a => a.id === mgr.id)
-      return { ...f, maintenance_assignees: exists ? cur.filter(a => a.id !== mgr.id) : [...cur, mgr] }
+      return { ...f, maintenance_assignees: exists ? cur.filter(a => a.id !== mgr.id) : [...cur, { ...mgr, remind: true }] }
     })
+  }
+
+  function toggleRemind(id) {
+    setForm(f => ({
+      ...f,
+      maintenance_assignees: (f.maintenance_assignees || []).map(a => a.id === id ? { ...a, remind: !a.remind } : a)
+    }))
   }
 
   function calcNextMaintenance(lastDate, intervalDays) {
@@ -209,14 +216,23 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
             {managers.length === 0 ? (
               <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>No lab managers found.</div>
             ) : (
-              <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', maxHeight: 140, overflowY: 'auto', background: 'var(--surface)' }}>
+              <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', maxHeight: 160, overflowY: 'auto', background: 'var(--surface)' }}>
                 {managers.map((mgr, idx) => {
-                  const checked = (form.maintenance_assignees || []).some(a => a.id === mgr.id)
+                  const assignee = (form.maintenance_assignees || []).find(a => a.id === mgr.id)
+                  const checked = !!assignee
                   return (
-                    <label key={mgr.id} onClick={() => toggleAssignee(mgr)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', cursor: 'pointer', background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)', borderBottom: idx < managers.length - 1 ? '1px solid var(--border)' : 'none', marginBottom: 0 }}>
-                      <input type="checkbox" checked={checked} onChange={() => {}} style={{ width: 'auto', flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, fontWeight: checked ? 600 : 400, color: checked ? 'var(--accent)' : 'var(--text)' }}>{mgr.name}</span>
-                    </label>
+                    <div key={mgr.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)', borderBottom: idx < managers.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <div onClick={() => toggleAssignee(mgr)} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={checked} onChange={() => {}} style={{ width: 'auto', flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, fontWeight: checked ? 600 : 400, color: checked ? 'var(--accent)' : 'var(--text)' }}>{mgr.name}</span>
+                      </div>
+                      {checked && (
+                        <label onClick={e => { e.stopPropagation(); toggleRemind(mgr.id) }} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0, marginBottom: 0 }}>
+                          <input type="checkbox" checked={!!assignee.remind} onChange={() => {}} style={{ width: 'auto' }} />
+                          <span style={{ fontSize: 11, color: assignee.remind ? '#b45309' : 'var(--text3)', fontWeight: 500, whiteSpace: 'nowrap' }}>🔔 Remind</span>
+                        </label>
+                      )}
+                    </div>
                   )
                 })}
               </div>
@@ -224,9 +240,9 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
             {(form.maintenance_assignees || []).length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                 {form.maintenance_assignees.map(a => (
-                  <span key={a.id} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {a.name}
-                    <button onClick={() => toggleAssignee(a)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
+                  <span key={a.id} style={{ background: a.remind ? '#fef3c7' : 'var(--accent-light)', color: a.remind ? '#b45309' : 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {a.remind ? '🔔' : ''}{a.name}
+                    <button onClick={() => toggleAssignee(a)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
                   </span>
                 ))}
               </div>
