@@ -1,3 +1,4 @@
+import { IconEye, IconEyeOff } from '../../components/Icons'
 import HelpPanel from '../../components/HelpPanel'
 import ScrollTabs from '../../components/ScrollTabs'
 import React from 'react'
@@ -1088,6 +1089,7 @@ function BuildingAlarm({ students, session, hideChrome = false, onChanged }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [localPins, setLocalPins] = useState({})
+  const [showPins, setShowPins] = useState({})
 
   useEffect(() => { if (students.length > 0) load() }, [students])
 
@@ -1178,11 +1180,11 @@ function BuildingAlarm({ students, session, hideChrome = false, onChanged }) {
               </span>
             </div>
             <div style={{ padding: '10px 16px', display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center', fontSize: 13 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ color: 'var(--text3)', fontSize: 12 }}>Alarm PIN:</span>
                 {canEdit(session) ? (
                   <input
-                    type="password"
+                    type={showPins[u.id] ? 'text' : 'password'}
                     maxLength={4}
                     value={localPins[u.id] ?? rec?.alarm_pin ?? ''}
                     onChange={e => setLocalPins(p => ({ ...p, [u.id]: e.target.value }))}
@@ -1191,7 +1193,20 @@ function BuildingAlarm({ students, session, hideChrome = false, onChanged }) {
                     placeholder="····"
                     style={{ width: 70, fontFamily: 'var(--mono)', fontSize: 15, padding: '4px 8px', textAlign: 'center', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}
                   />
-                ) : <span style={{ fontFamily: 'var(--mono)', fontSize: 13 }}>{rec?.alarm_pin ? '••••' : '—'}</span>}
+                ) : (
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 13 }}>
+                    {rec?.alarm_pin ? (showPins[u.id] ? rec.alarm_pin : '••••') : '—'}
+                  </span>
+                )}
+                {rec?.alarm_pin && (
+                  <button
+                    onClick={() => setShowPins(p => ({ ...p, [u.id]: !p[u.id] }))}
+                    title={showPins[u.id] ? 'Hide PIN' : 'Show PIN'}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 2, display: 'flex', alignItems: 'center' }}
+                  >
+                    {showPins[u.id] ? <IconEyeOff size={14} /> : <IconEye size={14} />}
+                  </button>
+                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ color: 'var(--text3)', fontSize: 12 }}>Training:</span>
