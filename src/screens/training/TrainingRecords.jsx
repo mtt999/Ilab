@@ -1087,6 +1087,7 @@ function BuildingAlarm({ students, session, hideChrome = false, onChanged }) {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [localPins, setLocalPins] = useState({})
 
   useEffect(() => { if (students.length > 0) load() }, [students])
 
@@ -1180,7 +1181,16 @@ function BuildingAlarm({ students, session, hideChrome = false, onChanged }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ color: 'var(--text3)', fontSize: 12 }}>Alarm PIN:</span>
                 {canEdit(session) ? (
-                  <input type="password" maxLength={4} value={rec?.alarm_pin || ''} onChange={e => updateRecord(u, 'alarm_pin', e.target.value)} placeholder="····" style={{ width: 70, fontFamily: 'var(--mono)', fontSize: 15, padding: '4px 8px', textAlign: 'center', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }} />
+                  <input
+                    type="password"
+                    maxLength={4}
+                    value={localPins[u.id] ?? rec?.alarm_pin ?? ''}
+                    onChange={e => setLocalPins(p => ({ ...p, [u.id]: e.target.value }))}
+                    onBlur={e => { if (e.target.value !== (rec?.alarm_pin ?? '')) updateRecord(u, 'alarm_pin', e.target.value) }}
+                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur() }}
+                    placeholder="····"
+                    style={{ width: 70, fontFamily: 'var(--mono)', fontSize: 15, padding: '4px 8px', textAlign: 'center', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}
+                  />
                 ) : <span style={{ fontFamily: 'var(--mono)', fontSize: 13 }}>{rec?.alarm_pin ? '••••' : '—'}</span>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
