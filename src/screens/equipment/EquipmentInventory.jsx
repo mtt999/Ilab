@@ -38,7 +38,7 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
     ref_id: '', model_number: '', serial_number: '', manufacturer: '',
     date_received: '', condition: 'Good', notes: '', out_of_service: false,
     maintenance_interval_days: '', last_maintenance_date: '', next_maintenance_date: '',
-    website: '',
+    website: '', maintenance_assignees: [],
   }
   const [form, setForm] = useState(item ? {
     equipment_name: item.equipment_name || '',
@@ -57,8 +57,32 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
     maintenance_interval_days: item.maintenance_interval_days || '',
     last_maintenance_date: item.last_maintenance_date || '',
     next_maintenance_date: item.next_maintenance_date || '',
+    maintenance_assignees: item.maintenance_assignees || [],
   } : blank)
   const [saving, setSaving] = useState(false)
+  const [managers, setManagers] = useState([])
+
+  useEffect(() => {
+    async function loadManagers() {
+      if (isSolo) {
+        setManagers([{ id: session?.userId, name: session?.username || session?.email || 'Me' }])
+      } else {
+        const orgId = session?.organizationId
+        if (!orgId) return
+        const { data } = await sb.from('users').select('id, name, email').eq('role', 'user').eq('organization_id', orgId).eq('is_active', true).order('name')
+        setManagers((data || []).map(u => ({ id: u.id, name: u.name || u.email })))
+      }
+    }
+    loadManagers()
+  }, [])
+
+  function toggleAssignee(mgr) {
+    setForm(f => {
+      const cur = f.maintenance_assignees || []
+      const exists = cur.find(a => a.id === mgr.id)
+      return { ...f, maintenance_assignees: exists ? cur.filter(a => a.id !== mgr.id) : [...cur, mgr] }
+    })
+  }
 
   function calcNextMaintenance(lastDate, intervalDays) {
     if (!lastDate || !intervalDays) return ''
@@ -77,6 +101,7 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
       maintenance_interval_days: form.maintenance_interval_days ? parseInt(form.maintenance_interval_days) : null,
       last_maintenance_date: form.last_maintenance_date || null,
       next_maintenance_date: form.next_maintenance_date || calcNextMaintenance(form.last_maintenance_date, form.maintenance_interval_days) || null,
+      maintenance_assignees: form.maintenance_assignees?.length ? form.maintenance_assignees : null,
       updated_at: new Date().toISOString(),
     }
     if (item) {
@@ -177,6 +202,35 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
           <div className="field">
             <label>Next Maintenance (auto-calculated)</label>
             <input type="date" value={form.next_maintenance_date} onChange={e => setForm(f => ({ ...f, next_maintenance_date: e.target.value }))} />
+          </div>
+
+          <div className="field">
+            <label>Responsible for Maintenance</label>
+            {managers.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>No lab managers found.</div>
+            ) : (
+              <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', maxHeight: 140, overflowY: 'auto', background: 'var(--surface)' }}>
+                {managers.map((mgr, idx) => {
+                  const checked = (form.maintenance_assignees || []).some(a => a.id === mgr.id)
+                  return (
+                    <label key={mgr.id} onClick={() => toggleAssignee(mgr)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px', cursor: 'pointer', background: idx % 2 === 0 ? 'var(--row-a)' : 'var(--row-b)', borderBottom: idx < managers.length - 1 ? '1px solid var(--border)' : 'none', marginBottom: 0 }}>
+                      <input type="checkbox" checked={checked} onChange={() => {}} style={{ width: 'auto', flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, fontWeight: checked ? 600 : 400, color: checked ? 'var(--accent)' : 'var(--text)' }}>{mgr.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+            {(form.maintenance_assignees || []).length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {form.maintenance_assignees.map(a => (
+                  <span key={a.id} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {a.name}
+                    <button onClick={() => toggleAssignee(a)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="field">
