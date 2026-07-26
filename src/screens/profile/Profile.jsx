@@ -946,6 +946,9 @@ function NotificationPrefsPanel({ userId, role }) {
     { title: '💬 Lab Messages', desc: 'Messages from the Lab Messages feature.', roles: ['student', 'user', 'admin', 'solo'], events: [
       { key: 'message_reply', label: 'Reply received to my message' },
     ]},
+    { title: '🔧 Equipment Maintenance', desc: 'Reminders when equipment you are responsible for is coming due.', roles: ['user', 'admin', 'solo'], events: [
+      { key: 'maintenance_reminder', label: 'Maintenance due — reminder 2 weeks before and 1 week before due date' },
+    ]},
   ].filter(s => s.roles.includes(role))
 
   useEffect(() => { if (userId) load() }, [userId])
