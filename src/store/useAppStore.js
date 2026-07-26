@@ -92,4 +92,13 @@ export const useAppStore = create((set, get) => ({
     localStorage.setItem('ilab_storage_provider', key)
     set({ storageProviderKey: key })
   },
+
+  // ── UI Guidance tooltips ──
+  showTooltips: localStorage.getItem('ilab_show_tooltips') !== 'false',
+  setShowTooltips: (val) => {
+    localStorage.setItem('ilab_show_tooltips', val ? 'true' : 'false')
+    if (val) document.body.classList.remove('tooltips-off')
+    else document.body.classList.add('tooltips-off')
+    set({ showTooltips: val })
+  },
 }))

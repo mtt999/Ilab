@@ -916,7 +916,7 @@ function NotificationPrefsPanel({ userId, role }) {
   const [prefs, setPrefs] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const { toast } = useAppStore()
+  const { toast, showTooltips, setShowTooltips } = useAppStore()
 
   const SECTIONS = [
     { title: '📅 Equipment Booking', desc: 'Notifications about your equipment reservations.', roles: ['student', 'user', 'admin', 'solo'], events: [
@@ -982,6 +982,26 @@ function NotificationPrefsPanel({ userId, role }) {
 
   return (
     <div>
+      {/* App Preferences */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
+        <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>⚙️ App Preferences</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>General display and behavior settings.</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 500 }}>UI guidance tooltips</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Show explanations when hovering over icons and buttons.</div>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0, marginBottom: 0 }}>
+            <span style={{ fontSize: 12, color: 'var(--text3)' }}>{showTooltips ? 'On' : 'Off'}</span>
+            <div onClick={() => setShowTooltips(!showTooltips)} style={{ width: 44, height: 24, borderRadius: 12, background: showTooltips ? 'var(--accent)' : 'var(--border)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 2, left: showTooltips ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.6 }}>Choose how you want to be notified. <strong>In-app</strong> shows a 🔔 inside LabHive. <strong>Email</strong> sends to your registered address.</div>
       {SECTIONS.map(sec => (
         <div key={sec.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>

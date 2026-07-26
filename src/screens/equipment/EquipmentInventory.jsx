@@ -576,8 +576,8 @@ function EquipmentList({ session }) {
                         {canEdit(session) && (
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
-                              <button className="btn btn-sm" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => { setEditItem(item); setShowModal(true) }}>Edit</button>
-                              <button className="btn btn-sm btn-danger" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => deleteItem(item.id)}>✕</button>
+                              <button data-tooltip="Edit equipment details" className="btn btn-sm" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => { setEditItem(item); setShowModal(true) }}>Edit</button>
+                              <button data-tooltip="Remove this equipment from the list" className="btn btn-sm btn-danger" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => deleteItem(item.id)}>✕</button>
                             </div>
                           </td>
                         )}
@@ -1471,8 +1471,8 @@ function MaintenanceRecords({ session }) {
                         {canEdit(session) && (
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setEditHours({ id: item.id, name: item.nickname || item.equipment_name, max_usage_hours: item.max_usage_hours || '', usage_hours_since_maintenance: item.usage_hours_since_maintenance || 0 })}>⚙️ Set</button>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => resetUsage(item.id)}>↺ Time Reset</button>
+                              <button data-tooltip="Set max usage hours and current usage" className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setEditHours({ id: item.id, name: item.nickname || item.equipment_name, max_usage_hours: item.max_usage_hours || '', usage_hours_since_maintenance: item.usage_hours_since_maintenance || 0 })}>⚙️ Set</button>
+                              <button data-tooltip="Reset usage hours to 0 and set today as last maintenance date" className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => resetUsage(item.id)}>↺ Time Reset</button>
                             </div>
                           </td>
                         )}

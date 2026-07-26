@@ -16,6 +16,11 @@ window.addEventListener('vite:preloadError', (e) => {
   window.location.reload()
 })
 
+// Apply tooltip preference before first render
+if (localStorage.getItem('ilab_show_tooltips') === 'false') {
+  document.body.classList.add('tooltips-off')
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
