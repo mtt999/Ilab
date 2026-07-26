@@ -1005,9 +1005,9 @@ function NotificationPrefsPanel({ userId, role }) {
       <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.6 }}>Choose how you want to be notified. <strong>In-app</strong> shows a 🔔 inside LabHive. <strong>Email</strong> sends to your registered address.</div>
       {SECTIONS.map(sec => (
         <div key={sec.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-          <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div><div style={{ fontWeight: 600, fontSize: 14 }}>{sec.title}</div><div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{sec.desc}</div></div>
-            <div style={{ display: 'flex', gap: 20, fontSize: 11, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+          <div style={{ padding: '12px 16px', background: 'var(--accent-light)', borderBottom: '1px solid #9FE1CB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div><div style={{ fontWeight: 600, fontSize: 14, color: '#085041' }}>{sec.title}</div><div style={{ fontSize: 12, color: '#1D9E75', marginTop: 2 }}>{sec.desc}</div></div>
+            <div style={{ display: 'flex', gap: 20, fontSize: 11, fontWeight: 600, color: '#085041', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
               <span style={{ width: 80, textAlign: 'center' }}>In-app 🔔</span>
               <span style={{ width: 80, textAlign: 'center' }}>Email 📧</span>
             </div>
