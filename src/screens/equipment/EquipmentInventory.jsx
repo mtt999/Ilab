@@ -38,6 +38,7 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
     ref_id: '', model_number: '', serial_number: '', manufacturer: '',
     date_received: '', condition: 'Good', notes: '', out_of_service: false,
     maintenance_interval_days: '', last_maintenance_date: '', next_maintenance_date: '',
+    website: '',
   }
   const [form, setForm] = useState(item ? {
     equipment_name: item.equipment_name || '',
@@ -51,6 +52,7 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
     date_received: item.date_received || '',
     condition: item.condition || 'Good',
     notes: item.notes || '',
+    website: item.website || '',
     out_of_service: item.out_of_service || false,
     maintenance_interval_days: item.maintenance_interval_days || '',
     last_maintenance_date: item.last_maintenance_date || '',
@@ -175,6 +177,11 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
           <div className="field">
             <label>Next Maintenance (auto-calculated)</label>
             <input type="date" value={form.next_maintenance_date} onChange={e => setForm(f => ({ ...f, next_maintenance_date: e.target.value }))} />
+          </div>
+
+          <div className="field">
+            <label>Company Website</label>
+            <input type="url" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://example.com" />
           </div>
 
           <div className="field"><label>Notes</label><textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} /></div>
@@ -480,6 +487,9 @@ function EquipmentList({ session }) {
                                 <span style={{ marginRight: 6, fontSize: 10, background: '#fcebeb', color: '#a32d2d', borderRadius: 3, padding: '1px 4px', fontWeight: 700 }}>OUT OF SERVICE</span>
                               )}
                               {item.equipment_name}
+                              {item.website && (
+                                <a href={item.website} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} title={item.website} style={{ marginLeft: 6, fontSize: 10, color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>🌐</a>
+                              )}
                             </div>
                           </div>
                         </td>
