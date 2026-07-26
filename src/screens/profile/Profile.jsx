@@ -1007,17 +1007,26 @@ function NotificationPrefsPanel({ userId, role }) {
         <div key={sec.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
           <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div><div style={{ fontWeight: 600, fontSize: 14 }}>{sec.title}</div><div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{sec.desc}</div></div>
-            <div style={{ display: 'flex', gap: 24, fontSize: 11, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
-              <span style={{ width: 50, textAlign: 'center' }}>In-app 🔔</span>
-              <span style={{ width: 50, textAlign: 'center' }}>Email 📧</span>
+            <div style={{ display: 'flex', gap: 20, fontSize: 11, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+              <span style={{ width: 80, textAlign: 'center' }}>In-app 🔔</span>
+              <span style={{ width: 80, textAlign: 'center' }}>Email 📧</span>
             </div>
           </div>
           {sec.events.map((ev, i) => (
             <div key={ev.key} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: i < sec.events.length - 1 ? '1px solid var(--surface2)' : 'none' }}>
               <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{ev.label}</div>
-              <div style={{ display: 'flex', gap: 24, flexShrink: 0 }}>
-                <div style={{ width: 50, textAlign: 'center' }}><input type="checkbox" checked={!!prefs[ev.key]} onChange={e => setPrefs(p => ({ ...p, [ev.key]: e.target.checked }))} style={{ width: 'auto', cursor: 'pointer', transform: 'scale(1.3)' }} /></div>
-                <div style={{ width: 50, textAlign: 'center' }}><input type="checkbox" checked={!!prefs[`email_${ev.key}`]} onChange={e => setPrefs(p => ({ ...p, [`email_${ev.key}`]: e.target.checked }))} style={{ width: 'auto', cursor: 'pointer', transform: 'scale(1.3)' }} /></div>
+              <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
+                {[ev.key, `email_${ev.key}`].map(key => {
+                  const on = !!prefs[key]
+                  return (
+                    <div key={key} style={{ width: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: on ? 'var(--accent)' : 'var(--text3)', minWidth: 22, textAlign: 'right' }}>{on ? 'On' : 'Off'}</span>
+                      <div onClick={() => setPrefs(p => ({ ...p, [key]: !p[key] }))} style={{ width: 44, height: 24, borderRadius: 12, background: on ? 'var(--accent)' : 'var(--border)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+                        <div style={{ position: 'absolute', top: 2, left: on ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}
