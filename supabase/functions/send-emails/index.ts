@@ -69,9 +69,7 @@ Deno.serve(async () => {
         body: JSON.stringify({
           from: RESEND_FROM,
           to: [recipient],
-          subject: testOverride
-            ? `[TEST → ${row.to_email}] ${row.subject ?? "(no subject)"}`
-            : (row.subject ?? "(no subject)"),
+          subject: row.subject ?? "(no subject)",
           html: row.html_body || undefined,
           text: row.body || undefined,
         }),
