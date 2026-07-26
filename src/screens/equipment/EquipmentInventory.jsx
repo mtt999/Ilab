@@ -1472,8 +1472,7 @@ function MaintenanceRecords({ session }) {
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setEditHours({ id: item.id, name: item.nickname || item.equipment_name, max_usage_hours: item.max_usage_hours || '', usage_hours_since_maintenance: item.usage_hours_since_maintenance || 0 })}>⚙️ Set</button>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => setAssignModal({ id: item.id, name: item.nickname || item.equipment_name, assigned_to: item.assigned_to || '' })}>👤</button>
-                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => resetUsage(item.id)}>↺</button>
+                              <button className="btn btn-sm" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => resetUsage(item.id)}>↺ Time Reset</button>
                             </div>
                           </td>
                         )}
