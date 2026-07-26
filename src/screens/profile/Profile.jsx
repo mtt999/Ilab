@@ -1459,7 +1459,7 @@ export function StudentsPanel({ toast, session }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 14, color: 'var(--text2)' }}>{students.length} lab user{students.length !== 1 ? 's' : ''}</div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-sm" onClick={() => fileRef.current?.click()}>⬆️ Import Excel</button>
+          <button className="btn btn-sm" onClick={() => fileRef.current?.click()}>⬇️ Import Excel</button>
           <button className="btn btn-sm btn-primary" onClick={() => { setEditStudent(null); setShowModal(true) }}>+ Add lab user</button>
         </div>
       </div>

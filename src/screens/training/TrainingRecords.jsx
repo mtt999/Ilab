@@ -814,7 +814,7 @@ function EquipmentTraining({ students, session, hideChrome = false, onChanged })
           {canEdit(session) && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <button className="btn btn-sm" onClick={() => equipImportRef.current?.click()} disabled={importing}>
-                {importing ? '⏳ Importing…' : '⬆️ Import Excel'}
+                {importing ? '⏳ Importing…' : '⬇️ Import Excel'}
               </button>
               <input ref={equipImportRef} type="file" accept=".xlsx" style={{ display: 'none' }}
                 onChange={e => { importEquipmentFromExcel(e.target.files[0]); e.target.value = '' }} />

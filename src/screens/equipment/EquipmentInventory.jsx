@@ -410,7 +410,7 @@ function EquipmentList({ session }) {
       {canEdit(session) && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           <button className="btn btn-sm btn-primary" onClick={() => { setEditItem(null); setShowModal(true) }}>+ Add equipment</button>
-          <button className="btn btn-sm" onClick={() => fileRef.current?.click()} disabled={importing}>⬆️ Import Excel</button>
+          <button className="btn btn-sm" onClick={() => fileRef.current?.click()} disabled={importing}>⬇️ Import Excel</button>
           <button className="btn btn-sm" onClick={exportToExcel}>📊 Export Excel</button>
           <input ref={fileRef} type="file" accept=".xlsx" style={{ display: 'none' }} onChange={async e => {
             try { setImportPreview(await parseExcel(e.target.files[0])); e.target.value = '' }
