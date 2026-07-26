@@ -20,8 +20,8 @@ async function sendMessageEmail(userId, senderName, messageBody) {
   if (!userId) return
   const { data: prefs } = await sb.from('notification_prefs').select('*').eq('user_id', userId).maybeSingle()
   if (!prefs || prefs['email_message_reply'] !== true) return
-  const { data: user } = await sb.from('users').select('phone, email, organization_id').eq('id', userId).maybeSingle()
-  const toEmail = user?.phone || user?.email
+  const { data: user } = await sb.from('users').select('email, organization_id').eq('id', userId).maybeSingle()
+  const toEmail = user?.email
   if (!toEmail) return
   let orgContact = null
   if (user?.organization_id) {
