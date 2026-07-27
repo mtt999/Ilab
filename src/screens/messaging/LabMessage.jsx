@@ -103,18 +103,19 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
     : users
 
   function toggle(u) {
-    const already = selectedIds.includes(u.id)
-    onChange(already ? selectedIds.filter(id => id !== u.id) : [...selectedIds, u.id])
+    const list = selectedIds ?? []
+    const already = list.includes(u.id)
+    onChange(already ? list.filter(id => id !== u.id) : [...list, u.id])
   }
 
-  function remove(id) { onChange(selectedIds.filter(x => x !== id)) }
+  function remove(id) { onChange((selectedIds ?? []).filter(x => x !== id)) }
 
-  const isBroadcast = !isLabUser && selectedIds.length === 0
+  const isBroadcast = !isLabUser && selectedIds !== null && selectedIds.length === 0
 
   return (
     <div ref={wrapRef}>
       {/* Selected chips */}
-      {(selectedIds.length > 0 || isBroadcast) && (
+      {(selectedIds !== null && (selectedIds.length > 0 || isBroadcast)) && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {isBroadcast && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>
@@ -139,7 +140,7 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
-          placeholder={isLabUser ? 'Search by name…' : selectedIds.length ? 'Add more…' : 'Search or leave blank to broadcast to all…'}
+          placeholder={isLabUser ? 'Search by name…' : (selectedIds?.length ? 'Add more…' : 'Search by name, or choose "All org users"…')}
           autoComplete="off"
         />
         {open && (
@@ -153,7 +154,7 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
             {filtered.length === 0
               ? <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text3)' }}>No users found</div>
               : filtered.map(u => {
-                  const selected = selectedIds.includes(u.id)
+                  const selected = (selectedIds ?? []).includes(u.id)
                   return (
                     <div key={u.id} onClick={() => { toggle(u); setQuery('') }}
                       style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, background: selected ? 'var(--accent-light)' : undefined }}>
@@ -196,7 +197,7 @@ function Avatar({ name, user, size = 32 }) {
 
 function NewConvModal({ session, staff, onSent, onClose }) {
   const { toast } = useAppStore()
-  const [receiverIds, setReceiverIds] = useState([])
+  const [receiverIds, setReceiverIds] = useState(null)
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
   const [file, setFile] = useState(null)
@@ -206,7 +207,8 @@ function NewConvModal({ session, staff, onSent, onClose }) {
 
   async function send() {
     if (!body.trim()) { toast('Message is required.'); return }
-    if (isLabUser && receiverIds.length === 0) { toast('Please select who to send to.'); return }
+    const ids = receiverIds ?? []
+    if (isLabUser && ids.length === 0) { toast('Please select who to send to.'); return }
     setSending(true)
     let fileUrl = null, fileName = null
     if (file) {
@@ -219,7 +221,7 @@ function NewConvModal({ session, staff, onSent, onClose }) {
       }
     }
 
-    const isBroadcast = !isLabUser && receiverIds.length === 0
+    const isBroadcast = !isLabUser && ids.length === 0
     const baseMsg = {
       sender_id: session.userId, sender_name: session.username,
       subject: subject || null, body: body.trim(),
@@ -235,7 +237,7 @@ function NewConvModal({ session, staff, onSent, onClose }) {
       })
       if (error) { toast('Failed to send: ' + error.message); setSending(false); return }
     } else {
-      for (const rid of receiverIds) {
+      for (const rid of ids) {
         const receiver = staff.find(s => s.id === rid)
         const { error } = await sb.from('re_messages').insert({
           ...baseMsg,
@@ -248,7 +250,7 @@ function NewConvModal({ session, staff, onSent, onClose }) {
       }
     }
 
-    toast(isBroadcast ? 'Broadcast sent ✓' : `Message sent to ${receiverIds.length} recipient${receiverIds.length > 1 ? 's' : ''} ✓`)
+    toast(isBroadcast ? 'Broadcast sent ✓' : `Message sent to ${ids.length} recipient${ids.length > 1 ? 's' : ''} ✓`)
     setSending(false)
     onSent()
   }
