@@ -120,7 +120,7 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser, orgN
           {isBroadcast && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>
               <IconMegaphone size={11} /> All {orgName || 'org'} users
-              <span onClick={() => onChange(null)} style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13, lineHeight: 1, marginLeft: 2 }}>×</span>
+              <span onClick={() => onChange(null)} style={{ cursor: 'pointer', fontWeight: 700, fontSize: 18, lineHeight: 1, marginLeft: 4 }}>×</span>
             </span>
           )}
           {selectedIds.map(id => {
@@ -129,7 +129,7 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser, orgN
             return (
               <span key={id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 500 }}>
                 {getUserDisplayName(u)}
-                <span onClick={() => remove(id)} style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13, lineHeight: 1, marginLeft: 2 }}>×</span>
+                <span onClick={() => remove(id)} style={{ cursor: 'pointer', fontWeight: 700, fontSize: 18, lineHeight: 1, marginLeft: 4 }}>×</span>
               </span>
             )
           })}
