@@ -76,19 +76,17 @@ function isImageFile(name, url) {
   return IMG_EXT.test(name || '') || IMG_EXT.test((url || '').split('?')[0])
 }
 
-// Students store firstName in email col, lastName in name col
 function getUserDisplayName(u) {
   if (!u) return ''
-  if (u.role === 'student') return [u.email, u.name].filter(Boolean).join(' ').trim() || 'Lab User'
-  return u.name || '—'
+  return u.nick_name?.trim() || [u.name, u.last_name].filter(Boolean).join(' ').trim() || '—'
 }
 function getRoleLabel(u) {
   if (u.role === 'admin') return 'Admin'
-  if (u.role === 'student') return 'Lab User'
-  return 'Staff'
+  if (u.role === 'lab_user') return 'Lab User'
+  return 'Lab Manager'
 }
 
-function UserSearchDropdown({ users, value, onChange, isStudent }) {
+function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
@@ -99,43 +97,78 @@ function UserSearchDropdown({ users, value, onChange, isStudent }) {
     return () => document.removeEventListener('mousedown', onDown)
   }, [])
 
-  useEffect(() => {
-    if (!value) setQuery('')
-    else { const u = users.find(x => x.id === value); if (u) setQuery(getUserDisplayName(u)) }
-  }, [value, users])
-
   const q = query.toLowerCase()
-  const filtered = q ? users.filter(u => getUserDisplayName(u).toLowerCase().includes(q) || getRoleLabel(u).toLowerCase().includes(q)) : users
+  const filtered = q
+    ? users.filter(u => getUserDisplayName(u).toLowerCase().includes(q) || getRoleLabel(u).toLowerCase().includes(q))
+    : users
 
-  function pick(u) { onChange(u?.id || ''); setQuery(u ? getUserDisplayName(u) : ''); setOpen(false) }
+  function toggle(u) {
+    const already = selectedIds.includes(u.id)
+    onChange(already ? selectedIds.filter(id => id !== u.id) : [...selectedIds, u.id])
+  }
+
+  function remove(id) { onChange(selectedIds.filter(x => x !== id)) }
+
+  const isBroadcast = !isLabUser && selectedIds.length === 0
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }}>
-      <input
-        value={query}
-        onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange('') }}
-        onFocus={() => setOpen(true)}
-        placeholder={isStudent ? 'Search by name…' : 'Search by name, or leave blank to broadcast…'}
-        autoComplete="off"
-      />
-      {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 200, maxHeight: 220, overflowY: 'auto' }}>
-          {!isStudent && (
-            <div onClick={() => pick(null)} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 500, color: 'var(--accent)', background: !value ? 'var(--accent-light)' : undefined }}>
-              — All staff (broadcast) —
-            </div>
+    <div ref={wrapRef}>
+      {/* Selected chips */}
+      {(selectedIds.length > 0 || isBroadcast) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          {isBroadcast && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>
+              <IconMegaphone size={11} /> All org users
+            </span>
           )}
-          {filtered.length === 0
-            ? <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text3)' }}>No users found</div>
-            : filtered.map(u => (
-              <div key={u.id} onClick={() => pick(u)} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: value === u.id ? 'var(--accent-light)' : undefined }}>
-                <span style={{ fontSize: 14, fontWeight: 500 }}>{getUserDisplayName(u)}</span>
-                <span style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 4, padding: '2px 6px' }}>{getRoleLabel(u)}</span>
-              </div>
-            ))
-          }
+          {selectedIds.map(id => {
+            const u = users.find(x => x.id === id)
+            if (!u) return null
+            return (
+              <span key={id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 500 }}>
+                {getUserDisplayName(u)}
+                <span onClick={() => remove(id)} style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13, lineHeight: 1, marginLeft: 2 }}>×</span>
+              </span>
+            )
+          })}
         </div>
       )}
+      {/* Search input */}
+      <div style={{ position: 'relative' }}>
+        <input
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder={isLabUser ? 'Search by name…' : selectedIds.length ? 'Add more…' : 'Search or leave blank to broadcast to all…'}
+          autoComplete="off"
+        />
+        {open && (
+          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 200, maxHeight: 220, overflowY: 'auto' }}>
+            {!isLabUser && (
+              <div onClick={() => { onChange([]); setQuery(''); setOpen(false) }}
+                style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 500, color: 'var(--accent)', background: isBroadcast ? 'var(--accent-light)' : undefined }}>
+                <IconMegaphone size={12} style={{ marginRight: 6 }} /> All org users (broadcast)
+              </div>
+            )}
+            {filtered.length === 0
+              ? <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text3)' }}>No users found</div>
+              : filtered.map(u => {
+                  const selected = selectedIds.includes(u.id)
+                  return (
+                    <div key={u.id} onClick={() => { toggle(u); setQuery('') }}
+                      style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, background: selected ? 'var(--accent-light)' : undefined }}>
+                      <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`, background: selected ? 'var(--accent)' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {selected && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>✓</span>}
+                      </div>
+                      <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{getUserDisplayName(u)}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 4, padding: '2px 6px' }}>{getRoleLabel(u)}</span>
+                    </div>
+                  )
+                })
+            }
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -163,15 +196,17 @@ function Avatar({ name, user, size = 32 }) {
 
 function NewConvModal({ session, staff, onSent, onClose }) {
   const { toast } = useAppStore()
-  const [form, setForm] = useState({ receiverId: '', subject: '', body: '' })
+  const [receiverIds, setReceiverIds] = useState([])
+  const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
   const [file, setFile] = useState(null)
   const [sending, setSending] = useState(false)
   const fileRef = useRef(null)
-  const isStudent = session?.role === 'student'
+  const isLabUser = session?.role === 'lab_user'
 
   async function send() {
-    if (!form.body.trim()) { toast('Message is required.'); return }
-    if (isStudent && !form.receiverId) { toast('Please select who to send to.'); return }
+    if (!body.trim()) { toast('Message is required.'); return }
+    if (isLabUser && receiverIds.length === 0) { toast('Please select who to send to.'); return }
     setSending(true)
     let fileUrl = null, fileName = null
     if (file) {
@@ -183,21 +218,37 @@ function NewConvModal({ session, staff, onSent, onClose }) {
         fileUrl = url.publicUrl; fileName = file.name
       }
     }
-    const receiver = staff.find(s => s.id === form.receiverId)
-    const { error } = await sb.from('re_messages').insert({
+
+    const isBroadcast = !isLabUser && receiverIds.length === 0
+    const baseMsg = {
       sender_id: session.userId, sender_name: session.username,
-      receiver_id: form.receiverId || null,
-      receiver_name: receiver ? getUserDisplayName(receiver) : (!form.receiverId ? 'All Staff' : null),
-      subject: form.subject || null, body: form.body.trim(),
+      subject: subject || null, body: body.trim(),
       organization_id: session?.organizationId || null,
       ...(fileUrl ? { file_url: fileUrl, file_name: fileName } : {}),
-    })
-    if (error) { toast('Failed to send: ' + error.message); setSending(false); return }
-    if (form.receiverId) {
-      await sendAppNotification(form.receiverId, session.username, form.body.trim())
-      await sendMessageEmail(form.receiverId, session.username, form.body.trim())
     }
-    toast('Message sent ✓')
+
+    if (isBroadcast) {
+      const { error } = await sb.from('re_messages').insert({
+        ...baseMsg,
+        receiver_id: null,
+        receiver_name: 'All org users',
+      })
+      if (error) { toast('Failed to send: ' + error.message); setSending(false); return }
+    } else {
+      for (const rid of receiverIds) {
+        const receiver = staff.find(s => s.id === rid)
+        const { error } = await sb.from('re_messages').insert({
+          ...baseMsg,
+          receiver_id: rid,
+          receiver_name: receiver ? getUserDisplayName(receiver) : null,
+        })
+        if (error) { toast('Failed to send: ' + error.message); setSending(false); return }
+        await sendAppNotification(rid, session.username, body.trim())
+        await sendMessageEmail(rid, session.username, body.trim())
+      }
+    }
+
+    toast(isBroadcast ? 'Broadcast sent ✓' : `Message sent to ${receiverIds.length} recipient${receiverIds.length > 1 ? 's' : ''} ✓`)
     setSending(false)
     onSent()
   }
@@ -210,16 +261,16 @@ function NewConvModal({ session, staff, onSent, onClose }) {
           <button onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: 4 }}>✕</button>
         </div>
         <div className="field">
-          <label>To {isStudent ? '*' : '(leave blank to broadcast to all staff)'}</label>
-          <UserSearchDropdown users={staff} value={form.receiverId} onChange={id => setForm(f => ({ ...f, receiverId: id }))} isStudent={isStudent} />
+          <label>To {isLabUser ? '*' : '(select one or more, or leave blank to broadcast)'}</label>
+          <UserMultiSelectDropdown users={staff} selectedIds={receiverIds} onChange={setReceiverIds} isLabUser={isLabUser} />
         </div>
         <div className="field">
           <label>Subject (optional)</label>
-          <input value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} placeholder="e.g. Equipment question, Booking issue…" />
+          <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Equipment question, Booking issue…" />
         </div>
         <div className="field">
           <label>Message *</label>
-          <textarea rows={4} value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} placeholder="Write your message here…" style={{ resize: 'vertical' }} />
+          <textarea rows={4} value={body} onChange={e => setBody(e.target.value)} placeholder="Write your message here…" style={{ resize: 'vertical' }} />
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
           <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files[0])} />
@@ -302,11 +353,16 @@ export default function LabMessage() {
 
   async function loadStaff() {
     // Students message staff/admins only; staff/admins can message everyone incl. lab users
-    const roles = (isAdmin || isStaff) ? ['user', 'admin', 'student'] : ['user', 'admin']
-    let q = sb.from('users').select('id, name, email, role').in('role', roles).eq('is_active', true).order('name')
+    const roles = (isAdmin || isStaff) ? ['user', 'admin', 'lab_user'] : ['user', 'admin']
+    let q = sb.from('users').select('id, name, last_name, nick_name, email, role').in('role', roles).eq('is_active', true)
     if (session?.organizationId && session?.userId) q = q.eq('organization_id', session.organizationId)
     const { data } = await q
-    setStaff(data || [])
+    const ROLE_ORDER = { user: 0, lab_user: 1, admin: 2 }
+    const sorted = (data || []).sort((a, b) =>
+      (ROLE_ORDER[a.role] ?? 3) - (ROLE_ORDER[b.role] ?? 3) ||
+      getUserDisplayName(a).localeCompare(getUserDisplayName(b))
+    )
+    setStaff(sorted)
     // avatar lookup: all org users (photo + gender), keyed by id
     let uq = sb.from('users').select('id, photo_url, gender, role').eq('is_active', true)
     if (session?.organizationId && session?.userId) uq = uq.eq('organization_id', session.organizationId)
@@ -319,8 +375,8 @@ export default function LabMessage() {
   async function fetchAll() {
     let q = sb.from('re_messages').select('*').order('created_at', { ascending: true })
     if (!isAdmin) {
-      // staff also see broadcast messages (receiver_id is null)
-      const broadcastClause = isStaff ? `,receiver_id.is.null` : ''
+      // all authenticated team users see broadcast messages (receiver_id is null)
+      const broadcastClause = `,receiver_id.is.null`
       q = q.or(`receiver_id.eq.${session.userId},sender_id.eq.${session.userId}${broadcastClause}`)
       if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
     } else if (session?.organizationId && session?.userId) {
@@ -499,7 +555,7 @@ export default function LabMessage() {
   function BroadcastBadge({ small }) {
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: small ? '1px 6px' : '2px 8px', fontSize: small ? 9 : 11, fontWeight: 700, flexShrink: 0, lineHeight: 1.5 }}>
-        <IconMegaphone size={small ? 10 : 12} /> All staff
+        <IconMegaphone size={small ? 10 : 12} /> All lab managers
       </span>
     )
   }
