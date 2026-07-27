@@ -86,7 +86,7 @@ function getRoleLabel(u) {
   return 'Lab Manager'
 }
 
-function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
+function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser, orgName }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
@@ -119,7 +119,8 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {isBroadcast && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>
-              <IconMegaphone size={11} /> All org users
+              <IconMegaphone size={11} /> All {orgName || 'org'} users
+              <span onClick={() => onChange(null)} style={{ cursor: 'pointer', fontWeight: 700, fontSize: 13, lineHeight: 1, marginLeft: 2 }}>×</span>
             </span>
           )}
           {selectedIds.map(id => {
@@ -148,7 +149,7 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser }) {
             {!isLabUser && (
               <div onClick={() => { onChange([]); setQuery(''); setOpen(false) }}
                 style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 500, color: 'var(--accent)', background: isBroadcast ? 'var(--accent-light)' : undefined }}>
-                <IconMegaphone size={12} style={{ marginRight: 6 }} /> All org users (broadcast)
+                <IconMegaphone size={12} style={{ marginRight: 6 }} /> All {orgName || 'org'} users (broadcast)
               </div>
             )}
             {filtered.length === 0
@@ -195,7 +196,7 @@ function Avatar({ name, user, size = 32 }) {
   )
 }
 
-function NewConvModal({ session, staff, onSent, onClose }) {
+function NewConvModal({ session, staff, orgName, onSent, onClose }) {
   const { toast } = useAppStore()
   const [receiverIds, setReceiverIds] = useState(null)
   const [subject, setSubject] = useState('')
@@ -264,7 +265,7 @@ function NewConvModal({ session, staff, onSent, onClose }) {
         </div>
         <div className="field">
           <label>To {isLabUser ? '*' : '(select one or more, or leave blank to broadcast)'}</label>
-          <UserMultiSelectDropdown users={staff} selectedIds={receiverIds} onChange={setReceiverIds} isLabUser={isLabUser} />
+          <UserMultiSelectDropdown users={staff} selectedIds={receiverIds} onChange={setReceiverIds} isLabUser={isLabUser} orgName={orgName} />
         </div>
         <div className="field">
           <label>Subject (optional)</label>
@@ -306,6 +307,7 @@ export default function LabMessage() {
   const [unreadOnly, setUnreadOnly] = useState(false)
   const [showBgPicker, setShowBgPicker] = useState(false)
   const [chatBg, setChatBg] = useState(() => localStorage.getItem('ilab_chat_bg') || 'default')
+  const [orgName, setOrgName] = useState('')
   const threadRef = useRef(null)
   const replyFileRef = useRef(null)
   const textareaRef = useRef(null)
@@ -354,6 +356,10 @@ export default function LabMessage() {
   }, [selectedId, selectedConv?.replies?.length])
 
   async function loadStaff() {
+    if (session?.organizationId) {
+      const { data: org } = await sb.from('organizations').select('name').eq('id', session.organizationId).maybeSingle()
+      if (org?.name) setOrgName(org.name)
+    }
     // Students message staff/admins only; staff/admins can message everyone incl. lab users
     const roles = (isAdmin || isStaff) ? ['user', 'admin', 'lab_user'] : ['user', 'admin']
     let q = sb.from('users').select('id, name, last_name, nick_name, email, role').in('role', roles).eq('is_active', true)
@@ -877,7 +883,7 @@ export default function LabMessage() {
       </div>
 
       {showCompose && (
-        <NewConvModal session={session} staff={staff} onSent={() => { setShowCompose(false); load() }} onClose={() => setShowCompose(false)} />
+        <NewConvModal session={session} staff={staff} orgName={orgName} onSent={() => { setShowCompose(false); load() }} onClose={() => setShowCompose(false)} />
       )}
 
       {deleteConfirm && (
