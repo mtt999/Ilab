@@ -206,10 +206,13 @@ function NewConvModal({ session, staff, orgName, onSent, onClose }) {
   const fileRef = useRef(null)
   const isLabUser = session?.role === 'lab_user'
 
+  const ids = receiverIds ?? []
+  const canSend = receiverIds !== null && subject.trim().length > 0 && body.trim().length > 0
+
   async function send() {
+    if (receiverIds === null) { toast('Please select who to send to.'); return }
+    if (!subject.trim()) { toast('Subject is required.'); return }
     if (!body.trim()) { toast('Message is required.'); return }
-    const ids = receiverIds ?? []
-    if (isLabUser && ids.length === 0) { toast('Please select who to send to.'); return }
     setSending(true)
     let fileUrl = null, fileName = null
     if (file) {
@@ -222,7 +225,7 @@ function NewConvModal({ session, staff, orgName, onSent, onClose }) {
       }
     }
 
-    const isBroadcast = !isLabUser && ids.length === 0
+    const isBroadcast = ids.length === 0
     const baseMsg = {
       sender_id: session.userId, sender_name: session.username,
       subject: subject || null, body: body.trim(),
@@ -264,11 +267,11 @@ function NewConvModal({ session, staff, orgName, onSent, onClose }) {
           <button onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--text3)', lineHeight: 1, padding: 4 }}>✕</button>
         </div>
         <div className="field">
-          <label>To {isLabUser ? '*' : '(select one or more, or leave blank to broadcast)'}</label>
+          <label>To *</label>
           <UserMultiSelectDropdown users={staff} selectedIds={receiverIds} onChange={setReceiverIds} isLabUser={isLabUser} orgName={orgName} />
         </div>
         <div className="field">
-          <label>Subject (optional)</label>
+          <label>Subject *</label>
           <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Equipment question, Booking issue…" />
         </div>
         <div className="field">
@@ -281,7 +284,7 @@ function NewConvModal({ session, staff, orgName, onSent, onClose }) {
           {file && <button className="btn btn-sm btn-danger" onClick={() => setFile(null)}>✕</button>}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-primary" onClick={send} disabled={sending}>{sending ? 'Sending…' : 'Send'}</button>
+          <button className="btn btn-primary" onClick={send} disabled={sending || !canSend}>{sending ? 'Sending…' : 'Send'}</button>
           <button className="btn" onClick={onClose}>Cancel</button>
         </div>
       </div>
