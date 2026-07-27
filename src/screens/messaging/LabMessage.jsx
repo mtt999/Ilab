@@ -162,7 +162,7 @@ function UserMultiSelectDropdown({ users, selectedIds, onChange, isLabUser, orgN
                       <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`, background: selected ? 'var(--accent)' : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {selected && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>✓</span>}
                       </div>
-                      <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{getUserDisplayName(u)}</span>
+                      <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{u.nick_name?.trim() || u.name || '—'}</span>
                       <span style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--surface2)', borderRadius: 4, padding: '2px 6px' }}>{getRoleLabel(u)}</span>
                     </div>
                   )
