@@ -30,10 +30,10 @@ const YEARS = Array.from({ length: 15 }, (_, i) => String(new Date().getFullYear
 const groupColor = { Material: '#92400e', Sustainability: '#085041', GPR: '#0369a1', Mechanic: '#534AB7', Other: '#6b6860' }
 const groupBg   = { Material: '#fef3c7', Sustainability: '#E1F5EE', GPR: '#e0f2fe', Mechanic: '#EEEDFE', Other: '#f0efe9' }
 
-const sFirstName  = s => s?.email  || ''
-const sLastName   = s => s?.name   || ''
-const sEmail      = s => s?.phone  || ''
-const sSupervisor = s => s?.degree || s?.supervisor || ''
+const sFirstName  = s => s?.name      || ''
+const sLastName   = s => s?.last_name || ''
+const sEmail      = s => s?.email     || ''
+const sSupervisor = s => s?.supervisor || s?.degree || ''
 
 async function createAuthUser(email, password) {
   const emailLC = email.trim().toLowerCase()
@@ -256,7 +256,7 @@ function SoloProfile({ session }) {
               <label>Current password</label>
               <div style={{ position: 'relative' }}>
                 <input type={showPinCur ? 'text' : 'password'} autoComplete="current-password" value={pinForm.current} onChange={e => { setPinForm(f => ({ ...f, current: e.target.value })); setPinError('') }} placeholder="••••••••" style={{ paddingRight: 40 }} />
-                <button type="button" onClick={() => setShowPinCur(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                <button type="button" onClick={() => setShowPinCur(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                   {showPinCur ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                 </button>
               </div>
@@ -266,7 +266,7 @@ function SoloProfile({ session }) {
                 <label>New password</label>
                 <div style={{ position: 'relative' }}>
                   <input type={showPinNew ? 'text' : 'password'} autoComplete="new-password" value={pinForm.newPin} onChange={e => { setPinForm(f => ({ ...f, newPin: e.target.value })); setPinError('') }} style={{ paddingRight: 40 }} />
-                  <button type="button" onClick={() => setShowPinNew(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+                  <button type="button" onClick={() => setShowPinNew(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                     {showPinNew ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                   </button>
                 </div>
@@ -566,7 +566,7 @@ function DashboardIconsPanel({ session }) {
         let appPool = null
         try { appPool = appRes?.data?.value ? JSON.parse(appRes.data.value) : null } catch {}
         // Role-specific org pool: lab users use labusers pool, staff use labmanagers pool, org admin uses outer pool
-        const outerOrgPool = session?.role === 'student'
+        const outerOrgPool = session?.role === 'lab_user'
           ? (orgRes?.data?.allowed_modules_labusers ?? orgRes?.data?.allowed_modules)
           : session?.role === 'user'
             ? (orgRes?.data?.allowed_modules_labmanagers ?? orgRes?.data?.allowed_modules)
@@ -574,7 +574,7 @@ function DashboardIconsPanel({ session }) {
         const orgPool = outerOrgPool || null
         const effectivePool = orgPool ?? appPool
         setAdminPool(effectivePool)
-        if (session?.role === 'student') {
+        if (session?.role === 'lab_user') {
           const pool = data?.allowed_modules || []
           setAllowedPool(pool)
           const poolKeys = effectivePool !== null ? pool.filter(k => effectivePool.includes(k)) : pool
@@ -638,7 +638,7 @@ function DashboardIconsPanel({ session }) {
     <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
   )
 
-  if (session?.role === 'student' && allowedPool !== null && allowedPool.length === 0) return (
+  if (session?.role === 'lab_user' && allowedPool !== null && allowedPool.length === 0) return (
     <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
       <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
       <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>No icons assigned yet</div>
@@ -647,7 +647,7 @@ function DashboardIconsPanel({ session }) {
   )
 
   const baseDisplay = (() => {
-    if (session?.role === 'student' && allowedPool?.length) {
+    if (session?.role === 'lab_user' && allowedPool?.length) {
       const studentPool = adminPool !== null
         ? allowedPool.filter(k => adminPool.includes(k))
         : allowedPool
@@ -750,7 +750,7 @@ function DashboardIconsPanel({ session }) {
           )
         })}
         {/* studentLocked modules: visible on dashboard as gray cards, also shown here so students see the full picture */}
-        {session?.role === 'student' && ALL_MODULES_META
+        {session?.role === 'lab_user' && ALL_MODULES_META
           .filter(m => m.studentLocked && m.roles.includes('team') && !allowedPool?.includes(m.key))
           .map(m => (
             <div key={m.key} style={{ borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface2)', padding: '14px 14px 12px', cursor: 'default', position: 'relative', opacity: 0.45, userSelect: 'none', filter: 'grayscale(0.7)' }}>
@@ -919,12 +919,12 @@ function NotificationPrefsPanel({ userId, role }) {
   const { toast, showTooltips, setShowTooltips } = useAppStore()
 
   const SECTIONS = [
-    { title: '📅 Equipment Booking', desc: 'Notifications about your equipment reservations.', roles: ['student', 'user', 'admin', 'solo'], events: [
+    { title: '📅 Equipment Booking', desc: 'Notifications about your equipment reservations.', roles: ['lab_user', 'user', 'admin', 'solo'], events: [
       { key: 'booking_confirmed', label: 'Booking confirmed' },
       { key: 'booking_reminder',  label: 'Upcoming booking reminder (1 day before)' },
       { key: 'booking_cancelled', label: 'Booking cancelled' },
     ]},
-    { title: '🎓 Training & Certifications', desc: 'Stay on top of your training status.', roles: ['student'], events: [
+    { title: '🎓 Training & Certifications', desc: 'Stay on top of your training status.', roles: ['lab_user'], events: [
       { key: 'training_approved',  label: 'Training certificate approved' },
       { key: 'training_expiring',  label: 'Training certificate expiring soon' },
       { key: 'training_submitted', label: 'Training submission received' },
@@ -940,10 +940,10 @@ function NotificationPrefsPanel({ userId, role }) {
       { key: 'reminder_daily', label: 'Morning check — see today\'s reminder list (7–11 am)' },
       { key: 'reminder_items', label: 'Reminder item alerts — noon, afternoon & timed items' },
     ]},
-    { title: '🤝 Project Team', desc: 'Notifications about project team invites.', roles: ['student', 'user', 'admin'], events: [
+    { title: '🤝 Project Team', desc: 'Notifications about project team invites.', roles: ['lab_user', 'user', 'admin'], events: [
       { key: 'team_invite', label: 'Project team invite received or accepted' },
     ]},
-    { title: '💬 Lab Messages', desc: 'Messages from the Lab Messages feature.', roles: ['student', 'user', 'admin', 'solo'], events: [
+    { title: '💬 Lab Messages', desc: 'Messages from the Lab Messages feature.', roles: ['lab_user', 'user', 'admin', 'solo'], events: [
       { key: 'message_reply', label: 'Reply received to my message' },
     ]},
     { title: '🔧 Equipment Maintenance', desc: 'Reminders when equipment you are responsible for is coming due.', roles: ['user', 'admin', 'solo'], events: [
@@ -1215,7 +1215,7 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
             <label>Current password</label>
             <div style={{ position: 'relative' }}>
               <input type={showCurrent ? 'text' : 'password'} autoComplete="current-password" value={form.currentPassword} onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} placeholder="••••••••" style={{ paddingRight: 40 }} />
-              <button type="button" onClick={() => setShowCurrent(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => setShowCurrent(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                 {showCurrent ? <IconEyeOff size={16} /> : <IconEye size={16} />}
               </button>
             </div>
@@ -1224,7 +1224,7 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
             <label>New password</label>
             <div style={{ position: 'relative' }}>
               <input type={showNew ? 'text' : 'password'} autoComplete="new-password" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} placeholder="Min. 8 characters" style={{ paddingRight: 40 }} />
-              <button type="button" onClick={() => setShowNew(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => setShowNew(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                 {showNew ? <IconEyeOff size={16} /> : <IconEye size={16} />}
               </button>
             </div>
@@ -1234,7 +1234,7 @@ function AdminSettings({ session: sessionProp, toast, isSuperAdmin = false }) {
             <label>Confirm new password</label>
             <div style={{ position: 'relative' }}>
               <input type={showConfirm ? 'text' : 'password'} autoComplete="new-password" value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="••••••••" style={{ paddingRight: 40 }} />
-              <button type="button" onClick={() => setShowConfirm(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => setShowConfirm(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                 {showConfirm ? <IconEyeOff size={16} /> : <IconEye size={16} />}
               </button>
             </div>
@@ -1394,7 +1394,7 @@ export function StudentsPanel({ toast, session }) {
 
   async function load() {
     setLoading(true)
-    let q = sb.from('users').select('*').eq('role', 'student').order('name')
+    let q = sb.from('users').select('*').eq('role', 'lab_user').order('name')
     if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
     const { data } = await q
     setStudents(data || [])
@@ -1419,7 +1419,7 @@ export function StudentsPanel({ toast, session }) {
       if (perr) { toast(perr); return }
     }
     if (!form.selectedProjectIds || form.selectedProjectIds.length === 0) { toast('Please assign at least one project.'); return }
-    const payload = { name: form.lastName.trim(), email: form.firstName.trim() || null, phone: actualEmail || null, degree: form.supervisor || null, year_semester: form.year_semester || null, project_group: form.project_group || null, assigned_project_ids: form.selectedProjectIds || [], nickname: form.nickname || null, organization_id: session?.organizationId || null, role: 'student', is_active: true, admin_level: 0, pin: '', must_change_password: !id && !!form.password, terms_accepted_version: null }
+    const payload = { name: form.firstName.trim(), last_name: form.lastName.trim() || null, email: actualEmail || null, supervisor: form.supervisor || null, year_semester: form.year_semester || null, project_group: form.project_group || null, assigned_project_ids: form.selectedProjectIds || [], nick_name: form.nickname || null, organization_id: session?.organizationId || null, role: 'lab_user', is_active: true, admin_level: 0, pin: '', must_change_password: !id && !!form.password, terms_accepted_version: null }
     if (!id && form.password && actualEmail) {
       try {
         const authUser = await createAuthUser(actualEmail, form.password)
@@ -1480,7 +1480,7 @@ export function StudentsPanel({ toast, session }) {
     setImporting(true)
     let added = 0
     for (const s of importPreview) {
-      const { error } = await sb.from('users').insert({ ...s, pin: '', role: 'student', is_active: true, admin_level: 0, must_change_password: true, terms_accepted_version: null })
+      const { error } = await sb.from('users').insert({ ...s, pin: '', role: 'lab_user', is_active: true, admin_level: 0, must_change_password: true, terms_accepted_version: null })
       if (!error) added++
     }
     setImportPreview(null); setImporting(false); load(); toast(`${added} students imported. Set their passwords individually to activate login.`)
@@ -1503,7 +1503,7 @@ export function StudentsPanel({ toast, session }) {
       <input ref={fileRef} type="file" accept=".xlsx" style={{ display: 'none' }} onChange={async e => { try { setImportPreview(await parseExcel(e.target.files[0])) } catch { toast('Error reading file.') } }} />
       {importPreview && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Import preview — {importPreview.length} students</div>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Import preview — {importPreview.length} lab users</div>
           {importPreview.slice(0,3).map((s,i) => <div key={i} style={{ fontSize: 13, padding: '2px 0', color: 'var(--text2)' }}>· {s.name}</div>)}
           {importPreview.length > 3 && <div style={{ fontSize: 12, color: 'var(--text3)' }}>…and {importPreview.length - 3} more</div>}
           <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
@@ -1524,7 +1524,7 @@ export function StudentsPanel({ toast, session }) {
                 ? <img src={s.photo_url} alt="" style={{ width: 'calc(100% + 24px)', height: 90, objectFit: 'cover', borderRadius: '10px 10px 0 0', margin: '0 -12px 10px' }} />
                 : <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><PersonAvatar user={s} /></div>}
               <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {sLastName(s)}{sLastName(s) && sFirstName(s) ? ', ' : ''}{sFirstName(s)}
+                {s.nick_name?.trim() || [sFirstName(s), sLastName(s)].filter(Boolean).join(' ') || '—'}
               </div>
               {sEmail(s) && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sEmail(s)}</div>}
               <div style={{ marginTop: 4, marginBottom: 10, display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap', minHeight: 16 }}>
@@ -1559,7 +1559,7 @@ function StudentModal({ student, session, onClose, onSave }) {
     firstName: sFirstName(student), lastName: sLastName(student), emailAddr: sEmail(student), supervisor: sSupervisor(student),
     password: '', year_semester: student.year_semester||'', project_group: student.project_group||'',
     selectedProjectIds: student.assigned_project_ids || [],
-    nickname: student.nickname || '',
+    nickname: student.nick_name || '',
   } : { firstName: '', lastName: '', emailAddr: '', supervisor: '', password: '', year_semester: '', project_group: '', selectedProjectIds: [], nickname: '' })
   const [orgProjects, setOrgProjects] = useState([])
   const [showPw, setShowPw] = useState(false)
@@ -1598,7 +1598,7 @@ function StudentModal({ student, session, onClose, onSave }) {
           <label>Password{student ? ' (leave blank to keep current)' : ' *'}</label>
           <div style={{ position: 'relative' }}>
             <input type={showPw ? 'text' : 'password'} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={student ? 'Leave blank to keep unchanged' : 'e.g. Lab2026! — upper, lower, number, symbol'} autoComplete="new-password" style={{ paddingRight: 40 }} />
-            <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+            <button type="button" onClick={() => setShowPw(s => !s)} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
               {showPw ? <IconEyeOff size={16} /> : <IconEye size={16} />}
             </button>
           </div>
@@ -1662,7 +1662,7 @@ function StaffListPanel({ toast, session }) {
     const actualEmail = form.email?.trim().toLowerCase()
     if (!id) {
       if (!form.password) { toast('Password is required.'); return }
-      if (!actualEmail) { toast('Email is required for staff login.'); return }
+      if (!actualEmail) { toast('Email is required for lab manager login.'); return }
     }
     if (form.password) {
       const perr = passwordError(form.password)
@@ -1694,7 +1694,7 @@ function StaffListPanel({ toast, session }) {
   // their email as first name and loses their login email display.
   async function setMemberRole(u, newRole) {
     let payload = { role: newRole, admin_level: 0 }
-    if (newRole === 'student') {
+    if (newRole === 'lab_user') {
       const parts = (u.name || '').trim().split(/\s+/)
       payload = {
         ...payload,
@@ -1773,7 +1773,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
 
   function handleRoleClick(opt) {
     if (opt.role === staff.role) return
-    if (opt.role === 'student') { setConfirmDowngrade(true); return }
+    if (opt.role === 'lab_user') { setConfirmDowngrade(true); return }
     onRoleChange(staff, opt.role); onClose()
   }
 
@@ -1791,7 +1791,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
             <label>Password{staff ? ' (leave blank to keep)' : ' *'}</label>
             <div style={{ position: 'relative' }}>
               <input type={showPw ? 'text' : 'password'} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={staff ? 'Type to change' : 'e.g. Lab2026! — upper, lower, number, symbol'} autoComplete="new-password" style={{ paddingRight: 40 }} />
-              <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => setShowPw(s => !s)} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                 {showPw ? <IconEyeOff size={16} /> : <IconEye size={16} />}
               </button>
             </div>
@@ -1803,7 +1803,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
           <div className="field">
             <label>Role</label>
             <div style={{ display:'flex', gap:8 }}>
-              {[{ label: 'Lab Manager', role: 'user' }, { label: 'Lab User', role: 'student' }].map(opt => (
+              {[{ label: 'Lab Manager', role: 'user' }, { label: 'Lab User', role: 'lab_user' }].map(opt => (
                 <button key={opt.role}
                   className={`btn btn-sm${staff.role === opt.role ? ' btn-primary' : ''}`}
                   onClick={() => handleRoleClick(opt)}>
@@ -1821,7 +1821,7 @@ function StaffModal({ staff, onClose, onSave, onRoleChange }) {
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <button className="btn btn-sm btn-primary" style={{ background:'#d97706', borderColor:'#d97706' }}
-                onClick={() => { onRoleChange(staff, 'student'); onClose() }}>Yes, change role</button>
+                onClick={() => { onRoleChange(staff, 'lab_user'); onClose() }}>Yes, change role</button>
               <button className="btn btn-sm" onClick={() => setConfirmDowngrade(false)}>No, keep as Lab Manager</button>
             </div>
           </div>
@@ -1854,7 +1854,7 @@ function SupervisorSelect({ value, onChange }) {
 // ══════════════════════════════════════════════════════════════
 // MANDATORY ICON SETUP MODAL (shown after new user creation)
 // ══════════════════════════════════════════════════════════════
-function IconSetupModal({ userId, displayName, organizationId, userRole = 'student', onDone }) {
+function IconSetupModal({ userId, displayName, organizationId, userRole = 'lab_user', onDone }) {
   const [orgPool, setOrgPool] = useState(null)
   const [selected, setSelected] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -1866,7 +1866,7 @@ function IconSetupModal({ userId, displayName, organizationId, userRole = 'stude
     if (organizationId) {
       const { data } = await sb.from('organizations').select('allowed_modules, allowed_modules_labusers, allowed_modules_labmanagers').eq('id', organizationId).maybeSingle()
       const outerPool = data?.allowed_modules
-      const rolePool = userRole === 'student' ? data?.allowed_modules_labusers : data?.allowed_modules_labmanagers
+      const rolePool = userRole === 'lab_user' ? data?.allowed_modules_labusers : data?.allowed_modules_labmanagers
       pool = rolePool ?? outerPool
     }
     const allKeys = ALL_MODULES_META.filter(m => !m.adminOnly && !m.soloLocked).map(m => m.key)
@@ -1975,7 +1975,7 @@ function StaffStudentIconManager() {
 
   async function load() {
     setLoading(true)
-    let q = sb.from('users').select('*').eq('role', 'student').order('name')
+    let q = sb.from('users').select('*').eq('role', 'lab_user').order('name')
     if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
     const { data } = await q
     setStudents(data || [])
@@ -2006,14 +2006,14 @@ function StaffStudentIconManager() {
       {loading
         ? <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
         : filtered.length === 0
-          ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No students match your search.' : 'No students yet.'}</div>
+          ? <div className="empty-state"><div className="empty-icon">👥</div>{search ? 'No lab users match your search.' : 'No lab users yet.'}</div>
           : filtered.map((s, idx) => (
             <div key={s.id} className="card" style={{ padding: '12px 16px', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>
                     <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginRight: 6 }}>#{idx + 1}</span>
-                    {sLastName(s)}{sLastName(s) && sFirstName(s) ? ', ' : ''}{sFirstName(s)}
+                    {s.nick_name?.trim() || [sFirstName(s), sLastName(s)].filter(Boolean).join(' ') || '—'}
                   </div>
                   {sEmail(s) && <div style={{ fontSize: 12, color: 'var(--text3)', fontFamily: 'var(--mono)', marginTop: 2 }}>📧 {sEmail(s)}</div>}
                 </div>
@@ -2068,7 +2068,7 @@ function PasswordChangePanel({ session, toast }) {
           <label>Current password</label>
           <div style={{ position: 'relative' }}>
             <input type={showCur ? 'text' : 'password'} autoComplete="current-password" value={form.current} onChange={e => { setForm(f => ({ ...f, current: e.target.value })); setError('') }} placeholder="••••••••" style={{ paddingRight: 40 }} />
-            <button type="button" onClick={() => setShowCur(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+            <button type="button" onClick={() => setShowCur(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
               {showCur ? <IconEyeOff size={16} /> : <IconEye size={16} />}
             </button>
           </div>
@@ -2078,7 +2078,7 @@ function PasswordChangePanel({ session, toast }) {
             <label>New password</label>
             <div style={{ position: 'relative' }}>
               <input type={showNew ? 'text' : 'password'} autoComplete="new-password" value={form.newPin} onChange={e => { setForm(f => ({ ...f, newPin: e.target.value })); setError('') }} style={{ paddingRight: 40 }} />
-              <button type="button" onClick={() => setShowNew(s => !s)} tabIndex={-1} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => setShowNew(s => !s)} tabIndex={-1} onMouseDown={e => e.preventDefault()} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', border: 'none', outline: 'none', background: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 4, display: 'flex', alignItems: 'center', zIndex: 2 }}>
                 {showNew ? <IconEyeOff size={16} /> : <IconEye size={16} />}
               </button>
             </div>
@@ -2164,7 +2164,7 @@ function UserProfileForm({ session, toast }) {
     setLoading(false)
   }
 
-  const isStudent = session?.role === 'student'
+  const isStudent = session?.role === 'lab_user'
 
   async function saveInfo() {
     setSaving(true)
@@ -2219,7 +2219,7 @@ function UserProfileForm({ session, toast }) {
         <div>
           <div style={{ fontWeight: 700, fontSize: 20 }}>{displayName || user.name}</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-            <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{user.role === 'student' ? 'Student' : 'Staff'}</span>
+            <span style={{ background: 'var(--surface2)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text2)' }}>{user.role === 'lab_user' ? 'Lab User' : 'Lab Manager'}</span>
             {user.project_group && <span style={{ background: groupBg[user.project_group]||'#f0efe9', color: groupColor[user.project_group]||'#6b6860', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{user.project_group}</span>}
           </div>
         </div>
@@ -2419,7 +2419,7 @@ export function ApprovalRequestsPanel({ toast, session, onCountChange }) {
         { data: trainGolf }, { data: trainAlarm }, { data: examResults },
         { data: bookings }, { data: sopNotes }, { data: projResults },
       ] = await Promise.all([
-        sb.from('users').select('id, name, email, role, degree, year_semester, supervisor, project_group, created_at').eq('id', userId).maybeSingle(),
+        sb.from('users').select('id, name, last_name, nick_name, email, role, degree, year_semester, supervisor, project_group, created_at').eq('id', userId).maybeSingle(),
         sb.from('training_equipment').select('*').eq('user_id', uid),
         sb.from('training_fresh').select('*').eq('user_id', uid),
         sb.from('training_golf_car').select('*').eq('user_id', uid),
@@ -2432,7 +2432,7 @@ export function ApprovalRequestsPanel({ toast, session, onCountChange }) {
       const wb = XLSX.utils.book_new()
       if (profile) {
         const rows = [['Field', 'Value'],
-          ['Name', profile.name], ['Email', profile.email], ['Role', profile.role],
+          ['Name', profile.nick_name?.trim() || [profile.name, profile.last_name].filter(Boolean).join(' ')], ['Email', profile.email], ['Role', profile.role],
           ['Degree', profile.degree], ['Year/Semester', profile.year_semester],
           ['Supervisor', profile.supervisor], ['Project Group', profile.project_group],
           ['Member Since', profile.created_at],
