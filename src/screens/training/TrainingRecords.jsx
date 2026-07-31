@@ -1,3 +1,4 @@
+import SafetyTab from '../labsafety/SafetyTab'
 import { IconEye, IconEyeOff } from '../../components/Icons'
 import HelpPanel from '../../components/HelpPanel'
 import ScrollTabs from '../../components/ScrollTabs'
@@ -15,13 +16,9 @@ function canEdit(session) {
   return session?.role === 'admin' || session?.role === 'user'
 }
 
-// Students: DB name=lastName, email=firstName (legacy schema)
 function fullName(u) {
-  const first = (u?.email || '').includes('@') ? '' : (u?.email || '')
-  const last = u?.last_name || u?.name || ''
-  return [first, last].filter(Boolean).join(' ') || '—'
+  return u?.nick_name?.trim() || [u?.name, u?.last_name].filter(Boolean).join(' ') || '—'
 }
-// kept for compatibility in non-display contexts
 function firstName(u) { return fullName(u) }
 
 function StatusBadge({ done }) {
@@ -1258,7 +1255,7 @@ function StudentLocker({ session, panelUser = null, onChanged }) {
   async function load() {
     setLoading(true)
     const orgId = session?.organizationId
-    let stQ = sb.from('users').select('id, name, last_name, project_group').eq('role', 'student').eq('is_active', true).order('name')
+    let stQ = sb.from('users').select('id, name, last_name, nick_name, project_group').eq('role', 'lab_user').eq('is_active', true).order('name')
     if (orgId) stQ = stQ.eq('organization_id', orgId)
     let lkQ = sb.from('student_lockers').select('*').order('locker_number')
     if (orgId) lkQ = lkQ.eq('organization_id', orgId)
@@ -1325,7 +1322,7 @@ function StudentLocker({ session, panelUser = null, onChanged }) {
 
   if (loading) return <div style={{ textAlign: 'center', padding: 32 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
 
-  const myLocker = session?.role === 'student'
+  const myLocker = session?.role === 'lab_user'
     ? lockers.find(l => l.user_id === session.userId)
     : null
 
@@ -1384,7 +1381,7 @@ function StudentLocker({ session, panelUser = null, onChanged }) {
         </div>
       </div>
 
-      {session?.role === 'student' && (
+      {session?.role === 'lab_user' && (
         <div>
           {myLocker ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 20px' }}>
@@ -1540,6 +1537,7 @@ function StudentLocker({ session, panelUser = null, onChanged }) {
 // "All users" toggle renders the classic full-list audit view.
 // ══════════════════════════════════════════════════════════════
 const HUB_TABS = [
+  { key: 'safety',    label: 'Safety' },
   { key: 'fresh',     label: 'Documents' },
   { key: 'golf',      label: 'Vehicle' },
   { key: 'equipment', label: 'Equipment' },
@@ -1566,12 +1564,13 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
   async function loadStatuses() {
     const ids = students.map(s => s.id)
     if (!ids.length) { setStatuses({}); return }
-    const [fresh, golf, equip, alarm, lockers] = await Promise.all([
+    const [fresh, golf, equip, alarm, lockers, safety] = await Promise.all([
       sb.from('training_fresh').select('user_id, admin_approved, certificate_url').in('user_id', ids),
       sb.from('training_golf_car').select('user_id, trained').in('user_id', ids),
       sb.from('training_equipment').select('user_id, passed_exam').in('user_id', ids),
       sb.from('training_building_alarm').select('user_id, trained').in('user_id', ids),
       sb.from('student_lockers').select('user_id').in('user_id', ids),
+      sb.from('lab_safety_progress').select('user_id, step_number, completed').in('user_id', ids),
     ])
     const map = {}
     const get = uid => map[uid] || (map[uid] = {})
@@ -1588,6 +1587,9 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
     agg(equip, 'equipment', r => r.passed_exam)
     agg(alarm, 'alarm', r => r.trained)
     ids.forEach(uid => { get(uid).locker = (lockers.data || []).some(r => r.user_id === uid) ? 'ok' : 'none' })
+    const safetyCount = {}
+    ;(safety.data || []).forEach(r => { if (r.completed) safetyCount[r.user_id] = (safetyCount[r.user_id] || 0) + 1 })
+    ids.forEach(uid => { const n = safetyCount[uid] || 0; get(uid).safety = n === 0 ? 'none' : n >= 4 ? 'ok' : 'pend' })
     setStatuses(map)
     const fc = {}
     ids.forEach(uid => {
@@ -1615,6 +1617,7 @@ function UserTrainingHub({ students, session, subTab, setSubTab }) {
       ? { students: selectedArr, session, hideChrome: true, onChanged: loadStatuses }
       : { students, session, onChanged: loadStatuses }
     switch (subTab) {
+      case 'safety':    return mode === 'all' ? <SafetyTab asTab /> : <SafetyTab asTab targetUser={selectedUser} />
       case 'golf':      return <GolfCarTraining {...props} />
       case 'equipment': return <EquipmentTraining {...props} />
       case 'alarm':     return <BuildingAlarm {...props} />
@@ -1718,7 +1721,7 @@ export default function TrainingRecords() {
     if (localStorage.getItem('examEquipment') && !sidebarSubTab) setSidebarSubTab('exam')
   }, [])
 
-  const subTab = sidebarSubTab || 'fresh'
+  const subTab = sidebarSubTab || 'safety'
 
   useEffect(() => { loadStudents() }, [])
 
@@ -1727,11 +1730,11 @@ export default function TrainingRecords() {
     let data
     if (session?.loginMode === 'solo') {
       data = [{ id: session.userId, name: session.username, email: session.username }]
-    } else if (session?.role === 'student') {
+    } else if (session?.role === 'lab_user') {
       const { data: d } = await sb.from('users').select('*').eq('id', session.userId).single()
       data = d ? [d] : []
     } else {
-      let q = sb.from('users').select('*').eq('role', 'student').eq('is_active', true).order('name')
+      let q = sb.from('users').select('*').eq('role', 'lab_user').eq('is_active', true).order('name')
       if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
       const { data: d } = await q
       data = d || []
@@ -1755,7 +1758,7 @@ export default function TrainingRecords() {
 
   return (
     <div>
-      {session?.role === 'student' && <UserTrainingSchedule session={session} />}
+      {session?.role === 'lab_user' && <UserTrainingSchedule session={session} />}
       <div className="section-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="section-title">Training Records</div>
@@ -1784,13 +1787,13 @@ export default function TrainingRecords() {
         ) : students.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">👥</div>
-            <div>No students yet. Add students in Admin → Students.</div>
+            <div>No lab users yet. Add students in Admin → Students.</div>
           </div>
         ) : (
           <UserTrainingHub
             students={students}
             session={session}
-            subTab={HUB_TABS.some(t => t.key === subTab) ? subTab : 'fresh'}
+            subTab={HUB_TABS.some(t => t.key === subTab) ? subTab : 'safety'}
             setSubTab={setSidebarSubTab}
           />
         )

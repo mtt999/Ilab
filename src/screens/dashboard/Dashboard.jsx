@@ -6,10 +6,10 @@ import { ALL_MODULES_META, PINNED_MODULES, STAFF_PINNED_MODULES } from '../../co
 function getModules(role, loginMode, activeModules) {
   const roleKey = loginMode === 'solo' ? 'solo' : 'team'
   const isStaff = role === 'admin' || role === 'user'
-  const studentAllowed = ['projects','training','booking','equipmenthub','mileage','labsafety','barcode','profile','pm']
+  const studentAllowed = ['projects','training','booking','equipmenthub','mileage','barcode','profile','pm']
   const base = ALL_MODULES_META.filter(m => {
     if (!m.roles.includes(roleKey)) return false
-    if (role === 'student' && !studentAllowed.includes(m.key)) return false
+    if (role === 'lab_user' && !studentAllowed.includes(m.key)) return false
     if (m.adminOnly && !isStaff) return false
     if (m.hideForStaff && isStaff) return false
     if (m.staffOnly && !isStaff) return false
@@ -38,7 +38,6 @@ function getAllModulesForStudent() {
     { key: 'booking',      screen: 'booking',       label: 'Reserve Equipment',         sub: 'Reserve lab equipment',            icon: '📅', bg: '#e0f2fe', color: '#0369a1' },
     { key: 'barcode',      screen: 'barcode',       label: 'QR Scan',                   sub: 'Scan & look up lab materials',     icon: '📷', bg: '#e0f7fa', color: '#00796b' },
     { key: 'mileage',      screen: null,            label: 'Mileage Form',              sub: 'Submit mileage reimbursement',     icon: '🚗', bg: '#fdf0ed', color: '#c84b2f', external: true },
-    { key: 'labsafety',    screen: null,            label: 'Lab Safety',                sub: 'Safety training & certification',  icon: '🦺', bg: '#fef3c7', color: '#92400e', external: true },
     { key: 'remessages',   screen: 'remessages',    label: 'Lab Messages', sub: 'Notes, ideas & issue reports',     icon: '💬', bg: '#E1F5EE', color: '#1D9E75' },
     { key: 'pm',           screen: 'pm',            label: 'Task Board',        sub: 'Tasks, meetings & team chat',      icon: '📋', bg: '#fff3e0', color: '#ff6b00', locked: true },
     { key: 'profile',      screen: 'profile',       label: 'Profile',                   sub: 'Your info & settings',             icon: '👤', bg: '#EEEDFE', color: '#534AB7' },
@@ -159,7 +158,6 @@ function CardGridView({ modules, onNavigate, mileageUrl, labSafetyUrl, isAdmin, 
 
   const adminManageCards = [
     { key: 'mileage',   icon: '🚗', label: 'Mileage Form', sub: 'Manage link', bg: '#fdf0ed', color: '#c84b2f', screen: null },
-    { key: 'labsafety', icon: '🦺', label: 'Lab Safety',   sub: 'Manage link', bg: '#fef3c7', color: '#92400e', screen: null },
   ].filter(card => !activeModules || activeModules.includes(card.key))
 
   const visibleModules = isAdmin ? modules.filter(m => !m.external) : modules
@@ -287,7 +285,7 @@ function DashboardView({ modules, onNavigate, mileageUrl, labSafetyUrl, moduleIm
       const orgId = session?.organizationId
       let suppliesQ = sb.from('supplies').select('id,min_qty')
       let projectsQ = sb.from('projects').select('id,status').eq('status','active')
-      let studentsQ = sb.from('users').select('id').eq('role','student').eq('is_active',true)
+      let studentsQ = sb.from('users').select('id').eq('role','lab_user').eq('is_active',true)
       let inspectionsQ = sb.from('inspections').select('id,room_name,inspected_at,flag_count,inspector').order('inspected_at',{ascending:false}).limit(5)
       let trainingQ = sb.from('training_fresh').select('id').eq('admin_approved',false)
       if (!isSuperAdmin && orgId) {
@@ -568,12 +566,12 @@ export default function Dashboard() {
   const [soloPoolFilter, setSoloPoolFilter] = useState(null)
 
   const isAdmin   = session?.role === 'admin'
-  const isStudent = session?.role === 'student'
+  const isStudent = session?.role === 'lab_user'
   const isSolo    = session?.loginMode === 'solo'
   const loginMode = session?.loginMode || 'team'
 
   useEffect(() => {
-    if (session?.userId && (session?.role === 'user' || session?.role === 'admin' || session?.role === 'student')) {
+    if (session?.userId && (session?.role === 'user' || session?.role === 'admin' || session?.role === 'lab_user')) {
       sb.from('user_screen_access').select('screen_key').eq('user_id', session.userId)
         .then(({ data }) => { if (data?.length) setUserAccess(new Set(data.map(r => r.screen_key))) })
     }
@@ -594,7 +592,7 @@ export default function Dashboard() {
       // with a DB re-fetch. Only fetch when null (initial load, page reload, or after logout).
       if (activeModules !== null) return
       // Students default to profile-only while prefs load so they never flash all icons
-      if (session?.role === 'student') setActiveModules(['profile'])
+      if (session?.role === 'lab_user') setActiveModules(['profile'])
       if (!session?.userId) {
         const saved = localStorage.getItem('ilab_admin_modules')
         setActiveModules(saved ? JSON.parse(saved) : null)
@@ -646,7 +644,7 @@ export default function Dashboard() {
           let appPool = null
           try { appPool = appRes?.data?.value ? JSON.parse(appRes.data.value) : null } catch {}
           // Role-specific org pool: students use labusers pool, staff use labmanagers pool
-          const outerOrgPool = session?.role === 'student'
+          const outerOrgPool = session?.role === 'lab_user'
             ? (orgRes?.data?.allowed_modules_labusers ?? orgRes?.data?.allowed_modules)
             : session?.role === 'user'
               ? (orgRes?.data?.allowed_modules_labmanagers ?? orgRes?.data?.allowed_modules)
@@ -665,7 +663,7 @@ export default function Dashboard() {
                 const missing = effectivePool.filter(k => !filtered.includes(k) && k !== 'profile' && !(isStaffUser && STAFF_PINNED_MODULES.includes(k)))
                 mods = [...filtered, ...missing]
               }
-            } else if (session?.role !== 'student') {
+            } else if (session?.role !== 'lab_user') {
               // No saved prefs — pool defines what's visible (not for students: they see nothing until admin assigns)
               mods = effectivePool
             }
@@ -683,9 +681,9 @@ export default function Dashboard() {
           if (mods && !mods.includes('profile')) mods = [...mods, 'profile']
         } catch {}
         // Students with no config see only Profile until admin assigns icons
-        const defaultMods = session?.role === 'student' ? ['profile'] : null
+        const defaultMods = session?.role === 'lab_user' ? ['profile'] : null
         setActiveModules(mods?.length ? mods : defaultMods)
-        if (session?.role === 'student') {
+        if (session?.role === 'lab_user') {
           setStudentAllowedPool(new Set(row?.allowed_modules || []))
         }
       }

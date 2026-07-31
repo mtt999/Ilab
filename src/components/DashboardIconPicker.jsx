@@ -14,7 +14,6 @@ export const ALL_MODULES_META = [
   { key: 'pm',           screen: 'pm',           label: 'Task Board',         sub: 'Tasks, meetings & team chat',     icon: '📋', bg: '#fff3e0', color: '#ff6b00', roles: ['team', 'solo'] },
   { key: 'barcode',      screen: 'barcode',      label: 'QR Scan',            sub: 'Scan & look up lab materials',    icon: '📷', bg: '#e0f7fa', color: '#00796b', roles: ['team', 'solo'] },
   { key: 'mileage',      screen: null,           label: 'Mileage Form',       sub: 'Submit mileage reimbursement',    icon: '🚗', bg: '#fdf0ed', color: '#c84b2f', roles: ['team', 'solo'], external: true },
-  { key: 'labsafety',    screen: null,           label: 'Lab Safety',         sub: 'Safety training & certification', icon: '🦺', bg: '#fef3c7', color: '#92400e', roles: ['team', 'solo'], external: true },
   { key: 'profile',      screen: 'profile',      label: 'Profile',            sub: 'Your info & settings',            icon: '👤', bg: '#EEEDFE', color: '#534AB7', roles: ['team', 'solo'] },
   { key: 'barcodeqr',    screen: 'barcodeqr',    label: 'QR Labels',          sub: 'Equipment QR code management',    icon: '🔲', bg: '#f0f4ff', color: '#1a56db', roles: ['team', 'solo'], studentLocked: true, soloLocked: true },
   { key: 'labmanagement', screen: 'labmanagement', label: 'Lab Management',   sub: 'Lab users & managers',            icon: '🏛️', bg: '#E1F5EE', color: '#1D9E75', roles: ['team'],           staffOnly: true },
@@ -136,7 +135,7 @@ export default function DashboardIconPicker({ session, loginMode, onDone }) {
           sb.from('user_dashboard_prefs').select('active_modules, allowed_modules').eq('user_id', session.userId).order('created_at', { ascending: false }).limit(1),
         ]
         // For staff and students: also load which screens admin has granted them
-        if (session?.role === 'user' || session?.role === 'student') {
+        if (session?.role === 'user' || session?.role === 'lab_user') {
           queries.push(sb.from('user_screen_access').select('screen_key').eq('user_id', session.userId))
         }
         // Always fetch org-level allowed modules and global app pool in parallel
@@ -150,7 +149,7 @@ export default function DashboardIconPicker({ session, loginMode, onDone }) {
         )
         const results = await Promise.all(queries)
         const prefsRes = results[0]
-        const accessRes = (session?.role === 'user' || session?.role === 'student') ? results[1] : null
+        const accessRes = (session?.role === 'user' || session?.role === 'lab_user') ? results[1] : null
         const orgRes = results[results.length - 2]
         const appRes = results[results.length - 1]
 
@@ -171,7 +170,7 @@ export default function DashboardIconPicker({ session, loginMode, onDone }) {
           localAvailable = localAvailable.filter(m => effectivePool.includes(m.key) || m.key === 'profile' || (isStaff && m.staffOnly))
         }
 
-        if (session?.role === 'student') {
+        if (session?.role === 'lab_user') {
           pool = prefsRes.data?.[0]?.allowed_modules || []
           setAllowedPool(pool)
           // Unlock studentLocked modules explicitly granted by admin via screen access
@@ -266,12 +265,12 @@ export default function DashboardIconPicker({ session, loginMode, onDone }) {
   )
 
   // Student with no pool set yet
-  if (session?.role === 'student' && allowedPool !== null && allowedPool.length === 0) return (
+  if (session?.role === 'lab_user' && allowedPool !== null && allowedPool.length === 0) return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '40px 32px', maxWidth: 400, textAlign: 'center', border: '1px solid var(--border)' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
         <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>No icons assigned yet</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>Your staff hasn't assigned any dashboard icons for you yet. Contact them to get access.</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>Your lab manager hasn't assigned any dashboard icons for you yet. Contact them to get access.</div>
         <button className="btn" onClick={() => onDone([])}>Close</button>
       </div>
     </div>
@@ -327,8 +326,8 @@ export default function DashboardIconPicker({ session, loginMode, onDone }) {
             <div>
               <div style={{ fontWeight: 700, fontSize: 19, color: 'var(--text)' }}>Customize your dashboard</div>
               <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 2 }}>
-                {session?.role === 'student'
-                  ? 'Pick from the icons your staff has made available for you'
+                {session?.role === 'lab_user'
+                  ? 'Pick from the icons your lab manager has made available for you'
                   : 'Pick the shortcuts you want on your home screen'}
               </div>
             </div>
