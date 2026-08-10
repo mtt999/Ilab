@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
+const AVATAR = import.meta.env.BASE_URL + 'sara-avatar.png'
+
 const FAQ = [
   {
     id: 'what',
@@ -11,7 +13,7 @@ const FAQ = [
   {
     id: 'features',
     q: 'What features does LabHive have?',
-    a: 'LabHive includes:\n• Supply Inventory & Inspections\n• Equipment List + Equipment Hub (SOPs, videos, exams)\n• Equipment Booking calendar\n• Training Records & compliance tracking\n• Project Workspace with test results\n• Task Board with meetings & deadlines\n• Lab Messages\n• QR code labels & barcode scanning',
+    a: 'LabHive includes:\n• Supply Inventory & Inspections\n• Equipment List + Equipment SOP (SOPs, videos, exams)\n• Equipment Booking calendar\n• Training Records & compliance tracking\n• Project Workspace with test results\n• Task Board with meetings & deadlines\n• QR code labels & barcode scanning',
     keywords: ['features', 'modules', 'capabilities', 'what can', 'what does', 'includes', 'functions'],
     followups: ['booking', 'training', 'projects'],
   },
@@ -61,7 +63,7 @@ const FAQ = [
     id: 'roles',
     q: 'What user roles are there?',
     a: 'LabHive has 4 roles:\n• Org Admin — full control of the organization\n• Lab Manager — manages day-to-day operations\n• Lab User / Student — limited module access\n• Solo User — independent personal workspace',
-    keywords: ['role', 'permission', 'admin', 'manager', 'student', 'access level', 'types of user', 'lab user'],
+    keywords: ['role', 'permission', 'admin', 'manager', 'lab_user', 'access level', 'types of user', 'lab user'],
     followups: ['team', 'features', 'signup'],
   },
   {
@@ -94,8 +96,8 @@ const FAQ = [
   },
   {
     id: 'equipment',
-    q: 'What is the Equipment Hub?',
-    a: 'The Equipment Hub is a knowledge library per instrument. It stores SOPs (standard operating procedures), training videos, manufacturer standards, and knowledge-check exams — so lab users always have the right information before using equipment.',
+    q: 'What is the Equipment SOP?',
+    a: 'The Equipment SOP is a knowledge library per instrument. It stores SOPs (standard operating procedures), training videos, manufacturer standards, and knowledge-check exams — so lab users always have the right information before using equipment.',
     keywords: ['equipment hub', 'sop', 'standard operating', 'video', 'hub', 'knowledge', 'instruments', 'library'],
     followups: ['training', 'qr', 'booking'],
   },
@@ -122,51 +124,49 @@ const FAQ = [
   },
 ]
 
-const STARTERS = ['what', 'features', 'signup', 'pricing', 'mobile', 'booking']
+const TOPICS = [
+  { id: 'what',    icon: '🧬', label: 'What is LabHive?',      desc: 'Overview of the platform' },
+  { id: 'booking', icon: '📅', label: 'Equipment Booking',      desc: 'Reserve equipment & manage your calendar' },
+  { id: 'signup',  icon: '🚀', label: 'Getting Started',        desc: 'Sign up and account types' },
+]
 
 function findAnswer(input) {
   const q = input.toLowerCase()
-  let best = null
-  let bestScore = 0
+  let best = null, bestScore = 0
   for (const item of FAQ) {
     let score = 0
-    for (const kw of item.keywords) {
-      if (q.includes(kw)) score += kw.length
-    }
+    for (const kw of item.keywords) { if (q.includes(kw)) score += kw.length }
     if (score > bestScore) { bestScore = score; best = item }
   }
   return bestScore > 0 ? best : null
 }
 
 export default function SaraChat({ bottomOffset = 24, onContact, color = '#1D9E75' }) {
-  const ACCENT = color
-  const [open, setOpen]         = useState(false)
+  const A = color
+  const [open, setOpen]       = useState(false)
+  const [view, setView]       = useState('welcome') // 'welcome' | 'chat'
   const [messages, setMessages] = useState([])
-  const [input, setInput]       = useState('')
-  const [typing, setTyping]     = useState(false)
+  const [input, setInput]     = useState('')
+  const [typing, setTyping]   = useState(false)
   const scrollRef = useRef(null)
   const inputRef  = useRef(null)
-
-  useEffect(() => {
-    if (open && messages.length === 0) {
-      setMessages([{
-        from: 'sara',
-        text: "Hi! I'm Sara, LabHive's virtual assistant 👋\nAsk me anything about LabHive, or pick a topic below.",
-        followups: STARTERS,
-      }])
-    }
-  }, [open])
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages, typing])
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 120)
-  }, [open])
+    if (open && view === 'chat') setTimeout(() => inputRef.current?.focus(), 100)
+  }, [open, view])
 
-  function send(text) {
-    const q = text.trim()
+  function goChat(q) {
+    setView('chat')
+    if (q) setTimeout(() => sendMsg(q), 80)
+    else    setTimeout(() => inputRef.current?.focus(), 100)
+  }
+
+  function sendMsg(text) {
+    const q = (text || input).trim()
     if (!q) return
     setInput('')
     setMessages(prev => [...prev, { from: 'user', text: q }])
@@ -174,170 +174,218 @@ export default function SaraChat({ bottomOffset = 24, onContact, color = '#1D9E7
     setTimeout(() => {
       const match = findAnswer(q)
       setTyping(false)
-      if (match) {
-        setMessages(prev => [...prev, { from: 'sara', text: match.a, followups: match.followups }])
-      } else {
-        setMessages(prev => [...prev, {
-          from: 'sara',
-          text: "I'm not sure about that one. Try rephrasing, or choose a topic below.",
-          followups: STARTERS.slice(0, 4),
-        }])
-      }
-    }, 650)
+      setMessages(prev => [...prev, match
+        ? { from: 'sara', text: match.a, followups: match.followups }
+        : { from: 'sara', text: "I'm not sure about that one. Try rephrasing, or choose a topic below.", followups: ['what', 'features', 'booking', 'signup'] }
+      ])
+    }, 680)
   }
 
-  function handleChip(id) {
-    const item = FAQ.find(f => f.id === id)
-    if (item) send(item.q)
-  }
+  const panelBottom = bottomOffset + 62
 
-  const panelBottom = bottomOffset + 68
+  // ── gradient from accent color
+  const heroGrad = A === '#1D9E75'
+    ? 'linear-gradient(145deg, #064e35 0%, #0d6b47 45%, #1D9E75 80%, #22c990 100%)'
+    : 'linear-gradient(145deg, #2d2470 0%, #3d34a0 45%, #534AB7 80%, #7c70e0 100%)'
+
+  const AvatarImg = ({ size, radius = '50%', style = {} }) => (
+    <img
+      src={AVATAR}
+      alt="Sara"
+      style={{ width: size, height: size, borderRadius: radius, objectFit: 'cover', objectPosition: 'center 10%', display: 'block', ...style }}
+    />
+  )
 
   return (
     <>
       <style>{`
-        @keyframes sara-slide-up {
-          from { opacity:0; transform:translateY(14px) scale(0.96) }
-          to   { opacity:1; transform:translateY(0)    scale(1)    }
-        }
-        @keyframes sara-dot {
-          0%,60%,100% { opacity:0.25; transform:scale(0.75) }
-          30%          { opacity:1;   transform:scale(1)    }
-        }
-        @keyframes sara-pulse {
-          0%   { transform:scale(0.92); opacity:0.7 }
-          100% { transform:scale(1.85); opacity:0   }
-        }
+        @keyframes sara-up   { from{opacity:0;transform:translateY(14px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes sara-dot  { 0%,60%,100%{opacity:.25;transform:scale(.75)} 30%{opacity:1;transform:scale(1)} }
+        @keyframes sara-pulse{ 0%{transform:scale(.92);opacity:.6} 100%{transform:scale(1.85);opacity:0} }
+        @keyframes sara-float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes sara-fadein{ from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes sara-blink{ 0%,100%{opacity:1} 50%{opacity:.4} }
       `}</style>
 
-      {/* ── Chat panel ── */}
       {open && (
         <div style={{
           position: 'fixed', bottom: panelBottom, right: 20,
-          width: 360, maxWidth: 'calc(100vw - 40px)', maxHeight: 520,
-          background: '#fff', borderRadius: 18,
-          boxShadow: '0 8px 48px rgba(0,0,0,0.18)',
+          width: 340, maxWidth: 'calc(100vw - 32px)',
+          background: '#fff', borderRadius: 20,
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 4px 6px rgba(0,0,0,0.04), 0 20px 56px rgba(0,0,0,0.15)',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden', zIndex: 9998,
-          animation: 'sara-slide-up 0.22s ease',
+          animation: 'sara-up 0.28s cubic-bezier(0.34,1.4,0.64,1)',
         }}>
-          {/* Header */}
-          <div style={{ background: ACCENT, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ fontSize: 17, fontWeight: 900, color: '#fff', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>S</span>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>Sara</div>
-              <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11 }}>LabHive Virtual Assistant</div>
-            </div>
-            <button
-              onClick={() => setOpen(false)}
-              style={{ border: 'none', background: 'rgba(255,255,255,0.15)', color: '#fff', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, flexShrink: 0 }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.28)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-            >×</button>
-          </div>
 
-          {/* Messages */}
-          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 14px 6px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {messages.map((msg, i) => (
-              <div key={i}>
-                {msg.from === 'user' ? (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ background: ACCENT, color: '#fff', borderRadius: '14px 14px 3px 14px', padding: '8px 12px', fontSize: 13, maxWidth: '80%', lineHeight: 1.55, whiteSpace: 'pre-line' }}>{msg.text}</div>
+          {/* ══ WELCOME SCREEN ══ */}
+          {view === 'welcome' && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+              {/* Hero */}
+              <div style={{ background: heroGrad, padding: '22px 20px 52px', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
+                {/* Decorative blobs */}
+                <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', bottom: -50, left: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+
+                <button onClick={() => setOpen(false)} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>×</button>
+
+                {/* Floating avatar */}
+                <div style={{ position: 'relative', width: 72, height: 72, marginBottom: 14, animation: 'sara-float 4.5s ease-in-out infinite', zIndex: 2 }}>
+                  <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 48, height: 8, background: 'rgba(0,0,0,0.12)', borderRadius: '50%', filter: 'blur(4px)' }} />
+                  <AvatarImg size={72} radius="22px" style={{ border: '2.5px solid rgba(255,255,255,0.45)', boxShadow: '0 10px 28px rgba(0,0,0,0.18)' }} />
+                </div>
+
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'white', lineHeight: 1.2, marginBottom: 4, position: 'relative', zIndex: 2 }}>Hi, I'm Sara 👋</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.5, position: 'relative', zIndex: 2, maxWidth: 240 }}>LabHive's virtual assistant — ask me anything or pick a topic.</div>
+              </div>
+
+              {/* Topic cards */}
+              <div style={{ padding: '0 12px 4px', marginTop: -24, position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {TOPICS.map((t, i) => (
+                  <button key={t.id} onClick={() => goChat(FAQ.find(f => f.id === t.id)?.q)}
+                    style={{ background: 'white', border: '1px solid #f1f5f9', borderRadius: 14, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', animation: `sara-fadein 0.3s ease ${i * 0.06}s both`, transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = A; e.currentTarget.style.boxShadow = `0 4px 16px rgba(0,0,0,0.1)` }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
+                  >
+                    <div style={{ width: 36, height: 36, borderRadius: 11, background: ['#f0fdf4','#eff6ff','#fdf4ff'][i], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{t.icon}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 1 }}>{t.label}</div>
+                      <div style={{ fontSize: 11, color: '#6b7280' }}>{t.desc}</div>
+                    </div>
+                    <span style={{ color: '#d1d5db', fontSize: 18, fontWeight: 300 }}>›</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: '10px 14px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f9fafb', marginTop: 8 }}>
+                <button onClick={() => goChat(null)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 99, padding: '6px 14px', fontSize: 12, color: '#374151', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Ask a question
+                </button>
+                {onContact && (
+                  <button onClick={() => { setOpen(false); onContact() }} style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Contact us →
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ══ CHAT SCREEN ══ */}
+          {view === 'chat' && (
+            <div style={{ display: 'flex', flexDirection: 'column', maxHeight: 480 }}>
+
+              {/* Colored header */}
+              <div style={{ background: heroGrad, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to bottom, rgba(255,255,255,0.08), transparent)', pointerEvents: 'none' }} />
+                <button onClick={() => setView('welcome')} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 1 }}>‹</button>
+                <AvatarImg size={36} style={{ border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 8px rgba(0,0,0,0.18)', flexShrink: 0, zIndex: 1 }} />
+                <div style={{ flex: 1, zIndex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>Sara</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#86efac', boxShadow: '0 0 0 2px rgba(134,239,172,0.3)', animation: 'sara-blink 2.5s ease-in-out infinite' }} />
+                    Online · Virtual Assistant
                   </div>
-                ) : (
-                  <div>
-                    <div style={{ background: '#f4f6f8', borderRadius: '3px 14px 14px 14px', padding: '8px 12px', fontSize: 13, maxWidth: '90%', lineHeight: 1.65, color: '#1f2937', whiteSpace: 'pre-line' }}>{msg.text}</div>
-                    {msg.followups?.length > 0 && (
-                      <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {msg.followups.map(id => {
-                          const item = FAQ.find(f => f.id === id)
-                          if (!item) return null
-                          return (
-                            <button key={id} onClick={() => handleChip(id)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, border: `1px solid ${ACCENT}`, background: '#e6f7f2', color: '#0d6b50', cursor: 'pointer', fontWeight: 600, lineHeight: 1.4, transition: 'background 0.12s' }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#c8f0e4'}
-                              onMouseLeave={e => e.currentTarget.style.background = '#e6f7f2'}>
-                              {item.q}
-                            </button>
-                          )
-                        })}
+                </div>
+                <button onClick={() => setOpen(false)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>×</button>
+              </div>
+
+              {/* Messages */}
+              <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 6px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {messages.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '20px 0 10px', color: '#9ca3af', fontSize: 12 }}>Ask me anything about LabHive ✨</div>
+                )}
+                {messages.map((msg, i) => (
+                  <div key={i} style={{ animation: 'sara-fadein 0.2s ease' }}>
+                    {msg.from === 'user' ? (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ background: `linear-gradient(135deg, ${A}, ${A}cc)`, color: '#fff', borderRadius: '14px 14px 3px 14px', padding: '8px 12px', fontSize: 13, maxWidth: '80%', lineHeight: 1.55, whiteSpace: 'pre-line', boxShadow: `0 3px 12px ${A}44` }}>{msg.text}</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                          <AvatarImg size={26} style={{ border: '1.5px solid #e8faf2', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', flexShrink: 0, marginTop: 1 }} />
+                          <div style={{ background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '3px 14px 14px 14px', padding: '8px 12px', fontSize: 13, maxWidth: '85%', lineHeight: 1.65, color: '#374151', whiteSpace: 'pre-line' }}>{msg.text}</div>
+                        </div>
+                        {msg.followups?.length > 0 && (
+                          <div style={{ marginTop: 8, marginLeft: 34, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                            {msg.followups.map(id => {
+                              const item = FAQ.find(f => f.id === id)
+                              if (!item) return null
+                              return (
+                                <button key={id} onClick={() => sendMsg(item.q)}
+                                  style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, border: '1px solid #d1fae5', background: '#f0fdf4', color: '#065f46', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.12s' }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = '#d1fae5'; e.currentTarget.style.borderColor = A }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = '#d1fae5' }}
+                                >{item.q}</button>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
+                ))}
+                {typing && (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <AvatarImg size={26} style={{ border: '1.5px solid #e8faf2', flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '3px 14px 14px 14px', padding: '10px 14px', display: 'flex', gap: 4 }}>
+                      {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#cbd5e1', animation: `sara-dot 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                    </div>
+                  </div>
                 )}
               </div>
-            ))}
-            {typing && (
-              <div style={{ display: 'flex', gap: 4, padding: '4px 2px' }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#9ca3af', animation: `sara-dot 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-                ))}
+
+              {/* Input */}
+              <div style={{ padding: '8px 10px 10px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } }}
+                  placeholder="Ask Sara anything…"
+                  style={{ flex: 1, border: '1.5px solid #e5e7eb', borderRadius: 99, padding: '8px 14px', fontSize: 13, outline: 'none', fontFamily: 'inherit', background: '#f9fafb', color: '#111827', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+                  onFocus={e => { e.target.style.borderColor = A; e.target.style.boxShadow = `0 0 0 3px ${A}18`; e.target.style.background = 'white' }}
+                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; e.target.style.background = '#f9fafb' }}
+                />
+                <button
+                  onClick={() => sendMsg()}
+                  disabled={!input.trim()}
+                  style={{ width: 36, height: 36, borderRadius: '50%', background: input.trim() ? A : '#e5e7eb', border: 'none', color: input.trim() ? '#fff' : '#9ca3af', cursor: input.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: input.trim() ? `0 3px 10px ${A}44` : 'none', transition: 'all 0.15s' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                </button>
               </div>
-            )}
-          </div>
-
-          {/* Input row */}
-          <div style={{ padding: '10px 12px', borderTop: '1px solid #f3f4f6', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }}
-              placeholder="Ask Sara anything…"
-              style={{ flex: 1, border: '1px solid #e5e7eb', borderRadius: 20, padding: '8px 14px', fontSize: 13, outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
-              onFocus={e => e.target.style.borderColor = ACCENT}
-              onBlur={e => e.target.style.borderColor = '#e5e7eb'}
-            />
-            <button
-              onClick={() => send(input)}
-              disabled={!input.trim()}
-              style={{ width: 36, height: 36, borderRadius: '50%', background: input.trim() ? ACCENT : '#e5e7eb', border: 'none', color: input.trim() ? '#fff' : '#9ca3af', cursor: input.trim() ? 'pointer' : 'default', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
-            >↑</button>
-          </div>
-
-          {/* Contact footer */}
-          {onContact && (
-            <div style={{ padding: '4px 14px 12px', textAlign: 'center', flexShrink: 0 }}>
-              <button onClick={() => { setOpen(false); onContact() }} style={{ fontSize: 11, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Talk to a real person →</button>
+              {onContact && (
+                <div style={{ padding: '0 12px 10px', textAlign: 'center' }}>
+                  <button onClick={() => { setOpen(false); onContact() }} style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Talk to a real person →</button>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* ── Floating button ── */}
+      {/* ── FAB ── */}
       <div style={{ position: 'fixed', bottom: bottomOffset, right: 20, zIndex: 9999 }}>
-        {/* Double ripple pulse — only when closed */}
         {!open && <>
-          <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', background: `${ACCENT}35`, animation: 'sara-pulse 2.4s ease-out infinite', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', background: `${ACCENT}22`, animation: 'sara-pulse 2.4s ease-out 0.9s infinite', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', background: `${A}33`, animation: 'sara-pulse 2.4s ease-out infinite', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', background: `${A}1a`, animation: 'sara-pulse 2.4s ease-out 0.9s infinite', pointerEvents: 'none' }} />
         </>}
         <button
-          onClick={() => setOpen(o => !o)}
+          onClick={() => { setOpen(o => !o); if (!open) setView('welcome') }}
           title={open ? 'Close Sara' : 'Chat with Sara'}
-          style={{
-            position: 'relative',
-            width: 56, height: 56, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT}bb 100%)`,
-            border: 'none', color: '#fff', cursor: 'pointer',
-            boxShadow: open
-              ? `0 4px 16px ${ACCENT}55`
-              : `0 6px 24px ${ACCENT}66, 0 2px 8px rgba(0,0,0,0.12)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = `0 8px 28px ${ACCENT}88` }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';   e.currentTarget.style.boxShadow = open ? `0 4px 16px ${ACCENT}55` : `0 6px 24px ${ACCENT}66, 0 2px 8px rgba(0,0,0,0.12)` }}
+          style={{ position: 'relative', width: 52, height: 52, borderRadius: '50%', background: `linear-gradient(135deg, ${A} 0%, ${A}cc 100%)`, border: 'none', color: '#fff', cursor: 'pointer', boxShadow: open ? `0 4px 14px ${A}55` : `0 6px 22px ${A}66, 0 2px 6px rgba(0,0,0,0.12)`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.18s ease, box-shadow 0.18s ease', overflow: 'hidden' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = `0 8px 26px ${A}88` }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = open ? `0 4px 14px ${A}55` : `0 6px 22px ${A}66, 0 2px 6px rgba(0,0,0,0.12)` }}
         >
-          {open ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          ) : (
-            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-          )}
+          <div style={{ position: 'absolute', top: 4, left: 7, width: 38, height: 14, background: 'rgba(255,255,255,0.15)', borderRadius: 99, filter: 'blur(3px)' }} />
+          {open
+            ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'relative' }}><path d="M18 6L6 18M6 6l12 12"/></svg>
+            : <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'relative' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          }
         </button>
       </div>
     </>

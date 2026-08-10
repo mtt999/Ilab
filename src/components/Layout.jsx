@@ -51,8 +51,8 @@ const MODULE_META = {
   inspection:       { icon: '🔍', label: 'Inspections' },
   results:          { icon: '🔍', label: 'Inspections' },
   history:          { icon: '🔍', label: 'Inspections' },
-  equipment:        { icon: '🔧', label: 'Equipment' },
-  equipmenthub:     { icon: '📖', label: 'Equipment Hub' },
+  equipment:        { icon: '🔧', label: 'Equipment & Maintenance' },
+  equipmenthub:     { icon: '📖', label: 'Equipment SOP' },
   equipmentscan:    { icon: '📷', label: 'Equipment Scan' },
   booking:          { icon: '📅', label: 'Booking' },
   training:         { icon: '📚', label: 'Training Records' },
@@ -87,6 +87,13 @@ function getScreenTabs(screen, session) {
     { key: 'students',  icon: '👥', label: 'Lab Users' },
     { key: 'staff',     icon: '👨‍💼', label: 'Lab Managers' },
     { key: 'approvals', icon: '📋', label: 'Approval Requests' },
+  ]
+
+  if (screen === 'booking') return [
+    { key: 'calendar', icon: '📅', label: 'Book Equipment' },
+    { key: 'history',  icon: '📋', label: 'History & Usage' },
+    ...((isAdmin || isStaff) ? [{ key: 'eq_notes', icon: '⚠️', label: 'Special Treatment' }] : []),
+    ...(isAdmin ? [{ key: 'settings', icon: '⚙️', label: 'Settings' }] : []),
   ]
 
   if (screen === 'equipment') return [
