@@ -6,7 +6,7 @@ import { ALL_MODULES_META, PINNED_MODULES, STAFF_PINNED_MODULES } from '../../co
 function getModules(role, loginMode, activeModules) {
   const roleKey = loginMode === 'solo' ? 'solo' : 'team'
   const isStaff = role === 'admin' || role === 'user'
-  const studentAllowed = ['projects','training','booking','equipmenthub','mileage','barcode','profile','pm']
+  const studentAllowed = ['projects','training','booking','equipmenthub','barcode','profile','pm']
   const base = ALL_MODULES_META.filter(m => {
     if (!m.roles.includes(roleKey)) return false
     if (role === 'lab_user' && !studentAllowed.includes(m.key)) return false
@@ -37,7 +37,6 @@ function getAllModulesForStudent() {
     { key: 'equipmenthub', screen: 'equipmenthub',  label: 'Equipment',                 sub: 'Info, SOP & standards',            icon: '📚', bg: '#E1F5EE', color: '#085041' },
     { key: 'booking',      screen: 'booking',       label: 'Reserve Equipment',         sub: 'Reserve lab equipment',            icon: '📅', bg: '#e0f2fe', color: '#0369a1' },
     { key: 'barcode',      screen: 'barcode',       label: 'QR Scan',                   sub: 'Scan & look up lab materials',     icon: '📷', bg: '#e0f7fa', color: '#00796b' },
-    { key: 'mileage',      screen: null,            label: 'Mileage Form',              sub: 'Submit mileage reimbursement',     icon: '🚗', bg: '#fdf0ed', color: '#c84b2f', external: true },
     { key: 'remessages',   screen: 'remessages',    label: 'Lab Messages', sub: 'Notes, ideas & issue reports',     icon: '💬', bg: '#E1F5EE', color: '#1D9E75' },
     { key: 'pm',           screen: 'pm',            label: 'Task Board',        sub: 'Tasks, meetings & team chat',      icon: '📋', bg: '#fff3e0', color: '#ff6b00', locked: true },
     { key: 'profile',      screen: 'profile',       label: 'Profile',                   sub: 'Your info & settings',             icon: '👤', bg: '#EEEDFE', color: '#534AB7' },
@@ -129,7 +128,7 @@ function gridMaxHeight(count) {
   return rows * CARD_MAX_H + (rows - 1) * GRID_GAP
 }
 
-function CardGridView({ modules, onNavigate, mileageUrl, labSafetyUrl, isAdmin, onEditUrl, moduleImages, isStudent, activeModules, studentAccess, studentAllowedPool, customLinks = [] }) {
+function CardGridView({ modules, onNavigate, labSafetyUrl, isAdmin, moduleImages, isStudent, activeModules, studentAccess, studentAllowedPool, customLinks = [] }) {
   const [confirmExternal, setConfirmExternal] = useState(null)
 
   if (isStudent) {
@@ -148,7 +147,7 @@ function CardGridView({ modules, onNavigate, mileageUrl, labSafetyUrl, isAdmin, 
           {visibleMods.map(m => {
             const grantedByAdmin = m.locked && ((m.screen && studentAccess?.has(m.screen)) || studentAllowedPool?.has(m.key))
             if (m.locked && !grantedByAdmin) return null
-            return <ModuleCard key={m.key} m={m} imgUrl={moduleImages[m.key]} onClick={() => m.external ? setConfirmExternal({ url: m.key === 'mileage' ? mileageUrl : labSafetyUrl }) : onNavigate(m.screen)} />
+            return <ModuleCard key={m.key} m={m} imgUrl={moduleImages[m.key]} onClick={() => m.external ? setConfirmExternal({ url: labSafetyUrl }) : onNavigate(m.screen)} />
           })}
         </div>
         {confirmExternal && <ExternalLinkModal url={confirmExternal.url} onConfirm={() => { window.open(confirmExternal.url, '_blank'); setConfirmExternal(null) }} onCancel={() => setConfirmExternal(null)} />}
@@ -156,18 +155,13 @@ function CardGridView({ modules, onNavigate, mileageUrl, labSafetyUrl, isAdmin, 
     )
   }
 
-  const adminManageCards = [
-    { key: 'mileage',   icon: '🚗', label: 'Mileage Form', sub: 'Manage link', bg: '#fdf0ed', color: '#c84b2f', screen: null },
-  ].filter(card => !activeModules || activeModules.includes(card.key))
-
-  const visibleModules = isAdmin ? modules.filter(m => !m.external) : modules
-  const totalCards = visibleModules.length + (isAdmin ? adminManageCards.length : 0) + customLinks.length
+  const visibleModules = modules
+  const totalCards = visibleModules.length + customLinks.length
 
   return (
     <>
       <div className="module-icon-grid" style={{ height: '100%', maxHeight: gridMaxHeight(totalCards) }}>
-        {visibleModules.map(m => <ModuleCard key={m.key} m={m} imgUrl={moduleImages[m.key]} onClick={() => m.external ? setConfirmExternal({ url: m.key === 'mileage' ? mileageUrl : labSafetyUrl }) : onNavigate(m.screen)} />)}
-        {isAdmin && adminManageCards.map(card => <ModuleCard key={card.key} m={card} imgUrl={moduleImages[card.key]} isAdminManage onClick={() => onEditUrl(card.key)} />)}
+        {visibleModules.map(m => <ModuleCard key={m.key} m={m} imgUrl={moduleImages[m.key]} onClick={() => m.external ? setConfirmExternal({ url: labSafetyUrl }) : onNavigate(m.screen)} />)}
         {customLinks.map(link => (
           <ModuleCard key={link.id}
             m={{ key: link.id, label: link.label, sub: '↗ External link', icon: '🔗', bg: '#f0f9ff', color: '#0369a1', external: true }}
@@ -180,7 +174,7 @@ function CardGridView({ modules, onNavigate, mileageUrl, labSafetyUrl, isAdmin, 
   )
 }
 
-function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, activeModules, studentAllowedPool }) {
+function StudentDashboardView({ session, onNavigate, moduleImages, activeModules, studentAllowedPool }) {
   const [data, setData] = useState({ myProjects: 0, trainingsComplete: 0, trainingsTotal: 4, upcomingBookings: [], pendingCert: false })
   const [loading, setLoading] = useState(true)
   const [confirmExternal, setConfirmExternal] = useState(null)
@@ -224,7 +218,6 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
     { key:'equipmenthub',icon:'📚', label:'Equipment',            sub:'SOPs & standards',               screen:'equipmenthub',color:'#085041' },
     { key:'barcode',     icon:'📷', label:'QR Scan',               sub:'Scan lab materials',             screen:'barcode',     color:'#00796b' },
     { key:'remessages',  icon:'💬', label:'Lab Messages',  sub:'Ask REs a question',             screen:'remessages',  color:'#1D9E75' },
-    { key:'mileage',     icon:'🚗', label:'Mileage Form',         sub:'Submit reimbursement',           screen:null,          color:'#c84b2f', external:true },
   ]
   const assignedQuickLinks = (studentAllowedPool && studentAllowedPool.size > 0)
     ? allQuickLinks.filter(m => studentAllowedPool.has(m.key))
@@ -250,7 +243,7 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           <div style={{ fontSize:12, fontWeight:500, color:'var(--text3)', fontFamily:'var(--mono)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6 }}>Quick access</div>
           {quickLinks.map(m => (
-            <a key={m.key} href="#" onClick={e=>{e.preventDefault();m.external?setConfirmExternal({url:mileageUrl}):onNavigate(m.screen)}} onTouchEnd={e=>{e.preventDefault();m.external?setConfirmExternal({url:mileageUrl}):onNavigate(m.screen)}}
+            <a key={m.key} href="#" onClick={e=>{e.preventDefault();m.external?setConfirmExternal({url:null}):onNavigate(m.screen)}} onTouchEnd={e=>{e.preventDefault();m.external?setConfirmExternal({url:null}):onNavigate(m.screen)}}
               style={{ display:'block', borderRadius:'var(--radius-lg)', overflow:'hidden', cursor:'pointer', height:56, position:'relative', border:'1px solid var(--border)', transition:'all 0.15s', touchAction:'manipulation', WebkitTapHighlightColor:'transparent', textDecoration:'none', backgroundColor:`${m.color}18`, backgroundImage:moduleImages[m.key]?`url(${moduleImages[m.key]})`:'none', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}
               onMouseEnter={e=>e.currentTarget.style.borderColor=m.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
               {moduleImages[m.key] && <div style={{ position:'absolute',inset:0,background:'linear-gradient(to right,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.2) 100%)',pointerEvents:'none' }} />}
@@ -271,7 +264,7 @@ function StudentDashboardView({ session, onNavigate, mileageUrl, moduleImages, a
   )
 }
 
-function DashboardView({ modules, onNavigate, mileageUrl, labSafetyUrl, moduleImages }) {
+function DashboardView({ modules, onNavigate, labSafetyUrl, moduleImages }) {
   const { session } = useAppStore()
   const [stats, setStats] = useState({ activeProjects:0, students:0, pendingTraining:0, lowSupplies:0 })
   const [recentInspections, setRecentInspections] = useState([])
@@ -338,7 +331,7 @@ function DashboardView({ modules, onNavigate, mileageUrl, labSafetyUrl, moduleIm
         <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
           <div style={{ fontSize:12,fontWeight:500,color:'var(--text3)',fontFamily:'var(--mono)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6 }}>Quick access</div>
           {modules.map(m=>(
-            <a key={m.key} href="#" onClick={e=>{e.preventDefault();m.external?setConfirmExternal({url:m.key==='mileage'?mileageUrl:labSafetyUrl}):onNavigate(m.screen)}} onTouchEnd={e=>{e.preventDefault();m.external?setConfirmExternal({url:m.key==='mileage'?mileageUrl:labSafetyUrl}):onNavigate(m.screen)}}
+            <a key={m.key} href="#" onClick={e=>{e.preventDefault();m.external?setConfirmExternal({url:labSafetyUrl}):onNavigate(m.screen)}} onTouchEnd={e=>{e.preventDefault();m.external?setConfirmExternal({url:labSafetyUrl}):onNavigate(m.screen)}}
               style={{ display:'block',borderRadius:'var(--radius-lg)',overflow:'hidden',cursor:'pointer',height:56,position:'relative',border:'1px solid var(--border)',transition:'all 0.15s',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',textDecoration:'none',backgroundColor:m.bg,backgroundImage:moduleImages[m.key]?`url(${moduleImages[m.key]})`:'none',backgroundSize:'cover',backgroundPosition:'center',backgroundRepeat:'no-repeat' }}
               onMouseEnter={e=>e.currentTarget.style.borderColor=m.color} onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
               {moduleImages[m.key] && <div style={{ position:'absolute',inset:0,background:'linear-gradient(to right,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.2) 100%)',pointerEvents:'none' }} />}
@@ -541,11 +534,7 @@ function SuperAdminDashboard({ session, setScreen, greeting, dateStr }) {
 export default function Dashboard() {
   const { session, screen, setScreen, activeModules, setActiveModules } = useAppStore()
   const [view, setView] = useState(() => localStorage.getItem('labstock_view') || 'grid')
-  const [mileageUrl, setMileageUrl] = useState('https://bw4qh7p8sn.us-east-1.awsapprunner.com/')
   const [labSafetyUrl, setLabSafetyUrl] = useState('https://canvas.illinois.edu/')
-  const [editingUrl, setEditingUrl] = useState(null)
-  const [urlInput, setUrlInput] = useState('')
-  const [savingUrl, setSavingUrl] = useState(false)
   const [userAccess, setUserAccess] = useState(null)
   const [studentAllowedPool, setStudentAllowedPool] = useState(null)
   // Module card images: seed from localStorage cache (stale-while-revalidate)
@@ -731,12 +720,11 @@ export default function Dashboard() {
 
     // Load URL settings + global icon images in parallel
     const [{ data: settingsData }, { data: allImgData }] = await Promise.all([
-      sb.from('settings').select('key, value').in('key', ['mileage_url', 'labsafety_url']),
+      sb.from('settings').select('key, value').in('key', ['labsafety_url']),
       sb.from('settings').select('key, value').in('key', imgKeys),
     ])
     ;(settingsData || []).forEach(r => {
-      if (r.key === 'mileage_url') setMileageUrl(r.value)
-      else if (r.key === 'labsafety_url') setLabSafetyUrl(r.value)
+      if (r.key === 'labsafety_url') setLabSafetyUrl(r.value)
     })
     // Apply global images uploaded by super admin
     ;(allImgData || []).forEach(r => {
@@ -753,16 +741,6 @@ export default function Dashboard() {
 
     setModuleImages(imgs)
     try { localStorage.setItem(imgCacheKey, JSON.stringify(imgs)) } catch { /* storage full/blocked — cache is best-effort */ }
-  }
-
-  async function saveUrl() {
-    if (!urlInput.trim()) return
-    setSavingUrl(true)
-    const key = editingUrl === 'mileage' ? 'mileage_url' : 'labsafety_url'
-    await sb.from('settings').upsert({ key, value: urlInput.trim() }, { onConflict: 'key' })
-    if (editingUrl === 'mileage') setMileageUrl(urlInput.trim())
-    else setLabSafetyUrl(urlInput.trim())
-    setEditingUrl(null); setSavingUrl(false)
   }
 
   function switchView(v) { setView(v); localStorage.setItem('labstock_view', v) }
@@ -818,25 +796,12 @@ export default function Dashboard() {
       )}
 
       <div style={{ flex: 1, minHeight: 0 }}>
-        {isStudent && view==='dashboard' && <StudentDashboardView session={session} onNavigate={s=>setScreen(s)} mileageUrl={mileageUrl} moduleImages={moduleImages} activeModules={activeModules} studentAllowedPool={studentAllowedPool} />}
-        {isStudent && view==='grid'      && <CardGridView modules={modules} onNavigate={s=>setScreen(s)} mileageUrl={mileageUrl} labSafetyUrl={labSafetyUrl} isAdmin={false} onEditUrl={()=>{}} moduleImages={moduleImages} isStudent={true} activeModules={activeModules} studentAccess={userAccess} studentAllowedPool={studentAllowedPool} />}
-        {!isStudent && view==='grid'     && <CardGridView modules={modules} onNavigate={s=>setScreen(s)} mileageUrl={mileageUrl} labSafetyUrl={labSafetyUrl} isAdmin={isAdmin} onEditUrl={(type)=>{setEditingUrl(type);setUrlInput(type==='mileage'?mileageUrl:labSafetyUrl)}} moduleImages={moduleImages} isStudent={false} activeModules={activeModules} customLinks={isSolo ? customLinks : []} />}
-        {!isStudent && view==='dashboard' && <DashboardView modules={modules} onNavigate={s=>setScreen(s)} mileageUrl={mileageUrl} labSafetyUrl={labSafetyUrl} moduleImages={moduleImages} />}
+        {isStudent && view==='dashboard' && <StudentDashboardView session={session} onNavigate={s=>setScreen(s)} moduleImages={moduleImages} activeModules={activeModules} studentAllowedPool={studentAllowedPool} />}
+        {isStudent && view==='grid'      && <CardGridView modules={modules} onNavigate={s=>setScreen(s)} labSafetyUrl={labSafetyUrl} isAdmin={false} moduleImages={moduleImages} isStudent={true} activeModules={activeModules} studentAccess={userAccess} studentAllowedPool={studentAllowedPool} />}
+        {!isStudent && view==='grid'     && <CardGridView modules={modules} onNavigate={s=>setScreen(s)} labSafetyUrl={labSafetyUrl} isAdmin={isAdmin} moduleImages={moduleImages} isStudent={false} activeModules={activeModules} customLinks={isSolo ? customLinks : []} />}
+        {!isStudent && view==='dashboard' && <DashboardView modules={modules} onNavigate={s=>setScreen(s)} labSafetyUrl={labSafetyUrl} moduleImages={moduleImages} />}
       </div>
 
-      {editingUrl !== null && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div style={{ background:'var(--surface)', borderRadius:'var(--radius-lg)', padding:28, maxWidth:480, width:'100%', border:'1px solid var(--border)' }}>
-            <div style={{ fontWeight:700, fontSize:17, marginBottom:4 }}>{editingUrl==='mileage'?'🚗 Mileage Form URL':'🦺 Lab Safety URL'}</div>
-            <div style={{ fontSize:13, color:'var(--text2)', marginBottom:16 }}>Update the external link for the {editingUrl==='mileage'?'Mileage Form':'Lab Safety'} icon.</div>
-            <div className="field"><label>Website URL</label><input type="url" value={urlInput} onChange={e=>setUrlInput(e.target.value)} placeholder="https://..." onKeyDown={e=>e.key==='Enter'&&saveUrl()} /></div>
-            <div style={{ display:'flex', gap:10, marginTop:8 }}>
-              <button className="btn btn-primary" onClick={saveUrl} disabled={savingUrl||!urlInput.trim()}>{savingUrl?'Saving…':'Save URL'}</button>
-              <button className="btn" onClick={()=>setEditingUrl(null)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

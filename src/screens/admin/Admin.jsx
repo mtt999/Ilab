@@ -60,7 +60,6 @@ const MODULE_IMAGE_DEFS = [
   { key: 'booking',        label: 'Reserve Equipment',   icon: '📅' },
   { key: 'remessages',     label: 'RE Messages',         icon: '💬' },
   { key: 'pm',             label: 'Task Board',  icon: '📋' },
-  { key: 'mileage',        label: 'Mileage Form',        icon: '🚗' },
   { key: 'labsafety',      label: 'Lab Safety',          icon: '🦺' },
   { key: 'labmanagement',  label: 'Lab Management',      icon: '🏛️' },
 ]
@@ -450,7 +449,6 @@ const STUDENT_ICON_OPTIONS = [
   { key: 'booking',      label: 'Reserve Equipment',     icon: '📅' },
   { key: 'barcode',      label: 'QR Scan',               icon: '📷' },
   { key: 'remessages',   label: 'Lab Messages',   icon: '💬' },
-  { key: 'mileage',      label: 'Mileage Form',          icon: '🚗' },
   { key: 'labsafety',    label: 'Lab Safety',            icon: '🦺' },
 ]
 
@@ -471,13 +469,13 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
 
   // Load icons: org defaults for new student, existing prefs for edit
   useEffect(() => {
-    if (user?.id && user?.role === 'student') {
+    if (user?.id && user?.role === 'lab_user') {
       sb.from('user_dashboard_prefs').select('active_modules').eq('user_id', user.id).maybeSingle()
         .then(({ data }) => {
           const mods = data?.active_modules?.length ? data.active_modules : []
           setSelectedIcons(new Set([...mods, 'profile']))
         })
-    } else if (!user && role === 'student' && effectiveOrgId) {
+    } else if (!user && role === 'lab_user' && effectiveOrgId) {
       sb.from('organizations').select('student_default_modules').eq('id', effectiveOrgId).maybeSingle()
         .then(({ data }) => {
           const defaults = data?.student_default_modules?.length
@@ -485,7 +483,7 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
             : ['projects', 'training', 'booking', 'equipmenthub', 'remessages']
           setSelectedIcons(new Set([...defaults, 'profile']))
         })
-    } else if (!user && role === 'student') {
+    } else if (!user && role === 'lab_user') {
       setSelectedIcons(new Set(['projects', 'training', 'booking', 'equipmenthub', 'remessages', 'profile']))
     }
   }, [user?.id, user?.role, role, effectiveOrgId])
@@ -526,7 +524,7 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
       if (password) upd.must_change_password = true
       const { error } = await sb.from('users').update(upd).eq('id', user.id)
       if (error) { toast('Error updating user: ' + error.message); return }
-      if (role === 'student') await saveIconPrefs(user.id)
+      if (role === 'lab_user') await saveIconPrefs(user.id)
       if (password) toast('User updated. Password will be required to change on next login.')
       else toast('User updated.')
       onSaved(); onClose()
@@ -548,7 +546,7 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
 
       // Fetch the new user's ID to save icon prefs and queue welcome email
       const { data: newUser } = await sb.from('users').select('id').ilike('email', emailLC).maybeSingle()
-      if (role === 'student' && newUser?.id) await saveIconPrefs(newUser.id)
+      if (role === 'lab_user' && newUser?.id) await saveIconPrefs(newUser.id)
       queueWelcomeEmail(sb, { name: name.trim(), toEmail: emailLC, orgId, userId: newUser?.id ?? null, password: tempPassword })
       setSavedCreds({ name: name.trim(), email: emailLC, password: tempPassword })
       onSaved()
@@ -625,7 +623,7 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
         )}
       </div>
 
-      {role === 'student' && (
+      {role === 'lab_user' && (
         <div style={{ marginTop: 4, marginBottom: 8 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
             Dashboard icons for this lab user
@@ -672,11 +670,11 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
 // Org-level pool (org admins): all modules except profile (always pinned)
 const ORG_CONFIGURABLE_MODULES = ALL_MODULES_META.filter(m => m.key !== 'profile')
 
-// Super admin global team pool: also exclude mileage & labsafety (ICT-org-specific external links)
-const APP_GLOBAL_MODULES = ALL_MODULES_META.filter(m => m.key !== 'profile' && m.key !== 'mileage' && m.key !== 'labsafety')
+// Super admin global team pool: exclude profile (always pinned) and labsafety (org-specific external link)
+const APP_GLOBAL_MODULES = ALL_MODULES_META.filter(m => m.key !== 'profile' && m.key !== 'labsafety')
 
 // Super admin global solo pool: same exclusions + soloLocked
-const SOLO_GLOBAL_MODULES = ALL_MODULES_META.filter(m => !m.soloLocked && m.key !== 'profile' && m.key !== 'mileage' && m.key !== 'labsafety')
+const SOLO_GLOBAL_MODULES = ALL_MODULES_META.filter(m => !m.soloLocked && m.key !== 'profile' && m.key !== 'labsafety')
 
 // Profile is always-on so excluded from access-control, but included here for image upload
 const ORG_IMAGE_MODULES = ALL_MODULES_META
@@ -799,7 +797,7 @@ function GlobalImageGrid({ modules, imagePrefix, alsoPrefix }) {
 // ── App-level modules modal (super admin only) ────────────────
 function AppModulesModal({ onClose }) {
   const { toast } = useAppStore()
-  // Configurable keys (no profile, no mileage, no labsafety)
+  // Configurable keys (no profile, no labsafety)
   const configKeys = APP_GLOBAL_MODULES.map(m => m.key)
   // Full display keys: configurable + profile always at end by default
   const defaultOrder = [...configKeys, 'profile']
@@ -1441,7 +1439,7 @@ export default function Admin() {
       if (orgFilter) q = q.eq('organization_id', orgFilter)
     } else {
       // Org admin sees their own org's users
-      if (tab === 'students') q = q.eq('role', 'student')
+      if (tab === 'students') q = q.eq('role', 'lab_user')
       else q = q.in('role', ['user', 'admin'])
       q = q.eq('organization_id', myOrgId)
     }
@@ -1691,8 +1689,8 @@ export default function Admin() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontWeight: 600 }}>{u.name}</span>
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: u.role === 'admin' ? '#FEF3C7' : u.role === 'student' ? '#EDE9FE' : '#E1F5EE', color: u.role === 'admin' ? '#92400E' : u.role === 'student' ? '#5B21B6' : '#065F46', fontWeight: 600 }}>
-                        {u.role === 'admin' ? 'Org Admin' : u.role === 'student' ? 'Lab User' : 'Lab Manager'}
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: u.role === 'admin' ? '#FEF3C7' : u.role === 'lab_user' ? '#EDE9FE' : '#E1F5EE', color: u.role === 'admin' ? '#92400E' : u.role === 'lab_user' ? '#5B21B6' : '#065F46', fontWeight: 600 }}>
+                        {u.role === 'admin' ? 'Org Admin' : u.role === 'lab_user' ? 'Lab User' : 'Lab Manager'}
                       </span>
                       {!u.is_active && <span style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 500 }}>Inactive</span>}
                       {u.must_change_password && <span style={{ fontSize: 11, color: '#D97706', fontWeight: 500 }}>⚠ Temp password</span>}
@@ -1942,9 +1940,9 @@ export default function Admin() {
                 if (filtered.length === 0) return <div style={{ textAlign: 'center', color: 'var(--text3)', padding: '24px 0', fontSize: 13 }}>No team users found.</div>
                 return filtered.map(u => {
                   const orgN = orgs.find(o => o.id === u.organization_id)?.name || '—'
-                  const roleLabel = u.role === 'admin' ? 'Org Admin' : u.role === 'student' ? 'Lab User' : 'Lab Manager'
-                  const roleBg = u.role === 'admin' ? '#FEF3C7' : u.role === 'student' ? '#EDE9FE' : '#E1F5EE'
-                  const roleColor = u.role === 'admin' ? '#92400E' : u.role === 'student' ? '#5B21B6' : '#065F46'
+                  const roleLabel = u.role === 'admin' ? 'Org Admin' : u.role === 'lab_user' ? 'Lab User' : 'Lab Manager'
+                  const roleBg = u.role === 'admin' ? '#FEF3C7' : u.role === 'lab_user' ? '#EDE9FE' : '#E1F5EE'
+                  const roleColor = u.role === 'admin' ? '#92400E' : u.role === 'lab_user' ? '#5B21B6' : '#065F46'
                   return (
                     <div key={u.id} className="card" style={{ padding: '10px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12, opacity: u.is_active ? 1 : 0.55 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>

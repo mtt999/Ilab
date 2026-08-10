@@ -202,13 +202,13 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
   const roleKey     = loginMode === 'solo' ? 'solo' : 'team'
   const isStaff     = session?.role === 'admin' || session?.role === 'user'
 
-  // External URL state for mileage / labsafety links
+  // External URL state for labsafety link
   const [extUrls, setExtUrls]       = useState({})
   const [extConfirm, setExtConfirm] = useState(null)
   const [soloPool, setSoloPool]     = useState(null)
 
   useEffect(() => {
-    const keys = ['mileage_url', 'labsafety_url']
+    const keys = ['labsafety_url']
     if (loginMode === 'solo') keys.push('solo_allowed_modules')
     sb.from('settings').select('key, value').in('key', keys)
       .then(({ data }) => {
@@ -221,8 +221,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
       })
   }, [loginMode])
 
-  // Navigable modules — same role-based filter as dashboard getModules,
-  // but also includes external modules (mileage, labsafety) for the full icon count.
+  // Navigable modules — same role-based filter as dashboard getModules.
   const navigable = ALL_MODULES_META.filter(m => {
     if (!m.screen && !m.external) return false
     if (!m.roles || !m.roles.includes(roleKey)) return false
@@ -237,7 +236,7 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
 
   const handleModuleClick = (m) => {
     if (m.external) {
-      const url = m.key === 'mileage' ? extUrls.mileage_url : extUrls.labsafety_url
+      const url = extUrls.labsafety_url
       if (url) setExtConfirm(url)
     } else {
       setScreen(m.screen)
