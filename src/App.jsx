@@ -1,6 +1,33 @@
-import { useEffect, useState, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy, Suspense, Component } from 'react'
 import { useAppStore } from './store/useAppStore'
 import { sb } from './lib/supabase'
+
+class ScreenErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false } }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(error, info) {
+    console.error('Screen render error:', error, info)
+    import('./lib/logAdminError').then(({ logAdminError }) =>
+      logAdminError('Screen render error', `${error?.message}\n${info?.componentStack?.slice(0, 400)}`)
+    )
+  }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'60vh', padding:32, textAlign:'center' }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>⚠️</div>
+        <div style={{ fontSize:20, fontWeight:700, color:'var(--text)', marginBottom:8 }}>Something went wrong</div>
+        <div style={{ fontSize:14, color:'var(--text3)', marginBottom:24, maxWidth:360, lineHeight:1.6 }}>
+          This page had an error. Your data is safe — go back to the dashboard and try again.
+        </div>
+        <button onClick={() => { this.setState({ hasError:false }); useAppStore.getState().setScreen('dashboard') }}
+          style={{ padding:'10px 24px', background:'var(--accent)', color:'#fff', border:'none', borderRadius:10, fontSize:15, fontWeight:600, cursor:'pointer' }}>
+          ← Back to Dashboard
+        </button>
+      </div>
+    )
+    return this.props.children
+  }
+}
 import Login from './screens/auth/Login'
 import AdminLogin from './screens/auth/AdminLogin'
 import Layout from './components/Layout'
@@ -324,7 +351,7 @@ export default function App() {
   }, [session?.userId])
 
   useEffect(() => {
-    if (session?.userId && (session?.role === 'user' || session?.role === 'admin' || session?.role === 'student')) {
+    if (session?.userId && (session?.role === 'user' || session?.role === 'admin' || session?.role === 'lab_user')) {
       sb.from('user_screen_access').select('screen_key').eq('user_id', session.userId)
         .then(({ data }) => {
           if (data?.length) setUserAccess(new Set(data.map(r => r.screen_key)))
@@ -342,7 +369,7 @@ export default function App() {
       if (!['dashboard', 'orgadmin', 'profile'].includes(screen)) setScreen('dashboard')
       return
     }
-    if (session?.role === 'student') {
+    if (session?.role === 'lab_user') {
       const baseAllowed = ['dashboard', 'projects', 'project-detail', 'training', 'profile', 'equipmenthub', 'booking', 'remessages', 'barcode', 'barcodeqr', 'equipmentscan', 'home', 'equipment', 'pm', 'history', 'training-proto', 'layout-proto']
       if (!baseAllowed.includes(screen) && !(userAccess && userAccess.has(screen))) setScreen('dashboard')
     }
@@ -405,9 +432,11 @@ export default function App() {
   return (
     <>
       <Layout>
-        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>}>
-          {screens[screen] || <Dashboard />}
-        </Suspense>
+        <ScreenErrorBoundary key={screen}>
+          <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>}>
+            {screens[screen] || <Dashboard />}
+          </Suspense>
+        </ScreenErrorBoundary>
       </Layout>
       <Toast />
       {!termsAccepted && session && <TermsAcceptance session={session} onAccept={() => setTermsAccepted(true)} />}
