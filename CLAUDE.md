@@ -377,7 +377,7 @@ Never do `mods = mods.filter(...)` alone — that drops newly-enabled modules fo
 | Super admin | `null` | All orgs, all data. Logs in at `/ilab/admin` via `settings.admin_email` + `settings.admin_password` |
 | Org admin | non-null UUID | Their own `organizationId` only. Entry via Admin Panel card on dashboard |
 | Lab manager | non-null UUID | `role = 'user'`. Access controlled by `user_screen_access` table |
-| Lab user | non-null UUID | `role = 'student'`. Restricted module set |
+| Lab user | non-null UUID | `role = 'lab_user'`. Restricted module set |
 
 `Admin.jsx` (`src/screens/admin/Admin.jsx`) detects super admin via `session.userId === null`.
 
@@ -578,7 +578,7 @@ Note: `ilab_session` is written by `TermsAcceptance.jsx` and `ForcePasswordChang
 ## SQL — all tables & key columns
 
 ### Core tables (team)
-- `users`: `id`, `name`, `email`, `password_hash`, `role` (admin/user/student), `organization_id`, `is_active`, `must_change_password`, `photo_url`, `avatar`, `terms_accepted_version` (INTEGER)
+- `users`: `id`, `name`, `email`, `password_hash`, `role` (admin/user/lab_user), `organization_id`, `is_active`, `must_change_password`, `photo_url`, `avatar`, `terms_accepted_version` (INTEGER)
 - `organizations`: `id`, `name`, `slug`, `created_at`, `allowed_modules` (JSONB), `module_images` (JSONB)
 - `user_screen_access`: `user_id`, `screen_key` — per-user screen grants
 - `user_dashboard_prefs`: `user_id`, `active_modules` (array), `allowed_modules` (array), `has_set_dashboard`
@@ -791,6 +791,58 @@ Tokens in `index.css`: `--row-a` `#f8faff` (even, blue tint) / `--row-b` `#f5f7f
   localStorage (`ilab_module_imgs_{mode}_{org}`), refreshed in background by
   `loadSettings()` (stale-while-revalidate) — kills the ~1s emoji flash.
   Local default SVGs seed the initializer. Do not revert to `useState({})`.
+
+---
+
+## Feature updates — August 2026 session (do not regress)
+
+### Onboarding tour system (`src/components/OnboardingTour.jsx`)
+
+Three exports — all logic lives here; do NOT put tour code in screen files or App.jsx:
+
+| Export | Purpose |
+|--------|---------|
+| `default OnboardingTour` | Full-screen guided modal (5–6 cards, role/loginMode-aware) |
+| `ModuleTip` | Dismissible tip banner at top of each screen, injected in Layout |
+| `HelpTourButton` | `?` header button with pulse ring + speech-bubble callout |
+
+**Tour cards:** Welcome (🐝) → Dashboard → Profile → Solo/Team Workspace (dynamic on loginMode) → Get Help → Managing Your Team (team managers only).
+
+**Auto-trigger:** 600ms after first login where `!mustChangePassword`; also every login while `ilab_tour_done_{uid}` is not `'true'`.
+
+**HelpTourButton** (replaces plain `?` in Layout header, between About and NotificationBell):
+- Logins 1–3: speech-bubble callout "👋 New here? Click to start the guided tour" (appears at 1.4s, hides at 8s)
+- Logins 1–5: double pulse-ring animation on the button
+- Login count tracked with `ilab_login_count_{uid}` in localStorage
+- `accentColor` prop drives ring color (teal team / purple solo)
+
+**ModuleTip** renders in Layout's `<main>` before `{children}` (no screen files need changes). Screens with tips: `booking`, `training`, `projects`, `home`, `equipmenthub`, `barcode`, `barcodeqr`, `pm`, `labmanagement`, `equipmentscan`, `history`, `equipment`, `remessages`.
+
+**localStorage keys:** `ilab_tour_done_{uid}`, `ilab_login_count_{uid}`, `ilab_tip_{uid}_{screen}`.
+
+**Login count increment** is guarded by `tourTriggeredRef = useRef(false)` in Layout to prevent double-count on re-renders. Effect watches `session?.userId, session?.soloId, session?.mustChangePassword`.
+
+**To reset for testing** (browser devtools):
+```js
+Object.keys(localStorage).filter(k => k.startsWith('ilab_tour') || k.startsWith('ilab_login') || k.startsWith('ilab_tip')).forEach(k => localStorage.removeItem(k))
+```
+
+### Dashboard icon drag-to-reorder
+
+Non-student users (lab managers, org admins, solo users) can drag cards directly on the home screen to reorder them. Lab users / students cannot drag (no `onReorder` prop passed to their `CardGridView`).
+
+**How it works:**
+- `ModuleCard` accepts `onDragStart/onDragOver/onDrop/onDragEnd/isDragging/isDragOver` props
+- `draggable={!!onDragStart}` — only draggable when a reorder handler is provided
+- `onDragStart` sets `effectAllowed = 'move'` and `setDragImage(element, ...)` so the card itself is the ghost (not a default link-drag preview)
+- `CardGridView` holds `dragSrc/dragOver` state; `handleDrop(targetIdx)` splices the array and calls `onReorder(keys)`
+- `saveModuleOrder(keys)` in Dashboard calls `setActiveModules(keys)` immediately (optimistic), then persists:
+  - Solo users → `solo_users.active_modules`
+  - Team users → `user_dashboard_prefs.active_modules` (upsert)
+  - Super admin → `localStorage.ilab_admin_modules`
+- The `if (activeModules !== null) return` early-return in `loadDashboardPrefs` prevents the DB re-fetch from overwriting a just-saved drag order
+
+**Visual feedback:** dragged card → `opacity: 0.35`; drop target → `border: 2px solid var(--accent)`; cursor changes to `grab`.
 
 ---
 
