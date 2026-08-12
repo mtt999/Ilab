@@ -226,7 +226,7 @@ export default function TrainingRecordsProto() {
         <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 16 }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 18, color: '#0C1140' }}>Training Records</div>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>Staff workspace · {session?.username || 'Lab Manager'}</div>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>Lab Manager workspace · {session?.username || 'Lab Manager'}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {STATS.map(s => (

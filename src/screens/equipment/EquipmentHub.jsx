@@ -68,7 +68,7 @@ function EquipmentInfo({ equipment, session }) {
 
   async function load() {
     setLoading(true)
-    const isStudent = session?.role === 'student'
+    const isStudent = session?.role === 'lab_user'
     if (isStudent) {
       const { data: trainRecs } = await sb.from('training_equipment').select('passed_exam').eq('user_id', session.userId).eq('equipment_id', equipment.id)
       const hasPassed = trainRecs?.some(r => r.passed_exam)
@@ -425,7 +425,7 @@ function TemporaryAccessPanel({ equipment, session }) {
   async function load() {
     setLoading(true)
     const [{ data: studs }, { data: temps }, { data: trained }] = await Promise.all([
-      sb.from('users').select('id, name, project_group').eq('role', 'student').eq('is_active', true).order('name'),
+      sb.from('users').select('id, name, project_group').eq('role', 'lab_user').eq('is_active', true).order('name'),
       sb.from('equipment_temp_access').select('*').eq('equipment_id', equipment.id),
       sb.from('training_equipment').select('user_id').eq('equipment_id', equipment.id).eq('passed_exam', true),
     ])
@@ -446,7 +446,7 @@ function TemporaryAccessPanel({ equipment, session }) {
   return (
     <div className="card" style={{ borderColor: 'var(--accent)' }}>
       <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>🔑 Temporary Access Management</div>
-      <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Grant untrained students 1-week access to view SOP and training materials before their training session.</div>
+      <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Grant untrained lab users 1-week access to view SOP and training materials before their training session.</div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)} style={{ flex: 1, minWidth: 180 }}>
           <option value="">— Select student —</option>

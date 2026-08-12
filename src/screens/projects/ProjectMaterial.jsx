@@ -1981,7 +1981,7 @@ function RecordsPanel({ projects, allowedNames, session }) {
 // Workspace = Data Analysis directly. Records merged into Project Test
 // Results; Links removed; Project Members promoted to its own sidebar tab.
 function WorkspaceTab({ session, isSolo, allowedNames, userProjectGroup, userAssignedProjectIds }) {
-  const isLabUser = !isSolo && session?.dbRole === 'student'
+  const isLabUser = !isSolo && session?.dbRole === 'lab_user'
   const hasProjectAccess = !isLabUser || !!userAssignedProjectIds
 
   if (!hasProjectAccess) return (
@@ -2293,7 +2293,7 @@ export default function ProjectMaterial() {
     return allProjects
   }, [allProjects, userProjectGroup, userAssignedProjectIds, session?.userId, session?.dbRole, isSolo])
 
-  const isLabUser = !isSolo && session?.dbRole === 'student'
+  const isLabUser = !isSolo && session?.dbRole === 'lab_user'
   const hasProjectAccess = !isLabUser || !!userAssignedProjectIds
 
   return (

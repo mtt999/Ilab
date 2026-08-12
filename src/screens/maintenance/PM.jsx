@@ -120,7 +120,7 @@ function TaskComments({ taskId, currentUserId, currentUserName, assignedTo }) {
   async function postComment() {
     if (!newComment.trim()) return
     setPosting(true)
-    const name = currentUserName || 'Staff'
+    const name = currentUserName || 'Lab Manager'
     await sb.from('task_comments').insert({ task_id: taskId, user_id: currentUserId || null, user_name: name, body: newComment.trim() }).select().single()
     if (assignedTo && assignedTo !== currentUserId) {
       await sendNotification(assignedTo, 'task_comment', 'New comment on your task', `${name}: ${newComment.trim().slice(0, 60)}`, taskId)
@@ -358,7 +358,7 @@ function TaskGroupPanel({ userId, orgId, onGroupChange }) {
         setPendingIn(incoming.map(i => ({ ...i, groupName: gMap[i.group_id] || 'Unknown group', inviterName: iMap[i.invited_by] || 'Someone' })))
       } else { setPendingIn([]) }
     }
-    const { data: ou } = await sb.from('users').select('id, name').eq('role', 'student').eq('is_active', true).eq('organization_id', orgId).neq('id', userId).order('name')
+    const { data: ou } = await sb.from('users').select('id, name').eq('role', 'lab_user').eq('is_active', true).eq('organization_id', orgId).neq('id', userId).order('name')
     setOrgUsers(ou || [])
   }
 
@@ -504,7 +504,7 @@ function TaskAttachments({ taskId, userName, refreshToken }) {
       const { error: upErr } = await sb.storage.from('task-files').upload(path, file)
       if (upErr) throw upErr
       const { data: { publicUrl } } = sb.storage.from('task-files').getPublicUrl(path)
-      const { data, error } = await sb.from('task_attachments').insert({ task_id: taskId, file_name: file.name, file_url: publicUrl, file_size: file.size, uploaded_by: userName || 'Staff' }).select().single()
+      const { data, error } = await sb.from('task_attachments').insert({ task_id: taskId, file_name: file.name, file_url: publicUrl, file_size: file.size, uploaded_by: userName || 'Lab Manager' }).select().single()
       if (error) throw error
       if (data) setAttachments(prev => [data, ...prev])
       toast('File attached!')
@@ -685,7 +685,7 @@ function DrawingBoard({ taskId, taskTitle, currentUserName, onClose, onAttachmen
       if (upErr) throw new Error('Upload failed: ' + upErr.message)
       const { data: { publicUrl } } = sb.storage.from('task-files').getPublicUrl(path)
       const { data: att, error: insertErr } = await sb.from('task_attachments')
-        .insert({ task_id: taskId, file_name: fileName, file_url: publicUrl, file_size: blob.size, uploaded_by: currentUserName || 'Staff' })
+        .insert({ task_id: taskId, file_name: fileName, file_url: publicUrl, file_size: blob.size, uploaded_by: currentUserName || 'Lab Manager' })
         .select().single()
       if (insertErr) throw new Error('Could not link drawing: ' + insertErr.message)
       toast('Drawing saved!')
@@ -1688,7 +1688,7 @@ function Team({ orgId, isSolo }) {
   const statusLabel = (s) => ({ todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[s] || s)
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-  if (staffUsers.length === 0) return <div style={{ padding: 32, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>No staff members found.</div>
+  if (staffUsers.length === 0) return <div style={{ padding: 32, textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>No lab managers found.</div>
 
   return (
     <div style={{ overflowX: 'auto', overflowY: 'visible', paddingBottom: 12, userSelect: resizing.current ? 'none' : 'auto' }}>
@@ -1865,7 +1865,7 @@ function MultiAssignSelect({ users, selected, onChange }) {
       <button type="button" onClick={() => setOpen(o => !o)}
         style={{ width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)', color: selected.length ? 'var(--text)' : 'var(--text3)', fontSize: 14, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-          {selected.length === 0 ? '— Select staff member(s) —' : selectedNames.join(', ')}
+          {selected.length === 0 ? '— Select lab manager(s) —' : selectedNames.join(', ')}
         </span>
         <span style={{ color: 'var(--text3)', marginLeft: 8, flexShrink: 0 }}>▾</span>
       </button>
@@ -2828,8 +2828,8 @@ export default function PM() {
   const userId = session?.userId
   const isOwnerAdmin = !userId
   const isAdmin = session?.role === 'admin' || session?.role === 'user'
-  const isStudent = session?.role === 'student'
-  const userName = session?.username || 'Staff'
+  const isStudent = session?.role === 'lab_user'
+  const userName = session?.username || 'Lab Manager'
   const isSolo = session?.loginMode === 'solo'
   const orgId = session?.organizationId || null
 

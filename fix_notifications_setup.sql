@@ -11,91 +11,82 @@ ALTER TABLE notifications
   ADD COLUMN IF NOT EXISTS type   text,
   ADD COLUMN IF NOT EXISTS read   boolean DEFAULT false;
 
--- ── STEP 2: Convert user_id to uuid (fixes Realtime 400 errors) ─
-ALTER TABLE notifications
-  ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+-- ── STEP 2: Drop all existing policies (needed before type change) ─
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT policyname FROM pg_policies WHERE schemaname='public' AND tablename='notifications'
+  LOOP EXECUTE 'DROP POLICY IF EXISTS ' || quote_ident(r.policyname) || ' ON notifications'; END LOOP;
+END $$;
+
+DO $$ DECLARE r record; BEGIN
+  FOR r IN SELECT policyname FROM pg_policies WHERE schemaname='public' AND tablename='booking_notifications'
+  LOOP EXECUTE 'DROP POLICY IF EXISTS ' || quote_ident(r.policyname) || ' ON booking_notifications'; END LOOP;
+END $$;
+
+-- ── STEP 3: Convert user_id to uuid (fixes Realtime 400 errors) ─
+DO $$ BEGIN
+  ALTER TABLE notifications ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
+EXCEPTION WHEN others THEN NULL; END $$;
 
 DO $$ BEGIN
   ALTER TABLE booking_notifications ALTER COLUMN user_id TYPE uuid USING user_id::uuid;
 EXCEPTION WHEN others THEN NULL; END $$;
 
--- ── STEP 3: notifications — RLS + policies ───────────────────
+-- ── STEP 4: notifications — RLS + policies ───────────────────
+-- Uses labhive's existing helper functions: my_user_id(), my_solo_id(), is_super_admin()
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS notifications_insert ON notifications;
 CREATE POLICY notifications_insert ON notifications
   FOR INSERT TO authenticated WITH CHECK (true);
 
-DROP POLICY IF EXISTS notifications_select ON notifications;
 CREATE POLICY notifications_select ON notifications
   FOR SELECT TO authenticated
   USING (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
+    user_id = my_user_id()
+    OR user_id = my_solo_id()
     OR EXISTS (
       SELECT 1 FROM users me
-      JOIN users target ON target.id::text = notifications.user_id::text
-      WHERE me.auth_id = auth.uid()::text
+      JOIN users target ON target.id = notifications.user_id
+      WHERE me.auth_id::text = auth.uid()::text
         AND me.organization_id = target.organization_id
         AND me.role IN ('admin', 'user')
     )
-    OR EXISTS (
-      SELECT 1 FROM settings
-      WHERE key = 'super_admin_auth_id' AND value = auth.uid()::text
-    )
+    OR is_super_admin()
   );
 
-DROP POLICY IF EXISTS notifications_update ON notifications;
 CREATE POLICY notifications_update ON notifications
   FOR UPDATE TO authenticated
-  USING  (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
-  )
-  WITH CHECK (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
-  );
+  USING  (user_id = my_user_id() OR user_id = my_solo_id())
+  WITH CHECK (user_id = my_user_id() OR user_id = my_solo_id());
 
-DROP POLICY IF EXISTS notifications_delete ON notifications;
 CREATE POLICY notifications_delete ON notifications
   FOR DELETE TO authenticated
-  USING (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
-  );
+  USING (user_id = my_user_id() OR user_id = my_solo_id());
 
--- ── STEP 4: notification_prefs — own row + org-wide SELECT ───
+-- ── STEP 5: notification_prefs — own row + org-wide SELECT ───
 ALTER TABLE notification_prefs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS notification_prefs_own ON notification_prefs;
 CREATE POLICY notification_prefs_own ON notification_prefs
   FOR ALL TO authenticated
-  USING    (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
-  )
-  WITH CHECK (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
-  );
+  USING    (user_id::text = my_user_id()::text OR user_id::text = my_solo_id()::text)
+  WITH CHECK (user_id::text = my_user_id()::text OR user_id::text = my_solo_id()::text);
 
 DROP POLICY IF EXISTS notification_prefs_select_org ON notification_prefs;
 CREATE POLICY notification_prefs_select_org ON notification_prefs
   FOR SELECT TO authenticated
   USING (
-    user_id::text = (SELECT id::text FROM users WHERE auth_id = auth.uid()::text LIMIT 1)
-    OR user_id::text = (SELECT id::text FROM solo_users WHERE auth_id = auth.uid()::text LIMIT 1)
+    user_id::text = my_user_id()::text
+    OR user_id::text = my_solo_id()::text
     OR EXISTS (
       SELECT 1 FROM users me
       JOIN users target ON target.id::text = notification_prefs.user_id::text
-      WHERE me.auth_id = auth.uid()::text
+      WHERE me.auth_id::text = auth.uid()::text
         AND me.organization_id = target.organization_id
         AND me.role IN ('admin', 'user')
     )
   );
 
--- ── STEP 5: email_notifications_queue ────────────────────────
+-- ── STEP 6: email_notifications_queue ────────────────────────
 CREATE TABLE IF NOT EXISTS email_notifications_queue (
   id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   to_email     text NOT NULL,
@@ -120,11 +111,9 @@ CREATE POLICY email_queue_insert ON email_notifications_queue
 DROP POLICY IF EXISTS email_queue_select ON email_notifications_queue;
 CREATE POLICY email_queue_select ON email_notifications_queue
   FOR SELECT TO authenticated
-  USING (
-    EXISTS (SELECT 1 FROM settings WHERE key = 'super_admin_auth_id' AND value = auth.uid()::text)
-  );
+  USING (is_super_admin());
 
--- ── STEP 6: Realtime publication ─────────────────────────────
+-- ── STEP 7: Realtime publication ─────────────────────────────
 DO $$ BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 EXCEPTION WHEN others THEN NULL; END $$;

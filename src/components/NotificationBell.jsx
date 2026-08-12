@@ -86,6 +86,8 @@ export default function NotificationBell() {
     } else if (n.type === 'team_invite') {
       setPendingProfileTab('team')
       setScreen('profile')
+    } else if (['training_approved', 'training_submitted', 'training_expiring'].includes(n.type)) {
+      setScreen('training')
     } else if (n.task_id) {
       setScreen('pm')
     }

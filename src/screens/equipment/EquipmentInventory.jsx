@@ -69,8 +69,8 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
       } else {
         const orgId = session?.organizationId
         if (!orgId) return
-        const { data } = await sb.from('users').select('id, name, email').eq('role', 'user').eq('organization_id', orgId).eq('is_active', true).order('name')
-        setManagers((data || []).map(u => ({ id: u.id, name: u.name || u.email })))
+        const { data } = await sb.from('users').select('id, name, last_name, nick_name, email').eq('role', 'user').eq('organization_id', orgId).eq('is_active', true).order('name')
+        setManagers((data || []).map(u => ({ id: u.id, name: u.nick_name?.trim() || [u.name, u.last_name].filter(Boolean).join(' ') || u.email })))
       }
     }
     loadManagers()

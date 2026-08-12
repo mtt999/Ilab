@@ -94,7 +94,7 @@ const HELP_CONTENT = {
       'Dashboard Icons tab: choose which module cards appear on your home screen',
       'Org admin — Module Images tab: upload a background photo for each dashboard card',
       'Org admin — Users and Lab Users tabs: add, edit, and manage all accounts',
-      'Admin 1 and Admin 2 levels can be assigned to trusted staff members',
+      'Admin 1 and Admin 2 levels can be assigned to trusted lab managers',
     ],
   },
   pm: {
@@ -111,7 +111,7 @@ const HELP_CONTENT = {
       'Live Drawing board (🎨): open from any meeting task modal to sketch and share ideas in real time — save to attach permanently or discard to close without saving',
       'Team tab (staff): kanban board of all lab manager tasks across the org',
       'Reminders tab: set personal time-based reminders independent of tasks',
-      'Assign Others tab (org admin only): create and assign tasks directly to any staff member',
+      'Assign Others tab (org admin only): create and assign tasks directly to any lab manager',
     ],
   },
   remessages: {
