@@ -209,6 +209,30 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
   const [extConfirm, setExtConfirm] = useState(null)
   const [soloPool, setSoloPool]     = useState(null)
 
+  // Training sidebar badges — red dot when there are pending items
+  const [trainingBadges, setTrainingBadges] = useState({})
+  useEffect(() => {
+    if (screen !== 'training' || !session?.userId) { setTrainingBadges({}); return }
+    const isManager = session?.role === 'admin' || session?.role === 'user'
+    const orgId = session?.organizationId
+    if (isManager) {
+      Promise.all([
+        sb.from('retraining_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').eq('organization_id', orgId),
+        sb.from('training_fresh').select('id', { count: 'exact', head: true }).eq('admin_approved', false).not('certificate_url', 'is', null),
+      ]).then(([{ count: eqCount }, { count: freshCount }]) => {
+        setTrainingBadges({ equipment: eqCount || 0, fresh: freshCount || 0 })
+      }).catch(() => {})
+    } else {
+      Promise.all([
+        sb.from('retraining_requests').select('id', { count: 'exact', head: true }).eq('user_id', session.userId).eq('status', 'pending'),
+        sb.from('training_schedule').select('id', { count: 'exact', head: true }).eq('user_id', session.userId).eq('status', 'proposed'),
+        sb.from('training_fresh').select('id', { count: 'exact', head: true }).eq('user_id', session.userId).eq('admin_approved', false).not('certificate_url', 'is', null),
+      ]).then(([{ count: reqCount }, { count: schedCount }, { count: freshCount }]) => {
+        setTrainingBadges({ equipment: (reqCount || 0) + (schedCount || 0), fresh: freshCount || 0 })
+      }).catch(() => {})
+    }
+  }, [screen, session?.userId, session?.role, session?.organizationId])
+
   useEffect(() => {
     const keys = ['labsafety_url']
     if (loginMode === 'solo') keys.push('solo_allowed_modules')
@@ -390,7 +414,9 @@ function Sidebar({ session, screen, activeModules, sidebarSubTab, setSidebarSubT
                     style={active ? { background: accentLight, color: accentColor } : {}}>
                     <span style={{ fontSize: 15, width: 20, textAlign: 'center', flexShrink: 0 }}>{t.icon}</span>
                     <span style={{ lineHeight: 1.3, flex: 1 }}>{t.label}</span>
-                    {active && <span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />}
+                    {screen === 'training' && trainingBadges[t.key] > 0
+                      ? <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c84b2f', flexShrink: 0 }} />
+                      : active && <span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />}
                   </button>
                 )
               })}
@@ -504,10 +530,38 @@ export default function Layout({ children }) {
     const count = parseInt(localStorage.getItem(countKey) || '0', 10) + 1
     localStorage.setItem(countKey, String(count))
     setLoginCount(count)
-    if (localStorage.getItem(doneKey) !== 'true') {
-      setTimeout(() => setShowTour(true), 600)
-    }
+    if (localStorage.getItem(doneKey) === 'true') return
+    // Check DB so tour doesn't re-show in incognito or on a new browser
+    const userId = session?.userId || session?.soloId
+    const table = session?.loginMode === 'solo' ? 'solo_users' : null
+    const dbCheck = table
+      ? sb.from('solo_users').select('has_set_dashboard').eq('id', userId).limit(1)
+      : sb.from('user_dashboard_prefs').select('has_set_dashboard, active_modules').eq('user_id', userId).limit(1)
+    dbCheck.then(({ data }) => {
+      const row = data?.[0]
+      const done = row?.has_set_dashboard || Array.isArray(row?.active_modules)
+      if (done) {
+        localStorage.setItem(doneKey, 'true')
+      } else {
+        setTimeout(() => setShowTour(true), 600)
+      }
+    }).catch(() => { setTimeout(() => setShowTour(true), 600) })
   }, [session?.userId, session?.soloId, session?.mustChangePassword])
+
+  async function handleTourDone() {
+    setShowTour(false)
+    const uid = session?.userId || session?.soloId
+    if (!uid) return
+    localStorage.setItem(`ilab_tour_done_${uid}`, 'true')
+    if (session?.loginMode === 'solo') {
+      sb.from('solo_users').update({ has_set_dashboard: true }).eq('id', uid).catch(() => {})
+    } else if (session?.userId) {
+      sb.from('user_dashboard_prefs').upsert(
+        { user_id: uid, has_set_dashboard: true },
+        { onConflict: 'user_id', ignoreDuplicates: false }
+      ).catch(() => {})
+    }
+  }
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -688,7 +742,7 @@ export default function Layout({ children }) {
 
       {showAbout   && <AboutModal onClose={() => setShowAbout(false)} onContact={() => { setShowAbout(false); setShowContact(true) }} />}
       {showContact && <CustomerServiceModal onClose={() => setShowContact(false)} />}
-      {showTour && <OnboardingTour session={session} onDone={() => setShowTour(false)} />}
+      {showTour && <OnboardingTour session={session} onDone={handleTourDone} />}
       <FeedbackWidget bottomOffset={isMobile ? 80 : 24} />
       <SaraChat bottomOffset={isMobile ? 80 : 24} color={accentColor} onContact={() => setShowContact(true)} />
     </div>

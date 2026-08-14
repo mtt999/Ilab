@@ -306,9 +306,10 @@ export default function App() {
       } else {
         const { data } = await sb.from('user_dashboard_prefs').select('active_modules, has_set_dashboard').eq('user_id', userId).order('created_at', { ascending: false }).limit(1)
         const row = data?.[0]
+        // Any explicit active_modules array (even empty) means already configured
         const hasSaved = row && (
-          (Array.isArray(row.active_modules) && row.active_modules.length > 0) ||
-          row.has_set_dashboard === true
+          row.has_set_dashboard === true ||
+          Array.isArray(row.active_modules)
         )
         setShowIconPicker(!hasSaved)
       }
@@ -450,19 +451,16 @@ export default function App() {
           onDone={(modules) => {
             if (!session.userId) {
               localStorage.setItem('ilab_admin_dashboard_set', 'true')
-            } else if (!modules || modules.length === 0) {
-              // Dismissed or no icons assigned — mark as seen so picker doesn't reappear
+            } else {
+              localStorage.setItem(`ilab_picker_done_${session.userId}`, 'true')
               if (session.loginMode === 'solo') {
-                sb.from('solo_users').update({ has_set_dashboard: true }).eq('id', session.userId).then(() => {})
+                sb.from('solo_users').update({ has_set_dashboard: true }).eq('id', session.userId).catch(() => {})
               } else {
-                sb.from('user_dashboard_prefs').select('id').eq('user_id', session.userId).limit(1)
-                  .then(({ data }) => {
-                    if (data?.length) {
-                      sb.from('user_dashboard_prefs').update({ has_set_dashboard: true }).eq('user_id', session.userId).then(() => {})
-                    } else {
-                      sb.from('user_dashboard_prefs').insert({ user_id: session.userId, has_set_dashboard: true, active_modules: [] }).then(() => {})
-                    }
-                  })
+                // Upsert avoids race condition when tour + picker both try to insert
+                sb.from('user_dashboard_prefs').upsert(
+                  { user_id: session.userId, has_set_dashboard: true, active_modules: modules || [] },
+                  { onConflict: 'user_id', ignoreDuplicates: false }
+                ).catch(() => {})
               }
             }
             if (modules !== null && modules !== undefined) setActiveModules(modules)
