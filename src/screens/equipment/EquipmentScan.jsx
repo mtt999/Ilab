@@ -34,10 +34,10 @@ function ILabLogo({ size = 40 }) {
 }
 
 const OPTION_META = [
-  { id: 'sop',         icon: '📋', label: 'Standard Operating Procedure',   sub: 'Watch how-to videos, read the SOP, or turn on/off guide',   color: '#0369a1', bg: '#e0f2fe' },
-  { id: 'book',        icon: '📅', label: 'Book this Equipment',            sub: 'Reserve a time slot on the lab calendar',                   color: '#1D9E75', bg: '#E1F5EE' },
-  { id: 'contact',     icon: '💬', label: 'Lab Messages',            sub: 'Questions, chat, or report an issue to the lab manager',    color: '#534AB7', bg: '#EEEDFE' },
-  { id: 'calibration', icon: '🔧', label: 'Calibration',                   sub: 'View calibration schedule and maintenance records',          color: '#92400e', bg: '#fef3c7' },
+  { id: 'info',        icon: '🏷️',  label: 'Equipment Info',               sub: 'View details, location, condition, and book',             color: '#0369a1', bg: '#e0f2fe' },
+  { id: 'sop',         icon: '📖',  label: 'Standard Operating Procedure', sub: 'Watch how-to videos, read the SOP, or turn on/off guide', color: '#1D9E75', bg: '#E1F5EE' },
+  { id: 'calibration', icon: '🔧',  label: 'Calibration',                  sub: 'Maintenance schedule and records — Lab Manager access',   color: '#92400e', bg: '#fef3c7' },
+  { id: 'openapp',     icon: '🚀',  label: 'Open LabHive',                 sub: 'Go to your dashboard — projects, training, and more',     color: '#534AB7', bg: '#EEEDFE' },
 ]
 
 function SectionCard({ title, children, onClose }) {
@@ -55,6 +55,44 @@ function SectionCard({ title, children, onClose }) {
         ← Back to options
       </button>
     </div>
+  )
+}
+
+function EquipmentInfoSection({ equipment, onClose, onBook }) {
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
+  const condColor = { Good: '#1D9E75', Fair: '#92400e', Poor: '#a32d2d', 'Out of Service': '#a32d2d' }
+  const InfoRow = ({ label, value }) => value ? (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '8px 0', borderBottom: '1px solid var(--surface2)' }}>
+      <div style={{ fontSize: 12, color: 'var(--text3)', flexShrink: 0, marginRight: 16 }}>{label}</div>
+      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', textAlign: 'right' }}>{value}</div>
+    </div>
+  ) : null
+  return (
+    <SectionCard title="🏷️ Equipment Info" onClose={onClose}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+        {equipment.category     && <span style={{ fontSize: 12, padding: '4px 10px', background: '#e0f2fe', color: '#0369a1', borderRadius: 20, fontWeight: 500 }}>{equipment.category}</span>}
+        {equipment.location     && <span style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface2)', color: 'var(--text2)', borderRadius: 20 }}>📍 {equipment.location}</span>}
+        {equipment.condition    && <span style={{ fontSize: 12, padding: '4px 10px', background: `${condColor[equipment.condition] || '#888'}18`, color: condColor[equipment.condition] || '#888', borderRadius: 20, fontWeight: 500 }}>{equipment.condition}</span>}
+        {equipment.out_of_service && <span style={{ fontSize: 12, padding: '4px 10px', background: '#fcebeb', color: '#a32d2d', borderRadius: 20, fontWeight: 700 }}>🚫 Out of Service</span>}
+      </div>
+      <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
+        <InfoRow label="Manufacturer"   value={equipment.manufacturer} />
+        <InfoRow label="Model"          value={equipment.model} />
+        <InfoRow label="Serial Number"  value={equipment.serial_number} />
+        <InfoRow label="Purchase Date"  value={fmt(equipment.purchase_date)} />
+        <InfoRow label="Warranty"       value={fmt(equipment.warranty_expiry)} />
+        {equipment.notes && (
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, borderTop: '1px solid var(--surface2)', paddingTop: 10 }}>
+            <span style={{ fontWeight: 600, color: 'var(--text3)' }}>Notes: </span>{equipment.notes}
+          </div>
+        )}
+      </div>
+      {!equipment.out_of_service && (
+        <button onClick={onBook} style={{ width: '100%', padding: '12px', borderRadius: 9, fontSize: 14, fontWeight: 700, background: '#E1F5EE', color: '#1D9E75', border: '1.5px solid #b2dfcb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          📅 Book this Equipment →
+        </button>
+      )}
+    </SectionCard>
   )
 }
 
@@ -221,26 +259,6 @@ function MaintenanceSection({ equipment, session, onClose, onGoToInventory }) {
 
 
 
-function ContactSection({ onClose, onGoToMessages }) {
-  return (
-    <SectionCard title="💬 Lab Messages" onClose={onClose}>
-      <div style={{ textAlign: 'center', padding: '20px 0 8px' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
-        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>Lab Messages</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>
-          Send a message, ask a question, or report an issue about this equipment to your lab manager.
-        </div>
-        <button
-          onClick={onGoToMessages}
-          style={{ padding: '10px 24px', borderRadius: 9, fontSize: 14, fontWeight: 700, background: '#534AB7', color: '#fff', border: 'none', cursor: 'pointer' }}
-        >
-          Open Messages →
-        </button>
-      </div>
-    </SectionCard>
-  )
-}
-
 // URL param is the canonical source — survives re-mounts after navigation
 const EQ_FROM_URL = new URLSearchParams(window.location.search).get('eq')
 
@@ -282,12 +300,13 @@ export default function EquipmentScan() {
   }
 
   function handleOption(id) {
-    if (id === 'book') {
-      if (equipment?.id) setScanEquipmentId(equipment.id)
-      setScreen('booking')
-      return
-    }
+    if (id === 'openapp') { setScreen('dashboard'); return }
     setActiveSection(prev => prev === id ? null : id)
+  }
+
+  function handleBook() {
+    if (equipment?.id) setScanEquipmentId(equipment.id)
+    setScreen('booking')
   }
 
   // Handle case where user navigates to this screen without a scan (e.g., admin)
@@ -340,7 +359,7 @@ export default function EquipmentScan() {
           <ILabLogo size={48} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-              Equipment · ICT Lab
+              Equipment · LabHive
             </div>
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2, marginBottom: 6 }}>
               {equipment.equipment_name}
@@ -372,7 +391,8 @@ export default function EquipmentScan() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {OPTION_META.map(opt => {
           const isActive = activeSection === opt.id
-          const isNavigate = opt.id === 'book'
+          const isNavigate = opt.id === 'openapp'
+          const isLocked = opt.id === 'calibration' && !isStaff
           return (
             <div key={opt.id}>
               <div
@@ -385,34 +405,41 @@ export default function EquipmentScan() {
                   borderRadius: 'var(--radius-lg)',
                   cursor: 'pointer',
                   transition: 'all 0.13s',
+                  opacity: isLocked ? 0.6 : 1,
                 }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.borderColor = opt.color }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.borderColor = 'var(--border)' }}
               >
                 <div style={{ fontSize: 26, flexShrink: 0 }}>{opt.icon}</div>
-
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? opt.color : 'var(--text)' }}>
                     {opt.label}
-                    {equipment.out_of_service && opt.id === 'book' && <span style={{ marginLeft: 8, fontSize: 11, color: '#a32d2d', fontWeight: 400 }}>— Out of service</span>}
+                    {isLocked && <span style={{ marginLeft: 8, fontSize: 11, color: '#92400e', fontWeight: 400 }}>— Lab Manager only</span>}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{opt.sub}</div>
                 </div>
-
                 <div style={{ fontSize: 16, color: isActive ? opt.color : 'var(--text3)', flexShrink: 0, transition: 'transform 0.15s', transform: isActive ? 'rotate(90deg)' : 'rotate(0deg)' }}>
                   {isNavigate ? '→' : (isActive ? '▼' : '▶')}
                 </div>
               </div>
 
-              {/* Inline expanded sections */}
+              {isActive && opt.id === 'info' && (
+                <EquipmentInfoSection equipment={equipment} onClose={() => setActiveSection(null)} onBook={handleBook} />
+              )}
               {isActive && opt.id === 'sop' && (
                 <HowToSection videos={videos} sop={sop} onClose={() => setActiveSection(null)} />
               )}
               {isActive && opt.id === 'calibration' && (
-                <MaintenanceSection equipment={equipment} session={session} onClose={() => setActiveSection(null)} onGoToInventory={() => setScreen('equipment')} />
-              )}
-              {isActive && opt.id === 'contact' && (
-                <ContactSection onClose={() => setActiveSection(null)} onGoToMessages={() => { sessionStorage.setItem('ilab_return_scan', '1'); setScreen('remessages') }} />
+                isStaff ? (
+                  <MaintenanceSection equipment={equipment} session={session} onClose={() => setActiveSection(null)} onGoToInventory={() => setScreen('equipment')} />
+                ) : (
+                  <SectionCard title="🔧 Calibration" onClose={() => setActiveSection(null)}>
+                    <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text3)', fontSize: 13 }}>
+                      <div style={{ fontSize: 36, marginBottom: 10 }}>🔒</div>
+                      Calibration records are only available to Lab Managers.<br />Contact your lab manager for maintenance information.
+                    </div>
+                  </SectionCard>
+                )
               )}
             </div>
           )
