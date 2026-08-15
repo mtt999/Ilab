@@ -89,8 +89,9 @@ if (isNative()) {
 // Detect if we're on the /admin route
 const IS_ADMIN_ROUTE = window.location.pathname.endsWith('/admin') || window.location.pathname.endsWith('/admin/')
 
-// Detect equipment scan from QR code: ?eq=<uuid>
-const SCAN_EQ_ID = new URLSearchParams(window.location.search).get('eq')
+// Detect QR scan: equipment (?eq=<uuid>) or material/item (?item=<name>)
+const SCAN_EQ_ID   = new URLSearchParams(window.location.search).get('eq')
+const SCAN_ITEM_QR = new URLSearchParams(window.location.search).get('item')
 
 // Deep-link from email notifications: ?screen=booking&tab=team etc.
 const DEEP_LINK_SCREEN = new URLSearchParams(window.location.search).get('screen')
@@ -266,8 +267,8 @@ export default function App() {
       localStorage.setItem('ilab_login_mode', session.loginMode)
       // Re-sync the rooms/supplies cache now that we have the correct org in session
       refreshCache()
-      // QR scan takes priority
-      if (SCAN_EQ_ID) { setScreen('equipmentscan'); return }
+      // QR scan takes priority (equipment ?eq= or material/item ?item=)
+      if (SCAN_EQ_ID || SCAN_ITEM_QR) { setScreen('equipmentscan'); return }
       // Deep-link from email notification
       if (DEEP_LINK_SCREEN) {
         if (DEEP_LINK_TAB === 'team') {
@@ -291,7 +292,7 @@ export default function App() {
   async function checkFirstLogin(userId, loginMode) {
     try {
       // Don't interrupt with the icon picker when the user arrived via a QR scan
-      if (SCAN_EQ_ID) { setShowIconPicker(false); return }
+      if (SCAN_EQ_ID || SCAN_ITEM_QR) { setShowIconPicker(false); return }
       if (!userId) {
         // Super admin: never show icon picker — they only use the Admin Panel
         setShowIconPicker(false)
