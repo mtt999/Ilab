@@ -238,7 +238,7 @@ function OrgSettingsPanel({ session }) {
         <input value={form.contact_name} onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))} placeholder="e.g. Dr. Smith" />
       </div>
       <div className="field">
-        <label>Contact email address *</label>
+        <label>Contact email address <span style={{ color: '#c84b2f' }}>*</span></label>
         <input type="email" value={form.contact_email} onChange={e => setForm(f => ({ ...f, contact_email: e.target.value }))} placeholder="admin@yourlab.edu" />
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Shown on the login page and used as the reply-to address in notification emails.</div>
       </div>
@@ -586,10 +586,10 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
     <Modal onClose={onClose}>
       <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 20 }}>{user ? 'Edit user' : 'Add new user'}</div>
 
-      <div className="field"><label>Full name *</label>
+      <div className="field"><label>Full name <span style={{ color: '#c84b2f' }}>*</span></label>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Dr. Smith" autoFocus />
       </div>
-      <div className="field"><label>Email * (used to sign in)</label>
+      <div className="field"><label>Email <span style={{ color: '#c84b2f' }}>*</span> (used to sign in)</label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" />
       </div>
       {user && (
@@ -614,7 +614,7 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
           </select>
         </div>
         {isSuperAdmin && (
-          <div className="field"><label>Organization *</label>
+          <div className="field"><label>Organization <span style={{ color: '#c84b2f' }}>*</span></label>
             <select value={orgId} onChange={e => setOrgId(e.target.value)}>
               <option value="">— Select org —</option>
               {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -1234,7 +1234,7 @@ function OrgModal({ org, onClose, onSaved }) {
   return (
     <Modal onClose={onClose}>
       <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 20 }}>{org ? 'Edit organization' : 'New organization'}</div>
-      <div className="field"><label>Organization name *</label>
+      <div className="field"><label>Organization name <span style={{ color: '#c84b2f' }}>*</span></label>
         <input value={name} onChange={e => { setName(e.target.value); if (!org) setSlug(autoSlug(e.target.value)) }} placeholder="e.g. ICT Lab" autoFocus />
       </div>
       <div className="field"><label>Slug (URL-safe identifier)</label>

@@ -147,19 +147,19 @@ function SignUpForm({ onSuccess, onCancel }) {
 
       <form onSubmit={handleSignUp}>
         <div className="field">
-          <label>Full name *</label>
+          <label>Full name <span style={{ color: '#c84b2f' }}>*</span></label>
           <input value={form.name} onChange={e => { setForm(f => ({...f, name: e.target.value})); setError('') }} placeholder="e.g. Jane Smith" autoComplete="name" />
         </div>
         <div className="field">
-          <label>Email address *</label>
+          <label>Email address <span style={{ color: '#c84b2f' }}>*</span></label>
           <input type="email" value={form.email} onChange={e => { setForm(f => ({...f, email: e.target.value})); setError('') }} placeholder="your@email.com" autoComplete="email" />
         </div>
         <div className="field">
-          <label>Password * (min 6 characters)</label>
+          <label>Password <span style={{ color: '#c84b2f' }}>*</span> (min 6 characters)</label>
           <input type="password" value={form.password} onChange={e => { setForm(f => ({...f, password: e.target.value})); setError('') }} placeholder="••••••••" autoComplete="new-password" />
         </div>
         <div className="field">
-          <label>Confirm password *</label>
+          <label>Confirm password <span style={{ color: '#c84b2f' }}>*</span></label>
           <input type="password" value={form.confirm} onChange={e => { setForm(f => ({...f, confirm: e.target.value})); setError('') }} placeholder="••••••••" autoComplete="new-password" />
         </div>
 
