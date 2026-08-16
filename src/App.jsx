@@ -222,12 +222,12 @@ export default function App() {
     if (teamUser) {
       const adminLevel = teamUser.admin_level || 0
       const role = teamUser.role === 'admin' || adminLevel >= 1 ? 'admin' : teamUser.role
-      setSession({ role, dbRole: teamUser.role, username: teamUser.nick_name?.trim() || teamUser.name, userId: teamUser.id, email: teamUser.email, adminLevel, photoUrl: teamUser.photo_url, avatar: teamUser.avatar, loginMode: 'team', organizationId: teamUser.organization_id || null, projectGroup: teamUser.project_group || null, mustChangePassword: teamUser.must_change_password === true, termsAcceptedVersion: teamUser.terms_accepted_version || null })
+      setSession({ role, dbRole: teamUser.role, username: teamUser.nick_name?.trim() || teamUser.name, userId: teamUser.id, email: teamUser.email, adminLevel, photoUrl: teamUser.photo_url, avatar: teamUser.avatar, loginMode: 'team', organizationId: teamUser.organization_id || null, projectGroup: teamUser.project_group || null, mustChangePassword: teamUser.must_change_password === true, termsAcceptedVersion: teamUser.terms_accepted_version || null, tourDone: teamUser.tour_done === true, pickerDone: teamUser.picker_done === true })
       return
     }
     const { data: soloUser } = await sb.from('solo_users').select('*').eq('auth_id', authUser.id).maybeSingle()
     if (soloUser) {
-      setSession({ role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id, email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar, activeModules: soloUser.active_modules || [], loginMode: 'solo', termsAcceptedVersion: soloUser.terms_accepted_version || null, isPaid: soloUser.is_paid || false })
+      setSession({ role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id, email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar, activeModules: soloUser.active_modules || [], loginMode: 'solo', termsAcceptedVersion: soloUser.terms_accepted_version || null, isPaid: soloUser.is_paid || false, tourDone: soloUser.tour_done === true, pickerDone: soloUser.picker_done === true })
       sb.from('solo_workspace_members').select('owner_id').eq('member_id', soloUser.id)
         .then(({ data: memberships }) => {
           if (memberships?.length) {
@@ -298,6 +298,8 @@ export default function App() {
         setShowIconPicker(false)
         return
       }
+      // Fast path: picker_done flag from session (device-agnostic DB field)
+      if (useAppStore.getState().session?.pickerDone) { setShowIconPicker(false); return }
       if (loginMode === 'solo') {
         const { data } = await sb.from('solo_users').select('active_modules').eq('id', userId).limit(1)
         const row = data?.[0]
@@ -470,14 +472,11 @@ export default function App() {
               localStorage.setItem('ilab_admin_dashboard_set', 'true')
             } else {
               localStorage.setItem(`ilab_picker_done_${session.userId}`, 'true')
+              // Write picker_done to the user's own row — simple UPDATE, no unique-constraint issues
               if (session.loginMode === 'solo') {
-                sb.from('solo_users').update({ has_set_dashboard: true }).eq('id', session.userId).catch(() => {})
+                sb.from('solo_users').update({ picker_done: true }).eq('id', session.userId).catch(() => {})
               } else {
-                // Upsert avoids race condition when tour + picker both try to insert
-                sb.from('user_dashboard_prefs').upsert(
-                  { user_id: session.userId, has_set_dashboard: true, active_modules: modules || [] },
-                  { onConflict: 'user_id', ignoreDuplicates: false }
-                ).catch(() => {})
+                sb.from('users').update({ picker_done: true }).eq('id', session.userId).catch(() => {})
               }
             }
             if (modules !== null && modules !== undefined) setActiveModules(modules)

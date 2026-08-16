@@ -529,11 +529,12 @@ export default function Layout({ children }) {
     const count = parseInt(localStorage.getItem(countKey) || '0', 10) + 1
     localStorage.setItem(countKey, String(count))
     setLoginCount(count)
+    // Fast path: tour_done flag in session (loaded from users/solo_users on every login, device-agnostic)
+    if (session?.tourDone) { localStorage.setItem(doneKey, 'true'); return }
     if (localStorage.getItem(doneKey) === 'true') return
-    // Check DB so tour doesn't re-show in incognito or on a new browser
+    // Fallback DB check for existing users (pre-tour_done column) who have dashboard prefs
     const userId = session?.userId || session?.soloId
-    const table = session?.loginMode === 'solo' ? 'solo_users' : null
-    const dbCheck = table
+    const dbCheck = session?.loginMode === 'solo'
       ? sb.from('solo_users').select('has_set_dashboard').eq('id', userId).limit(1)
       : sb.from('user_dashboard_prefs').select('has_set_dashboard, active_modules').eq('user_id', userId).limit(1)
     dbCheck.then(({ data }) => {
@@ -552,13 +553,11 @@ export default function Layout({ children }) {
     const uid = session?.userId || session?.soloId
     if (!uid) return
     localStorage.setItem(`ilab_tour_done_${uid}`, 'true')
+    // Write tour_done to the user's own row — simple UPDATE, no unique-constraint issues
     if (session?.loginMode === 'solo') {
-      sb.from('solo_users').update({ has_set_dashboard: true }).eq('id', uid).catch(() => {})
+      sb.from('solo_users').update({ tour_done: true }).eq('id', uid).catch(() => {})
     } else if (session?.userId) {
-      sb.from('user_dashboard_prefs').upsert(
-        { user_id: uid, has_set_dashboard: true },
-        { onConflict: 'user_id', ignoreDuplicates: false }
-      ).catch(() => {})
+      sb.from('users').update({ tour_done: true }).eq('id', uid).catch(() => {})
     }
   }
 
