@@ -510,6 +510,7 @@ export default function Layout({ children }) {
   const [showContact, setShowContact] = useState(false)
   const [showTour,    setShowTour]    = useState(false)
   const [loginCount,  setLoginCount]  = useState(0)
+  const [tourDone,    setTourDone]    = useState(false)
   // Mobile: sidebar lives in a slide-in drawer opened by the header hamburger
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const tourTriggeredRef = useRef(false)
@@ -551,8 +552,16 @@ export default function Layout({ children }) {
     }).catch(() => { setTimeout(() => setShowTour(true), 600) })
   }, [session?.userId, session?.soloId, session?.mustChangePassword])
 
+  useEffect(() => {
+    const uid = session?.userId || session?.soloId
+    if (!uid) { setTourDone(false); return }
+    const localDone = localStorage.getItem(`ilab_tour_done_${uid}`) === 'true'
+    setTourDone(session?.tourDone === true || localDone)
+  }, [session?.userId, session?.soloId, session?.tourDone])
+
   async function handleTourDone() {
     setShowTour(false)
+    setTourDone(true)
     const uid = session?.userId || session?.soloId
     if (!uid) return
     localStorage.setItem(`ilab_tour_done_${uid}`, 'true')
@@ -616,6 +625,7 @@ export default function Layout({ children }) {
           {(session?.userId || session?.soloId) && (
             <HelpTourButton
               loginCount={loginCount}
+              tourDone={tourDone}
               onOpen={() => setShowTour(true)}
               accentColor={accentColor}
             />
