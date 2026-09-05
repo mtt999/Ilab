@@ -294,12 +294,14 @@ export default function Login() {
     const authUserId = authData.user.id
 
     if (mode === 'team') {
-      // Check super admin
-      const { data: saRow } = await sb.from('settings').select('value').eq('key', 'super_admin_auth_id').maybeSingle()
-      if (saRow?.value === authUserId) {
+      // Check super admin — match by auth UID or by admin_email setting
+      const { data: saSettings } = await sb.from('settings').select('key,value').in('key', ['super_admin_auth_id', 'admin_email'])
+      const saCfg = Object.fromEntries((saSettings || []).map(r => [r.key, r.value]))
+      const isSuperAdmin = saCfg.super_admin_auth_id === authUserId || saCfg.admin_email?.toLowerCase() === emailLower
+      if (isSuperAdmin) {
         const adminSessionObj = { role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' }
         setSession(adminSessionObj)
-                setLoading(false); return
+        setLoading(false); return
       }
       // Team user: look up by auth_id; auto-link by email on first login
       let user = null
