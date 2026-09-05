@@ -218,6 +218,7 @@ export default function Login() {
   const [lockUntil, setLockUntil] = useState(0)
   const [showAbout, setShowAbout]   = useState(false)
   const [showContact, setShowContact] = useState(false)
+  const [accountPicker, setAccountPicker] = useState(null) // { rows, orgsMap, isSuperAdmin }
   const lockTimerRef = useRef(null)
 
   useEffect(() => {
@@ -235,6 +236,26 @@ export default function Login() {
   }, [lockUntil])
 
   const accentColor = mode === 'solo' ? '#534AB7' : '#1D9E75'
+
+  function applyTeamSession(user) {
+    const adminLevel = user.admin_level || 0
+    const role = user.role === 'admin' || adminLevel >= 1 ? 'admin' : user.role
+    setSession({
+      role, dbRole: user.role,
+      username: user.nick_name?.trim() || user.name,
+      userId: user.id, email: user.email,
+      adminLevel, photoUrl: user.photo_url, avatar: user.avatar,
+      loginMode: 'team',
+      organizationId: user.organization_id || null,
+      projectGroup: user.project_group || null,
+      mustChangePassword: user.must_change_password === true,
+      termsAcceptedVersion: user.terms_accepted_version || null,
+    })
+  }
+
+  function applySuperAdmin() {
+    setSession({ role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' })
+  }
 
   function handleModeSelect(m) {
     setMode(m); setLoginMode(m); setError('')
@@ -294,41 +315,48 @@ export default function Login() {
     const authUserId = authData.user.id
 
     if (mode === 'team') {
-      // Check super admin — match by auth UID or by admin_email setting
-      const { data: saSettings } = await sb.from('settings').select('key,value').in('key', ['super_admin_auth_id', 'admin_email'])
+      // Fetch settings + all active user rows for this email in parallel
+      const [{ data: saSettings }, { data: emailRows }] = await Promise.all([
+        sb.from('settings').select('key,value').in('key', ['super_admin_auth_id', 'admin_email']),
+        sb.from('users').select('*').ilike('email', emailLower).eq('is_active', true),
+      ])
       const saCfg = Object.fromEntries((saSettings || []).map(r => [r.key, r.value]))
       const isSuperAdmin = saCfg.super_admin_auth_id === authUserId || saCfg.admin_email?.toLowerCase() === emailLower
-      if (isSuperAdmin) {
-        const adminSessionObj = { role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' }
-        setSession(adminSessionObj)
+
+      const userRows = emailRows || []
+      // Auto-link auth_id for any rows that are missing it
+      const toLink = userRows.filter(u => !u.auth_id)
+      if (toLink.length) await sb.from('users').update({ auth_id: authUserId }).in('id', toLink.map(u => u.id))
+
+      if (userRows.length === 0 && !isSuperAdmin) {
+        await sb.auth.signOut()
+        setError('No account found. Contact your organization admin.')
         setLoading(false); return
       }
-      // Team user: look up by auth_id; auto-link by email on first login
-      let user = null
-      const { data: byAuthId } = await sb.from('users').select('*').eq('auth_id', authUserId).eq('is_active', true).maybeSingle()
-      if (byAuthId) {
-        user = byAuthId
-      } else {
-        const { data: byEmail } = await sb.from('users').select('*').ilike('email', emailLower).is('auth_id', null).eq('is_active', true).maybeSingle()
-        if (byEmail) {
-          await sb.from('users').update({ auth_id: authUserId }).eq('id', byEmail.id)
-          user = { ...byEmail, auth_id: authUserId }
-        }
+
+      const hasManager = userRows.some(u => u.role === 'user')
+      const hasAdmin   = userRows.some(u => u.role === 'admin')
+
+      // Pure single lab_user → auto-login, no picker
+      if (!isSuperAdmin && !hasManager && !hasAdmin && userRows.length === 1) {
+        applyTeamSession(userRows[0])
+        setLoading(false); return
       }
-      if (!user) { await sb.auth.signOut(); setError('No account found. Contact your organization admin.'); setLoading(false); return }
-      const adminLevel = user.admin_level || 0
-      const role = user.role === 'admin' || adminLevel >= 1 ? 'admin' : user.role
-      const teamSessionObj = {
-        role, dbRole: user.role, username: user.nick_name?.trim() || user.name, userId: user.id, email: user.email,
-        adminLevel, photoUrl: user.photo_url, avatar: user.avatar,
-        loginMode: 'team',
-        organizationId: user.organization_id || null,
-        projectGroup: user.project_group || null,
-        mustChangePassword: user.must_change_password === true,
-        termsAcceptedVersion: user.terms_accepted_version || null,
+
+      // If super admin only (no user rows) → auto-login
+      if (isSuperAdmin && userRows.length === 0) {
+        applySuperAdmin()
+        setLoading(false); return
       }
-      setSession(teamSessionObj)
-            setLoading(false); return
+
+      // Otherwise show role picker
+      const orgIds = [...new Set(userRows.map(u => u.organization_id).filter(Boolean))]
+      const { data: orgsData } = orgIds.length
+        ? await sb.from('organizations').select('id,name').in('id', orgIds)
+        : { data: [] }
+      const orgsMap = Object.fromEntries((orgsData || []).map(o => [o.id, o.name]))
+      setAccountPicker({ rows: userRows, orgsMap, isSuperAdmin })
+      setLoading(false); return
     }
 
     if (mode === 'solo') {
@@ -377,9 +405,58 @@ export default function Login() {
 
         <div className="card" style={{ padding: '28px 28px 12px' }}>
 
-          {/* Show sign-up form OR login form */}
+          {/* Show sign-up form OR account picker OR login form */}
           {showSignUp ? (
             <SignUpForm onSuccess={handleSignUpSuccess} onCancel={() => setShowSignUp(false)} />
+          ) : accountPicker ? (
+            /* Role picker — shown when user has multiple roles / orgs */
+            (() => {
+              const { rows, orgsMap, isSuperAdmin } = accountPicker
+              const adminRows   = rows.filter(u => u.role === 'admin')
+              const managerRows = rows.filter(u => u.role === 'user')
+              const labUserRows = rows.filter(u => u.role === 'lab_user')
+
+              const ROLE_CARDS = [
+                ...(isSuperAdmin ? [{ key: 'superadmin', label: 'Super Admin', sub: 'Full system access — all organizations', bg: '#FEE2E2', color: '#991B1B', border: '#FECACA', available: true, onClick: () => { applySuperAdmin(); setAccountPicker(null) } }] : []),
+                { key: 'admin',   label: 'Org Admin',    sub: adminRows[0]   ? (orgsMap[adminRows[0].organization_id]   || 'Organization Admin')  : 'You don\'t have an admin account',   bg: '#FEF3C7', color: '#92400E', border: '#FCD34D', available: adminRows.length   > 0, rows: adminRows },
+                { key: 'manager', label: 'Lab Manager',  sub: managerRows[0] ? (orgsMap[managerRows[0].organization_id] || 'Lab Manager')           : 'You don\'t have a lab manager account', bg: '#E1F5EE', color: '#065F46', border: '#9FE1CB', available: managerRows.length > 0, rows: managerRows },
+                { key: 'labuser', label: 'Lab User',     sub: labUserRows[0] ? (orgsMap[labUserRows[0].organization_id] || 'Lab User')              : 'You don\'t have a lab user account',   bg: '#EDE9FE', color: '#5B21B6', border: '#DDD6FE', available: labUserRows.length > 0, rows: labUserRows },
+              ]
+
+              return (
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Select how to sign in</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Choose the role you'd like to use for this session.</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                    {ROLE_CARDS.map(card => (
+                      <button key={card.key}
+                        onClick={card.available ? (card.onClick || (() => { applyTeamSession(card.rows[0]); setAccountPicker(null) })) : undefined}
+                        style={{
+                          padding: '12px 14px', border: `1.5px solid ${card.available ? card.border : 'var(--border)'}`,
+                          borderRadius: 10,
+                          background: card.available ? card.bg : 'var(--surface2)',
+                          cursor: card.available ? 'pointer' : 'not-allowed',
+                          textAlign: 'left', width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                          opacity: card.available ? 1 : 0.45, transition: 'opacity 0.15s',
+                        }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: card.available ? card.color : 'var(--text3)' }}>{card.label}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{card.sub}</div>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99, flexShrink: 0,
+                          background: card.available ? 'rgba(255,255,255,0.55)' : 'var(--border)',
+                          color: card.available ? card.color : 'var(--text3)',
+                        }}>{card.available ? 'Sign in →' : 'No access'}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => setAccountPicker(null)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text3)', padding: 0, width: '100%', textAlign: 'center' }}>
+                    ← Back to sign in
+                  </button>
+                </div>
+              )
+            })()
           ) : (
             <>
               {/* QR scan context banner */}
