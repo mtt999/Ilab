@@ -6,7 +6,7 @@ import { ALL_MODULES_META, PINNED_MODULES, STAFF_PINNED_MODULES } from '../../co
 function getModules(role, loginMode, activeModules) {
   const roleKey = loginMode === 'solo' ? 'solo' : 'team'
   const isStaff = role === 'admin' || role === 'user'
-  const studentAllowed = ['projects','training','booking','equipmenthub','barcode','profile','pm']
+  const studentAllowed = ['projects','training','booking','equipmenthub','profile','pm']
   const base = ALL_MODULES_META.filter(m => {
     if (!m.roles.includes(roleKey)) return false
     if (role === 'lab_user' && !studentAllowed.includes(m.key)) return false
@@ -36,7 +36,6 @@ function getAllModulesForStudent() {
     { key: 'equipment',    screen: 'equipment',     label: 'Equipment List',       sub: 'Lab equipment tracking',           icon: '🔧', bg: '#fef3c7', color: '#92400e', locked: true },
     { key: 'equipmenthub', screen: 'equipmenthub',  label: 'Equipment',                 sub: 'Info, SOP & standards',            icon: '📚', bg: '#E1F5EE', color: '#085041' },
     { key: 'booking',      screen: 'booking',       label: 'Reserve Equipment',         sub: 'Reserve lab equipment',            icon: '📅', bg: '#e0f2fe', color: '#0369a1' },
-    { key: 'barcode',      screen: 'barcode',       label: 'QR Scan',                   sub: 'Scan & look up lab materials',     icon: '📷', bg: '#e0f7fa', color: '#00796b' },
     { key: 'remessages',   screen: 'remessages',    label: 'Lab Messages', sub: 'Notes, ideas & issue reports',     icon: '💬', bg: '#E1F5EE', color: '#1D9E75' },
     { key: 'pm',           screen: 'pm',            label: 'Task Board',        sub: 'Tasks, meetings & team chat',      icon: '📋', bg: '#fff3e0', color: '#ff6b00', locked: true },
     { key: 'profile',      screen: 'profile',       label: 'Profile',                   sub: 'Your info & settings',             icon: '👤', bg: '#EEEDFE', color: '#534AB7' },
@@ -246,7 +245,6 @@ function StudentDashboardView({ session, onNavigate, moduleImages, activeModules
     { key:'training',    icon:'🎓', label:'Training Records',     sub:'Check your certs',               screen:'training',    color:'#0369a1' },
     { key:'booking',     icon:'📅', label:'Book Equipment',       sub:'Reserve lab equipment',          screen:'booking',     color:'#0369a1' },
     { key:'equipmenthub',icon:'📚', label:'Equipment',            sub:'SOPs & standards',               screen:'equipmenthub',color:'#085041' },
-    { key:'barcode',     icon:'📷', label:'QR Scan',               sub:'Scan lab materials',             screen:'barcode',     color:'#00796b' },
     { key:'remessages',  icon:'💬', label:'Lab Messages',  sub:'Ask REs a question',             screen:'remessages',  color:'#1D9E75' },
   ]
   const assignedQuickLinks = (studentAllowedPool && studentAllowedPool.size > 0)
@@ -574,7 +572,7 @@ export default function Dashboard() {
   const [moduleImages, setModuleImages] = useState(() => {
     const base = import.meta.env.BASE_URL
     const defaults = {   // local SVGs — always available, no fetch needed
-      pm: `${base}icon-pm.svg`, barcode: `${base}icon-barcode.svg`,
+      pm: `${base}icon-pm.svg`,
       barcodeqr: `${base}icon-barcodeqr.svg`, profile: `${base}icon-profile.svg`,
       supply: `${base}icon-supply.svg`,
     }
@@ -721,7 +719,7 @@ export default function Dashboard() {
     return base
   })()
   // Screens not managed by user_screen_access (always allowed if in activeModules)
-  const UNMANAGED_SCREENS = new Set(['profile', 'dashboard', 'pm', 'barcode', 'barcodeqr', 'orgadmin', 'home', 'equipment', 'labmanagement'])
+  const UNMANAGED_SCREENS = new Set(['profile', 'dashboard', 'pm', 'barcodeqr', 'orgadmin', 'home', 'equipment', 'labmanagement'])
   const modules = (() => {
     let list = userAccess
       ? allModules.filter(m => m.external || !m.screen || UNMANAGED_SCREENS.has(m.screen) || userAccess.has(m.screen))
@@ -737,7 +735,6 @@ export default function Dashboard() {
     const base = import.meta.env.BASE_URL
     const imgs = {
       pm:        `${base}icon-pm.svg`,
-      barcode:   `${base}icon-barcode.svg`,
       barcodeqr: `${base}icon-barcodeqr.svg`,
       profile:   `${base}icon-profile.svg`,
       supply:    `${base}icon-supply.svg`,

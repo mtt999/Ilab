@@ -12,7 +12,6 @@ export const ALL_MODULES_META = [
   { key: 'booking',      screen: 'booking',      label: 'Reserve Equipment',  sub: 'Reserve lab equipment',           icon: '📅', bg: '#e0f2fe', color: '#0369a1', roles: ['team', 'solo'] },
   { key: 'remessages',   screen: 'remessages',   label: 'Lab Messages',       sub: 'Notes, ideas & issue reports',    icon: '💬', bg: '#E1F5EE', color: '#1D9E75', roles: ['team', 'solo'], soloLocked: true },
   { key: 'pm',           screen: 'pm',           label: 'Task Board',         sub: 'Tasks, meetings & team chat',     icon: '📋', bg: '#fff3e0', color: '#ff6b00', roles: ['team', 'solo'] },
-  { key: 'barcode',      screen: 'barcode',      label: 'QR Scan',            sub: 'Scan & look up lab materials',    icon: '📷', bg: '#e0f7fa', color: '#00796b', roles: ['team', 'solo'] },
   { key: 'profile',      screen: 'profile',      label: 'Profile',            sub: 'Your info & settings',            icon: '👤', bg: '#EEEDFE', color: '#534AB7', roles: ['team', 'solo'] },
   { key: 'barcodeqr',    screen: 'barcodeqr',    label: 'QR Labels',          sub: 'Equipment QR code management',    icon: '🔲', bg: '#f0f4ff', color: '#1a56db', roles: ['team', 'solo'], studentLocked: true, soloLocked: true },
   { key: 'labmanagement', screen: 'labmanagement', label: 'Lab Management',   sub: 'Lab users & managers',            icon: '🏛️', bg: '#E1F5EE', color: '#1D9E75', roles: ['team'],           staffOnly: true },

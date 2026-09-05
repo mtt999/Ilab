@@ -62,7 +62,6 @@ const EquipmentInventory   = lazy(() => import('./screens/equipment/EquipmentInv
 const EquipmentHub         = lazy(() => import('./screens/equipment/EquipmentHub'))
 const BookingEquipment     = lazy(() => import('./screens/equipment/BookingEquipment'))
 const PM                   = lazy(() => import('./screens/maintenance/PM'))
-const BarcodeScannerScreen = lazy(() => import('./screens/barcode/BarcodeScannerScreen'))
 const BarcodeManager       = lazy(() => import('./screens/barcode/BarcodeManager'))
 const EquipmentScan        = lazy(() => import('./screens/equipment/EquipmentScan'))
 const Admin                = lazy(() => import('./screens/admin/Admin'))
@@ -374,11 +373,11 @@ export default function App() {
       return
     }
     if (session?.role === 'lab_user') {
-      const baseAllowed = ['dashboard', 'projects', 'project-detail', 'training', 'profile', 'equipmenthub', 'booking', 'remessages', 'barcode', 'barcodeqr', 'equipmentscan', 'home', 'equipment', 'pm', 'history', 'training-proto', 'layout-proto']
+      const baseAllowed = ['dashboard', 'projects', 'project-detail', 'training', 'profile', 'equipmenthub', 'booking', 'remessages', 'barcodeqr', 'equipmentscan', 'home', 'equipment', 'pm', 'history', 'training-proto', 'layout-proto']
       if (!baseAllowed.includes(screen) && !(userAccess && userAccess.has(screen))) setScreen('dashboard')
     }
-    // equipmentscan, barcodeqr, barcode, home, equipment bypass per-user access control
-    const INTERNAL = new Set(['dashboard', 'profile', 'inspection', 'results', 'project-detail', 'pm', 'barcode', 'equipmentscan', 'barcodeqr', 'orgadmin', 'home', 'equipment', 'projects', 'training', 'training-proto', 'layout-proto', 'history', 'equipmenthub', 'booking', 'remessages', 'labmanagement'])
+    // equipmentscan, barcodeqr, home, equipment bypass per-user access control
+    const INTERNAL = new Set(['dashboard', 'profile', 'inspection', 'results', 'project-detail', 'pm', 'equipmentscan', 'barcodeqr', 'orgadmin', 'home', 'equipment', 'projects', 'training', 'training-proto', 'layout-proto', 'history', 'equipmenthub', 'booking', 'remessages', 'labmanagement'])
     if ((session?.role === 'user' || session?.role === 'admin') && userAccess && !INTERNAL.has(screen)) {
       if (!userAccess.has(screen)) setScreen('dashboard')
     }
@@ -442,7 +441,6 @@ export default function App() {
     booking: <BookingEquipment />,
     remessages: <LabMessage />,
     pm: <PM />,
-    barcode: <BarcodeScannerScreen />,
     barcodeqr: <BarcodeManager />,
     equipmentscan: <EquipmentScan />,
     orgadmin: <Admin />,
