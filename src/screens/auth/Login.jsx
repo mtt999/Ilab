@@ -240,6 +240,7 @@ export default function Login() {
   function applyTeamSession(user) {
     const adminLevel = user.admin_level || 0
     const role = user.role === 'admin' || adminLevel >= 1 ? 'admin' : user.role
+    const isDemo = user.email?.toLowerCase() === 'demo@labhive.app'
     setSession({
       role, dbRole: user.role,
       username: user.nick_name?.trim() || user.name,
@@ -249,12 +250,40 @@ export default function Login() {
       organizationId: user.organization_id || null,
       projectGroup: user.project_group || null,
       mustChangePassword: user.must_change_password === true,
-      termsAcceptedVersion: user.terms_accepted_version || null,
+      termsAcceptedVersion: isDemo ? null : (user.terms_accepted_version || null),
+      tourDone: isDemo ? false : (user.tour_done === true),
+      pickerDone: isDemo ? false : (user.picker_done === true),
+      isDemo,
     })
   }
 
   function applySuperAdmin() {
     setSession({ role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' })
+  }
+
+  function applySoloSession(soloUser) {
+    const isDemo = soloUser.email?.toLowerCase() === 'demo@labhive.app'
+    setSession({
+      role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name,
+      userId: soloUser.id, email: soloUser.email,
+      photoUrl: soloUser.photo_url, avatar: soloUser.avatar,
+      activeModules: soloUser.active_modules || [], loginMode: 'solo',
+      termsAcceptedVersion: isDemo ? null : (soloUser.terms_accepted_version || null),
+      isPaid: soloUser.is_paid || false,
+      tourDone: isDemo ? false : (soloUser.tour_done === true),
+      pickerDone: isDemo ? false : (soloUser.picker_done === true),
+      isDemo,
+    })
+    sb.from('solo_workspace_members').select('owner_id').eq('member_id', soloUser.id)
+      .then(({ data: memberships }) => {
+        if (memberships?.length) {
+          const ownerIds = memberships.map(m => m.owner_id)
+          sb.from('solo_users').select('id, name').in('id', ownerIds)
+            .then(({ data: owners }) => setSharedWorkspaces((owners || []).map(o => ({ ownerId: o.id, ownerName: o.name }))))
+        } else {
+          setSharedWorkspaces([])
+        }
+      })
   }
 
   function handleModeSelect(m) {
@@ -297,7 +326,12 @@ export default function Login() {
     setLoading(true); setError('')
     const emailLower = identifier.trim().toLowerCase()
 
-    const { data: authData, error: authError } = await sb.auth.signInWithPassword({ email: emailLower, password })
+    // Demo account shortcut: "demo" / "demo" → real Supabase credentials
+    const isDemoLogin = (emailLower === 'demo' || emailLower === 'demo@labhive.app') && password === 'demo'
+    const loginEmail    = isDemoLogin ? 'demo@labhive.app' : emailLower
+    const loginPassword = isDemoLogin ? 'DemoLabHive2026!' : password
+
+    const { data: authData, error: authError } = await sb.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
     if (authError) {
       const newCount = failCount + 1
       setFailCount(newCount)
@@ -312,85 +346,82 @@ export default function Login() {
       return
     }
     setFailCount(0); setLockUntil(0)
+    // Demo: clear tour/picker state so every demo login starts fresh
+    if (isDemoLogin) {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('ilab_tour') || k.startsWith('ilab_login_count') || k.startsWith('ilab_tip') || k.startsWith('ilab_picker_done'))
+        .forEach(k => localStorage.removeItem(k))
+    }
     const authUserId = authData.user.id
 
-    if (mode === 'team') {
-      // Fetch settings + all active user rows for this email in parallel
-      const [{ data: saSettings }, { data: emailRows }] = await Promise.all([
-        sb.from('settings').select('key,value').in('key', ['super_admin_auth_id', 'admin_email']),
-        sb.from('users').select('*').ilike('email', emailLower).eq('is_active', true),
-      ])
-      const saCfg = Object.fromEntries((saSettings || []).map(r => [r.key, r.value]))
-      const isSuperAdmin = saCfg.super_admin_auth_id === authUserId || saCfg.admin_email?.toLowerCase() === emailLower
+    // Always check super-admin status and fetch all roles in parallel
+    // loginEmail is the real email (demo@labhive.app for demo logins, emailLower otherwise)
+    const [{ data: saSettings }, { data: emailRows }, { data: soloByAuth }] = await Promise.all([
+      sb.from('settings').select('key,value').in('key', ['super_admin_auth_id', 'admin_email']),
+      sb.from('users').select('*').ilike('email', loginEmail).eq('is_active', true),
+      sb.from('solo_users').select('*').eq('auth_id', authUserId).maybeSingle(),
+    ])
 
-      const userRows = emailRows || []
-      // Auto-link auth_id for any rows that are missing it
-      const toLink = userRows.filter(u => !u.auth_id)
-      if (toLink.length) await sb.from('users').update({ auth_id: authUserId }).in('id', toLink.map(u => u.id))
+    const saCfg = Object.fromEntries((saSettings || []).map(r => [r.key, r.value]))
+    const isSuperAdmin = saCfg.super_admin_auth_id === authUserId || saCfg.admin_email?.toLowerCase() === loginEmail
 
-      if (userRows.length === 0 && !isSuperAdmin) {
-        await sb.auth.signOut()
-        setError('No account found. Contact your organization admin.')
-        setLoading(false); return
+    // Resolve solo user (try auth_id first, then email link)
+    let soloUser = soloByAuth || null
+    if (!soloUser) {
+      const { data: soloByEmail } = await sb.from('solo_users').select('*').ilike('email', loginEmail).is('auth_id', null).maybeSingle()
+      if (soloByEmail) {
+        await sb.from('solo_users').update({ auth_id: authUserId }).eq('id', soloByEmail.id)
+        soloUser = { ...soloByEmail, auth_id: authUserId }
       }
-
-      const hasManager = userRows.some(u => u.role === 'user')
-      const hasAdmin   = userRows.some(u => u.role === 'admin')
-
-      // Pure single lab_user → auto-login, no picker
-      if (!isSuperAdmin && !hasManager && !hasAdmin && userRows.length === 1) {
-        applyTeamSession(userRows[0])
-        setLoading(false); return
-      }
-
-      // If super admin only (no user rows) → auto-login
-      if (isSuperAdmin && userRows.length === 0) {
-        applySuperAdmin()
-        setLoading(false); return
-      }
-
-      // Otherwise show role picker
-      const orgIds = [...new Set(userRows.map(u => u.organization_id).filter(Boolean))]
-      const { data: orgsData } = orgIds.length
-        ? await sb.from('organizations').select('id,name').in('id', orgIds)
-        : { data: [] }
-      const orgsMap = Object.fromEntries((orgsData || []).map(o => [o.id, o.name]))
-      setAccountPicker({ rows: userRows, orgsMap, isSuperAdmin })
+    }
+    if (soloUser?.deletion_requested_at) {
+      await sb.auth.signOut()
+      setError('This account is pending deletion.')
       setLoading(false); return
     }
 
-    if (mode === 'solo') {
-      let soloUser = null
-      const { data: byAuthId } = await sb.from('solo_users').select('*').eq('auth_id', authUserId).maybeSingle()
-      if (byAuthId) {
-        soloUser = byAuthId
-      } else {
-        const { data: byEmail } = await sb.from('solo_users').select('*').ilike('email', emailLower).is('auth_id', null).maybeSingle()
-        if (byEmail) {
-          await sb.from('solo_users').update({ auth_id: authUserId }).eq('id', byEmail.id)
-          soloUser = { ...byEmail, auth_id: authUserId }
-        }
-      }
-      if (!soloUser) { await sb.auth.signOut(); setError('No Solo account found. Please sign up first.'); setLoading(false); return }
-      if (soloUser.deletion_requested_at) { await sb.auth.signOut(); setError('This account is pending deletion. Your teammates have been notified and have 7 days to respond.'); setLoading(false); return }
-      const soloSessionObj = {
-        role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id,
-        email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar,
-        activeModules: soloUser.active_modules || [], loginMode: 'solo',
-        termsAcceptedVersion: soloUser.terms_accepted_version || null,
-        isPaid: soloUser.is_paid || false,
-      }
-      setSession(soloSessionObj)
-            const { data: memberships } = await sb.from('solo_workspace_members').select('owner_id').eq('member_id', soloUser.id)
-      if (memberships?.length) {
-        const ownerIds = memberships.map(m => m.owner_id)
-        const { data: owners } = await sb.from('solo_users').select('id, name').in('id', ownerIds)
-        setSharedWorkspaces((owners || []).map(o => ({ ownerId: o.id, ownerName: o.name })))
-      } else {
-        setSharedWorkspaces([])
-      }
-      setLoading(false)
+    const userRows = emailRows || []
+    // Auto-link auth_id for any team rows missing it
+    const toLink = userRows.filter(u => !u.auth_id)
+    if (toLink.length) await sb.from('users').update({ auth_id: authUserId }).in('id', toLink.map(u => u.id))
+
+    const hasTeamRows  = userRows.length > 0
+    const hasSolo      = !!soloUser
+    const hasManager   = userRows.some(u => u.role === 'user')
+    const hasAdmin     = userRows.some(u => u.role === 'admin')
+
+    if (!isSuperAdmin && !hasTeamRows && !hasSolo) {
+      await sb.auth.signOut()
+      setError(mode === 'solo' ? 'No Solo account found. Please sign up first.' : 'No account found. Contact your organization admin.')
+      setLoading(false); return
     }
+
+    // Auto-login: solo only, no super admin, no team roles
+    if (!isSuperAdmin && !hasTeamRows && hasSolo) {
+      applySoloSession(soloUser)
+      setLoading(false); return
+    }
+
+    // Auto-login: single lab_user only, no super admin, no solo
+    if (!isSuperAdmin && !hasManager && !hasAdmin && !hasSolo && userRows.length === 1) {
+      applyTeamSession(userRows[0])
+      setLoading(false); return
+    }
+
+    // Auto-login: super admin with nothing else
+    if (isSuperAdmin && !hasTeamRows && !hasSolo) {
+      applySuperAdmin()
+      setLoading(false); return
+    }
+
+    // Show role picker — super admin always gets the picker so they can choose their role
+    const orgIds = [...new Set(userRows.map(u => u.organization_id).filter(Boolean))]
+    const { data: orgsData } = orgIds.length
+      ? await sb.from('organizations').select('id,name').in('id', orgIds)
+      : { data: [] }
+    const orgsMap = Object.fromEntries((orgsData || []).map(o => [o.id, o.name]))
+    setAccountPicker({ rows: userRows, orgsMap, isSuperAdmin, soloUser })
+    setLoading(false)
   }
 
   return (
@@ -411,7 +442,7 @@ export default function Login() {
           ) : accountPicker ? (
             /* Role picker — shown when user has multiple roles / orgs */
             (() => {
-              const { rows, orgsMap, isSuperAdmin } = accountPicker
+              const { rows, orgsMap, isSuperAdmin, soloUser: pickerSolo } = accountPicker
               const adminRows   = rows.filter(u => u.role === 'admin')
               const managerRows = rows.filter(u => u.role === 'user')
               const labUserRows = rows.filter(u => u.role === 'lab_user')
@@ -421,6 +452,7 @@ export default function Login() {
                 { key: 'admin',   label: 'Org Admin',    sub: adminRows[0]   ? (orgsMap[adminRows[0].organization_id]   || 'Organization Admin')  : 'You don\'t have an admin account',   bg: '#FEF3C7', color: '#92400E', border: '#FCD34D', available: adminRows.length   > 0, rows: adminRows },
                 { key: 'manager', label: 'Lab Manager',  sub: managerRows[0] ? (orgsMap[managerRows[0].organization_id] || 'Lab Manager')           : 'You don\'t have a lab manager account', bg: '#E1F5EE', color: '#065F46', border: '#9FE1CB', available: managerRows.length > 0, rows: managerRows },
                 { key: 'labuser', label: 'Lab User',     sub: labUserRows[0] ? (orgsMap[labUserRows[0].organization_id] || 'Lab User')              : 'You don\'t have a lab user account',   bg: '#EDE9FE', color: '#5B21B6', border: '#DDD6FE', available: labUserRows.length > 0, rows: labUserRows },
+                ...(pickerSolo ? [{ key: 'solo', label: 'Solo User', sub: pickerSolo.nick_name?.trim() || pickerSolo.name || 'Personal workspace', bg: '#EEEDFE', color: '#534AB7', border: '#CECBF6', available: true, onClick: () => { applySoloSession(pickerSolo); setAccountPicker(null) } }] : []),
               ]
 
               return (

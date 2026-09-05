@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, Component } from 'react'
+import { useEffect, useState, useRef, lazy, Suspense, Component } from 'react'
 import { useAppStore } from './store/useAppStore'
 import { sb } from './lib/supabase'
 
@@ -117,6 +117,9 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [userAccess, setUserAccess] = useState(null)
   const [showIconPicker, setShowIconPicker] = useState(null)
+  // Once the user dismisses the picker (via Save or ×), this ref prevents any
+  // async DB re-check from re-opening it within the same session.
+  const pickerDismissedRef = useRef(false)
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [showSupport, setShowSupport] = useState(() => new URLSearchParams(window.location.search).get('support') === '1')
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -221,12 +224,14 @@ export default function App() {
     if (teamUser) {
       const adminLevel = teamUser.admin_level || 0
       const role = teamUser.role === 'admin' || adminLevel >= 1 ? 'admin' : teamUser.role
-      setSession({ role, dbRole: teamUser.role, username: teamUser.nick_name?.trim() || teamUser.name, userId: teamUser.id, email: teamUser.email, adminLevel, photoUrl: teamUser.photo_url, avatar: teamUser.avatar, loginMode: 'team', organizationId: teamUser.organization_id || null, projectGroup: teamUser.project_group || null, mustChangePassword: teamUser.must_change_password === true, termsAcceptedVersion: teamUser.terms_accepted_version || null, tourDone: teamUser.tour_done === true, pickerDone: teamUser.picker_done === true })
+      const isDemo = teamUser.email?.toLowerCase() === 'demo@labhive.app'
+      setSession({ role, dbRole: teamUser.role, username: teamUser.nick_name?.trim() || teamUser.name, userId: teamUser.id, email: teamUser.email, adminLevel, photoUrl: teamUser.photo_url, avatar: teamUser.avatar, loginMode: 'team', organizationId: teamUser.organization_id || null, projectGroup: teamUser.project_group || null, mustChangePassword: teamUser.must_change_password === true, termsAcceptedVersion: isDemo ? null : (teamUser.terms_accepted_version || null), tourDone: isDemo ? false : (teamUser.tour_done === true), pickerDone: isDemo ? false : (teamUser.picker_done === true), isDemo })
       return
     }
     const { data: soloUser } = await sb.from('solo_users').select('*').eq('auth_id', authUser.id).maybeSingle()
     if (soloUser) {
-      setSession({ role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id, email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar, activeModules: soloUser.active_modules || [], loginMode: 'solo', termsAcceptedVersion: soloUser.terms_accepted_version || null, isPaid: soloUser.is_paid || false, tourDone: soloUser.tour_done === true, pickerDone: soloUser.picker_done === true })
+      const isDemo = soloUser.email?.toLowerCase() === 'demo@labhive.app'
+      setSession({ role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id, email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar, activeModules: soloUser.active_modules || [], loginMode: 'solo', termsAcceptedVersion: isDemo ? null : (soloUser.terms_accepted_version || null), isPaid: soloUser.is_paid || false, tourDone: isDemo ? false : (soloUser.tour_done === true), pickerDone: isDemo ? false : (soloUser.picker_done === true), isDemo })
       sb.from('solo_workspace_members').select('owner_id').eq('member_id', soloUser.id)
         .then(({ data: memberships }) => {
           if (memberships?.length) {
@@ -245,7 +250,15 @@ export default function App() {
         sb.from('settings').select('value').eq('key', 'maintenance_mode').maybeSingle(),
       ])
       if (maintRow?.value === 'true') setMaintenanceMode(true)
-      if (authSession?.user) await restoreSessionFromAuth(authSession.user)
+      if (authSession?.user) {
+        await restoreSessionFromAuth(authSession.user)
+        // Clear demo-user localStorage flags on every page load so restrictions apply fresh
+        if (authSession.user.email?.toLowerCase() === 'demo@labhive.app') {
+          Object.keys(localStorage)
+            .filter(k => k.startsWith('ilab_tour') || k.startsWith('ilab_login_count') || k.startsWith('ilab_tip') || k.startsWith('ilab_picker_done'))
+            .forEach(k => localStorage.removeItem(k))
+        }
+      }
       const loginMode = localStorage.getItem('ilab_login_mode')
       const done = () => {
         setLoading(false)
@@ -280,11 +293,17 @@ export default function App() {
       localStorage.removeItem('ilab_login_mode')
       setShowIconPicker(null)
       setActiveModules(null)
+      pickerDismissedRef.current = false
     }
   }, [session])
 
   useEffect(() => {
     if (!session?.loginMode) return
+    // Reset picker guard when user/role changes (e.g. switching demo roles without logout)
+    pickerDismissedRef.current = false
+    // Demo: always reset activeModules so loadDashboardPrefs doesn't early-return on a stale
+    // non-null value left over from a previous role in the same browser session
+    if (session?.isDemo) setActiveModules(null)
     checkFirstLogin(session.userId, session.loginMode)
   }, [session?.loginMode, session?.userId])
 
@@ -292,11 +311,18 @@ export default function App() {
     try {
       // Don't interrupt with the icon picker when the user arrived via a QR scan
       if (SCAN_EQ_ID || SCAN_ITEM_QR) { setShowIconPicker(false); return }
+      // Picker was already dismissed this session — never re-open it
+      if (pickerDismissedRef.current) { setShowIconPicker(false); return }
+      // Demo account always sees the picker on login (localStorage/DB checks skipped)
+      if (useAppStore.getState().session?.isDemo) { setShowIconPicker(true); return }
       if (!userId) {
-        // Super admin: never show icon picker — they only use the Admin Panel
+        // Super admin: show picker only if they haven't set their dashboard yet
+        if (localStorage.getItem('ilab_admin_dashboard_set') === 'true') { setShowIconPicker(false); return }
         setShowIconPicker(false)
         return
       }
+      // Fast path: picker already dismissed in this browser (set synchronously by onDone)
+      if (localStorage.getItem(`ilab_picker_done_${userId}`) === 'true') { setShowIconPicker(false); return }
       // Fast path: picker_done flag from session (device-agnostic DB field)
       if (useAppStore.getState().session?.pickerDone) { setShowIconPicker(false); return }
       if (loginMode === 'solo') {
@@ -466,11 +492,13 @@ export default function App() {
           session={session}
           loginMode={session.loginMode}
           onDone={(modules) => {
+            // Mark dismissed immediately — prevents any async DB re-check from re-opening
+            pickerDismissedRef.current = true
             if (!session.userId) {
               localStorage.setItem('ilab_admin_dashboard_set', 'true')
-            } else {
+            } else if (!session.isDemo) {
+              // Skip localStorage/DB flags for demo — next login should show picker again
               localStorage.setItem(`ilab_picker_done_${session.userId}`, 'true')
-              // Write picker_done to the user's own row — simple UPDATE, no unique-constraint issues
               if (session.loginMode === 'solo') {
                 sb.from('solo_users').update({ picker_done: true }).eq('id', session.userId).catch(() => {})
               } else {

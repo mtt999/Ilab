@@ -530,6 +530,29 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
       onSaved(); onClose()
     } else {
       const emailLC = email.trim().toLowerCase()
+
+      // Check if a Supabase auth account already exists for this email
+      const { data: existingAuthId } = await sb.rpc('get_auth_user_id_by_email', { p_email: emailLC })
+      const isExistingAuthUser = !!existingAuthId
+
+      if (isExistingAuthUser) {
+        // Email already has an auth account — check for duplicate role+org
+        const { data: dupRow } = await sb.from('users').select('id').ilike('email', emailLC)
+          .eq('role', role).eq('organization_id', orgId).eq('is_active', true).maybeSingle()
+        if (dupRow) { toast('This user already has that role in this organization.'); return }
+
+        // Add a new role row using the existing auth_id (user keeps their current password)
+        const { error } = await sb.from('users').insert({
+          name: name.trim(), email: emailLC, auth_id: existingAuthId, role,
+          organization_id: orgId, is_active: true, must_change_password: false, terms_accepted_version: null,
+        })
+        if (error) { toast('Error adding role: ' + error.message); return }
+        toast('Role added. This user can now log in and select their role.')
+        onSaved(); onClose()
+        return
+      }
+
+      // New email — create a Supabase auth account with a temp password
       const tempPassword = generateTempPassword()
       let auth_id = null
       try {
@@ -545,7 +568,8 @@ function UserModal({ user, orgs, defaultOrgId, isSuperAdmin, defaultRole, onClos
       if (error) { toast('Error creating user: ' + error.message); return }
 
       // Fetch the new user's ID to save icon prefs and queue welcome email
-      const { data: newUser } = await sb.from('users').select('id').ilike('email', emailLC).maybeSingle()
+      const { data: newUser } = await sb.from('users').select('id').ilike('email', emailLC)
+        .eq('role', role).eq('organization_id', orgId).maybeSingle()
       if (role === 'lab_user' && newUser?.id) await saveIconPrefs(newUser.id)
       queueWelcomeEmail(sb, { name: name.trim(), toEmail: emailLC, orgId, userId: newUser?.id ?? null, password: tempPassword })
       setSavedCreds({ name: name.trim(), email: emailLC, password: tempPassword })
@@ -1321,6 +1345,7 @@ function AccessModal({ user, onClose, onSaved }) {
 export default function Admin() {
   const { session, toast, pendingAdminTab, setPendingAdminTab } = useAppStore()
   const isSuperAdmin = !session?.userId   // logged in via /admin password
+  const isDemo = !!session?.isDemo
   const myOrgId = session?.organizationId || null
 
   const [tab, setTab] = useState(isSuperAdmin ? 'organizations' : 'users')
@@ -1647,7 +1672,7 @@ export default function Admin() {
         <div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email…" style={{ flex: 1, minWidth: 180 }} />
-            <button className="btn btn-primary btn-sm" onClick={() => setUserModal('add')}>
+            <button className="btn btn-primary btn-sm" onClick={() => setUserModal('add')} disabled={isDemo} style={isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}}>
               + Add {tab === 'students' ? 'lab user' : 'lab manager'}
             </button>
           </div>
@@ -1663,7 +1688,7 @@ export default function Admin() {
                 {selectedIds.size === filteredUsers.length ? 'Deselect all' : 'Select all'} ({filteredUsers.length})
               </label>
               {selectedIds.size > 0 && (
-                <button className="btn btn-sm btn-danger" onClick={deleteSelected} style={{ marginLeft: 'auto' }}>
+                <button className="btn btn-sm btn-danger" onClick={deleteSelected} disabled={isDemo} style={{ marginLeft: 'auto', ...(isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}) }}>
                   Delete selected ({selectedIds.size})
                 </button>
               )}
@@ -1701,10 +1726,10 @@ export default function Admin() {
                   </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {u.role !== 'admin' && tab === 'users' && <button className="btn btn-sm" onClick={() => setAccessModal(u)}>Access</button>}
-                    {u.role !== 'admin' && <button className="btn btn-sm" onClick={() => setUserModal(u)}>Edit</button>}
-                    {u.role !== 'admin' && <button className="btn btn-sm" onClick={() => deactivateUser(u)}>{u.is_active ? 'Deactivate' : 'Activate'}</button>}
-                    {u.role !== 'admin' && <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)}>Delete</button>}
+                    {u.role !== 'admin' && tab === 'users' && <button className="btn btn-sm" onClick={() => setAccessModal(u)} disabled={isDemo} style={isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}}>Access</button>}
+                    {u.role !== 'admin' && <button className="btn btn-sm" onClick={() => setUserModal(u)} disabled={isDemo} style={isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}}>Edit</button>}
+                    {u.role !== 'admin' && <button className="btn btn-sm" onClick={() => deactivateUser(u)} disabled={isDemo} style={isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}}>{u.is_active ? 'Deactivate' : 'Activate'}</button>}
+                    {u.role !== 'admin' && <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)} disabled={isDemo} style={isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}}>Delete</button>}
                   </div>
                 </div>
               </div>

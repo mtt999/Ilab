@@ -608,6 +608,8 @@ export default function Dashboard() {
       // If activeModules is already set (e.g., just saved from Profile), don't overwrite it
       // with a DB re-fetch. Only fetch when null (initial load, page reload, or after logout).
       if (activeModules !== null) return
+      // Demo accounts: skip saved DB row so every login starts fresh with all role modules
+      if (session?.isDemo) return
       // Students default to profile-only while prefs load so they never flash all icons
       if (session?.role === 'lab_user') setActiveModules(['profile'])
       if (!session?.userId) {

@@ -1327,7 +1327,7 @@ function TeamDeleteAccountPanel({ session, toast }) {
           </select>
         </div>
       )}
-      <button className="btn btn-danger" onClick={handleSubmit} disabled={submitting} style={{ marginTop: 8 }}>
+      <button className="btn btn-danger" onClick={handleSubmit} disabled={submitting || session?.isDemo} style={{ marginTop: 8, ...(session?.isDemo ? { opacity: 0.4, cursor: 'not-allowed' } : {}) }}>
         {submitting ? 'Submitting…' : 'Submit deletion request'}
       </button>
     </div>
@@ -2113,7 +2113,9 @@ function StaffProfile({ session }) {
         ))}
       </ScrollTabs>
       {activeTab === 'info'      && <UserProfileForm session={session} toast={toast} />}
-      {activeTab === 'password'  && <PasswordChangePanel session={session} toast={toast} />}
+      {activeTab === 'password'  && (session?.isDemo
+        ? <div className="card" style={{ opacity: 0.5, pointerEvents: 'none' }}><div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>🔑 Change Password</div><p style={{ fontSize: 14, color: 'var(--text2)' }}>Password changes are disabled for the demo account.</p></div>
+        : <PasswordChangePanel session={session} toast={toast} />)}
       {activeTab === 'dashboard' && <DashboardIconsPanel session={session} />}
       {activeTab === 'notifs'    && <NotificationPrefsPanel userId={session?.userId} role="user" />}
       {activeTab === 'storage'   && <StorageTab toast={toast} />}
@@ -2329,7 +2331,9 @@ function UserProfile({ session }) {
         ))}
       </ScrollTabs>
       {activeTab === 'info'      && <UserProfileForm session={session} toast={toast} />}
-      {activeTab === 'password'  && <PasswordChangePanel session={session} toast={toast} />}
+      {activeTab === 'password'  && (session?.isDemo
+        ? <div className="card" style={{ opacity: 0.5, pointerEvents: 'none' }}><div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>🔑 Change Password</div><p style={{ fontSize: 14, color: 'var(--text2)' }}>Password changes are disabled for the demo account.</p></div>
+        : <PasswordChangePanel session={session} toast={toast} />)}
       {activeTab === 'dashboard' && <DashboardIconsPanel session={session} />}
       {activeTab === 'notifs'    && <NotificationPrefsPanel userId={session?.userId} role="student" />}
       {activeTab === 'storage'   && <StorageTab toast={toast} />}
