@@ -8,7 +8,7 @@ export const useAppStore = create((set, get) => ({
   clearSession: () => {
     sb.auth.signOut()
     localStorage.removeItem('ilab_login_mode')
-    set({ session: null, loginMode: null, sharedWorkspaces: [], viewingWorkspaceOwnerId: null, activeModules: null, currentProjectId: null, sidebarSubTab: null })
+    set({ session: null, loginMode: null, sharedWorkspaces: [], viewingWorkspaceOwnerId: null, activeModules: null, currentProjectId: null, sidebarSubTab: null, screen: 'dashboard' })
   },
 
   // ── Active dashboard modules (icon picker) ──
