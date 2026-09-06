@@ -508,8 +508,8 @@ END $$;
 
 SELECT _apply_rls('retraining_requests', 'retraining_requests_policy', $b$
 FOR ALL TO authenticated
-USING    (is_super_admin() OR organization_id = my_org_id())
-WITH CHECK (is_super_admin() OR organization_id = my_org_id())
+USING    (is_super_admin() OR organization_id = my_org_id() OR user_id::text = my_user_id()::text)
+WITH CHECK (is_super_admin() OR organization_id = my_org_id() OR user_id::text = my_user_id()::text)
 $b$);
 
 
@@ -736,7 +736,7 @@ USING (
 $b$);
 
 SELECT _apply_rls('support_messages', 'support_messages_insert',
-  $b$FOR INSERT TO authenticated WITH CHECK (true)$b$);
+  $b$FOR INSERT TO authenticated, anon WITH CHECK (true)$b$);
 SELECT _apply_rls('support_messages', 'support_messages_select',
   $b$FOR SELECT TO authenticated USING (is_super_admin() OR user_id::text = my_user_id()::text)$b$);
 
