@@ -94,7 +94,7 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
     :root {
       --teal: #1D9E75; --teal-dark: #178A66; --teal-light: #E1F5EE;
       --navy: #0C1140; --orange: #FF6B1A;
-      --blue: #1a6fba; --blue-light: #EBF5FF; --blue-border: #b3d4f0;
+      --blue: #3b82f6; --blue-light: #F0F8FF; --blue-border: #bfdbfe;
       --text: #111827; --text2: #4B5563; --border: #e5e7eb;
       --surface: #ffffff; --bg: #f8faf9;
     }
@@ -113,8 +113,8 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
 
     /* ── Hero with video ── */
     .hero { position: relative; overflow: hidden; color: #fff; padding: 88px 24px 96px; text-align: center; background: var(--navy); }
-    .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.28; z-index: 0; }
-    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(12,17,64,0.82) 0%, rgba(12,17,64,0.65) 100%); z-index: 1; }
+    .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; z-index: 0; }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(12,17,64,0.52) 0%, rgba(12,17,64,0.38) 100%); z-index: 1; }
     .hero-inner { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; }
     .hero-badge { display: inline-block; background: rgba(29,158,117,0.22); color: #6ee7b7; border: 1px solid rgba(29,158,117,0.45); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 24px; }
     .hero h1 { font-size: clamp(28px, 5vw, 50px); font-weight: 700; line-height: 1.14; letter-spacing: -0.5px; margin-bottom: 20px; }
@@ -173,13 +173,13 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
     .plan-card.solo { border-color: var(--blue-border); background: var(--blue-light); }
     .plan-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; border-radius: 6px; padding: 3px 10px; margin-bottom: 16px; }
     .plan-tag.team { color: #085041; background: rgba(29,158,117,0.15); }
-    .plan-tag.solo { color: #1a5fa0; background: rgba(26,111,186,0.15); }
+    .plan-tag.solo { color: #1d4ed8; background: rgba(59,130,246,0.15); }
     .plan-card h3 { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
     .plan-card .plan-desc { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
     .plan-list { list-style: none; }
     .plan-list li { font-size: 14px; color: var(--text2); padding: 5px 0; display: flex; align-items: flex-start; gap: 8px; }
     .plan-list.team li::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-    .plan-list.solo li::before { content: '✓'; color: var(--blue); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .plan-list.solo li::before { content: '✓'; color: #3b82f6; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
 
     /* ── Pricing ── */
     .pricing { background: var(--bg); padding: 72px 24px; }
