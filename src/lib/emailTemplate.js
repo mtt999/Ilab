@@ -1,5 +1,5 @@
 const LOGO_URL = 'https://labhive.app/logo.svg'
-const APP_URL  = 'https://labhive.app/'
+const APP_URL  = 'https://labhive.app/app'
 
 export function buildEmailHtml({ title, body, ctaLabel = 'View in LabHive →', ctaUrl = APP_URL, prefsUrl = APP_URL, orgContact = null, credentials = null }) {
   const credentialsBlock = credentials ? `

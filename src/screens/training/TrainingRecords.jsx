@@ -51,7 +51,7 @@ async function sendTrainingApprovedNotif(userId, approverName) {
         const { data: org } = await sb.from('organizations').select('contact_name, contact_email').eq('id', user.organization_id).maybeSingle()
         orgContact = org
       }
-      const htmlBody = buildEmailHtml({ title, body, ctaLabel: 'View Training Records →', ctaUrl: 'https://labhive.app/?screen=training', prefsUrl: 'https://labhive.app/?screen=profile', orgContact })
+      const htmlBody = buildEmailHtml({ title, body, ctaLabel: 'View Training Records →', ctaUrl: 'https://labhive.app/app?screen=training', prefsUrl: 'https://labhive.app/app?screen=profile', orgContact })
       const { error: emailErr } = await sb.from('email_notifications_queue').insert({ to_email: toEmail, subject: title, body, html_body: htmlBody, user_id: userId, type: 'training_approved' })
       if (emailErr) console.warn('[notif] email queue insert failed:', emailErr.message)
       else fetch('https://qhsxtpywfczqopcimykk.supabase.co/functions/v1/send-emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {})

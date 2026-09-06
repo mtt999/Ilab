@@ -15,8 +15,8 @@ export async function queueWelcomeEmail(sb, { name, toEmail, orgId, userId = nul
     title,
     body,
     ctaLabel: 'Sign in to LabHive →',
-    ctaUrl: 'https://labhive.app/',
-    prefsUrl: 'https://labhive.app/?screen=profile',
+    ctaUrl: 'https://labhive.app/app',
+    prefsUrl: 'https://labhive.app/app?screen=profile',
     orgContact,
     credentials: password ? { email: toEmail, password } : null,
   })

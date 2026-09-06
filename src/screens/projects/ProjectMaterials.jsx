@@ -285,23 +285,17 @@ function SourceForm({ form, setForm }) {
 function QtyForm({ form, setForm }) {
   return (
     <Section title="3 · Material Quantity">
-      <div className="grid-2">
-        <div className="field">
-          <label>Total Quantity</label>
-          <input type="number" value={form.qty_total || ''} onChange={e => setForm(f => ({ ...f, qty_total: e.target.value }))} placeholder="e.g. 500" min="0" />
-        </div>
-        <div className="field">
-          <label>Unit</label>
-          <select value={form.qty_unit || ''} onChange={e => setForm(f => ({ ...f, qty_unit: e.target.value }))}>
-            <option value="">— Select unit —</option>
-            <option value="kg">kg</option>
-            <option value="lbs">lbs</option>
-            <option value="tons">tons</option>
-            <option value="liters">liters</option>
-            <option value="gallons">gallons</option>
-            <option value="m³">m³</option>
-          </select>
-        </div>
+      <div className="field">
+        <label>Unit</label>
+        <select value={form.qty_unit || ''} onChange={e => setForm(f => ({ ...f, qty_unit: e.target.value }))}>
+          <option value="">— Select unit —</option>
+          <option value="kg">kg</option>
+          <option value="lbs">lbs</option>
+          <option value="tons">tons</option>
+          <option value="liters">liters</option>
+          <option value="gallons">gallons</option>
+          <option value="m³">m³</option>
+        </select>
       </div>
       <div className="field">
         <label>Container Type</label>
@@ -582,18 +576,12 @@ function SoloSourceForm({ form, setForm }) {
 function SoloQtyForm({ form, setForm }) {
   return (
     <Section title="3 · Material Quantity">
-      <div className="grid-2">
-        <div className="field">
-          <label>Amount</label>
-          <input type="number" value={form.qty_total || ''} onChange={e => setForm(f => ({ ...f, qty_total: e.target.value }))} placeholder="e.g. 250" min="0" />
-        </div>
-        <div className="field">
-          <label>Unit</label>
-          <select value={form.qty_unit || ''} onChange={e => setForm(f => ({ ...f, qty_unit: e.target.value }))}>
-            <option value="">— Select unit —</option>
-            {SOLO_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-          </select>
-        </div>
+      <div className="field">
+        <label>Unit</label>
+        <select value={form.qty_unit || ''} onChange={e => setForm(f => ({ ...f, qty_unit: e.target.value }))}>
+          <option value="">— Select unit —</option>
+          {SOLO_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+        </select>
       </div>
       <div className="field">
         <label>Container</label>
@@ -666,7 +654,7 @@ function validate(form, toast, isSolo) {
 }
 
 // ── Material form modal ───────────────────────────────────────
-function MaterialModal({ projectId, projectName, material, onClose, onSaved }) {
+export function MaterialModal({ projectId, projectName, material, onClose, onSaved, inline = false }) {
   const { toast, session } = useAppStore()
   const isSolo = session?.loginMode === 'solo'
   const [orgTypes, setOrgTypes] = useState(null)
@@ -752,6 +740,39 @@ function MaterialModal({ projectId, projectName, material, onClose, onSaved }) {
     onClose()
   }
 
+  const formBody = (
+    <>
+      <div className="field">
+        <label>Material Name / Label (optional)</label>
+        <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isSolo ? 'e.g. Sodium chloride, Steel sample A…' : 'e.g. Base course aggregate, Surface binder…'} />
+      </div>
+      {isSolo ? (
+        <>
+          <SoloMaterialTypeForm form={form} setForm={setForm} />
+          <SoloSourceForm form={form} setForm={setForm} />
+          <SoloQtyForm form={form} setForm={setForm} />
+          <LocationForm form={form} setForm={setForm} projectId={projectId} projectName={projectName} materialId={material?.id} materialType={form.material_type} isSolo={isSolo} />
+          <SamplingDateForm form={form} setForm={setForm} />
+        </>
+      ) : (
+        <>
+          <MaterialTypeForm form={form} setForm={setForm} orgTypes={orgTypes} />
+          <SourceForm form={form} setForm={setForm} />
+          <QtyForm form={form} setForm={setForm} />
+          <LocationForm form={form} setForm={setForm} projectId={projectId} projectName={projectName} materialId={material?.id} materialType={form.material_type} isSolo={isSolo} />
+          <SamplingDateForm form={form} setForm={setForm} />
+        </>
+      )}
+      <PhotosForm form={form} setForm={setForm} materialId={material?.id} />
+      <div style={{ display: 'flex', gap: 10, marginTop: 8, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+        <button className="btn btn-purple" onClick={save} disabled={saving}>{saving ? 'Saving…' : (material ? 'Update material' : 'Add material')}</button>
+        {!inline && <button className="btn" onClick={onClose}>Cancel</button>}
+      </div>
+    </>
+  )
+
+  if (inline) return <div style={{ padding: '0 16px 16px' }}>{formBody}</div>
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', padding: 28, maxWidth: 600, width: '100%', border: '1px solid var(--border)', margin: 'auto' }}>
@@ -759,34 +780,57 @@ function MaterialModal({ projectId, projectName, material, onClose, onSaved }) {
           <div style={{ fontWeight: 700, fontSize: 17 }}>{material ? 'Edit material' : 'Add material'}</div>
           <button className="btn btn-sm" onClick={onClose}>✕ Close</button>
         </div>
+        {formBody}
+      </div>
+    </div>
+  )
+}
 
-        <div className="field">
-          <label>Material Name / Label (optional)</label>
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isSolo ? 'e.g. Sodium chloride, Steel sample A…' : 'e.g. Base course aggregate, Surface binder…'} />
+// ── Material QR Label Tab ──────────────────────────────────────
+function MaterialQRTab({ material, project }) {
+  const matName = material.name || typeLabel(material.material_type) || 'Material'
+  const qrData  = `https://labhive.app/app?mat=${material.id}&name=${encodeURIComponent(matName)}&proj=${encodeURIComponent(project?.name || '')}&date=${material.sampling_date || ''}`
+  const qrPx    = 140
+  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=${qrPx * 2}x${qrPx * 2}&data=${encodeURIComponent(qrData)}&margin=4&color=000000&bgcolor=ffffff&ecc=H`
+
+  function printLabel() {
+    const imgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrData)}&margin=4&color=000000&bgcolor=ffffff&ecc=H`
+    const html = `<!DOCTYPE html><html><head><title>Material Label</title>
+<style>body{margin:0;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+.label{border:2px solid #000;border-radius:8px;padding:12px 16px;width:260px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.ln{font-size:14px;font-weight:700;text-align:center;} .lt{font-size:11px;color:#555;text-align:center;} .lr{font-size:11px;color:#333;text-align:center;}
+img{display:block;}</style></head><body>
+<div class="label">
+  <img src="${imgUrl}" width="120" height="120" alt="QR"/>
+  <div class="ln">${matName}</div>
+  ${typeLabel(material.material_type) ? `<div class="lt">${typeLabel(material.material_type)}</div>` : ''}
+  ${material.sampling_date ? `<div class="lr">Sampled: ${material.sampling_date}</div>` : ''}
+  ${material.storage_date  ? `<div class="lr">Stored: ${material.storage_date}</div>`   : ''}
+  <div class="lr">Project: ${project?.name || '—'}</div>
+</div>
+<script>window.onload=function(){window.print();setTimeout(function(){window.close()},800)}<\/script>
+</body></html>`
+    const w = window.open('', '_blank', 'width=420,height=520')
+    w.document.write(html)
+    w.document.close()
+  }
+
+  return (
+    <div style={{ padding: 16 }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <img src={qrUrl} width={qrPx} height={qrPx} style={{ border: '1px solid var(--border)', borderRadius: 8 }} alt="QR Code" />
+          <button className="btn btn-sm btn-purple" onClick={printLabel}>🖨 Print Label</button>
         </div>
-
-        {isSolo ? (
-          <>
-            <SoloMaterialTypeForm form={form} setForm={setForm} />
-            <SoloSourceForm form={form} setForm={setForm} />
-            <SoloQtyForm form={form} setForm={setForm} />
-            <LocationForm form={form} setForm={setForm} projectId={projectId} projectName={projectName} materialId={material?.id} materialType={form.material_type} isSolo={isSolo} />
-            <SamplingDateForm form={form} setForm={setForm} />
-          </>
-        ) : (
-          <>
-            <MaterialTypeForm form={form} setForm={setForm} orgTypes={orgTypes} />
-            <SourceForm form={form} setForm={setForm} />
-            <QtyForm form={form} setForm={setForm} />
-            <LocationForm form={form} setForm={setForm} projectId={projectId} projectName={projectName} materialId={material?.id} materialType={form.material_type} isSolo={isSolo} />
-            <SamplingDateForm form={form} setForm={setForm} />
-          </>
-        )}
-        <PhotosForm form={form} setForm={setForm} materialId={material?.id} />
-
-        <div style={{ display: 'flex', gap: 10, marginTop: 8, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-          <button className="btn btn-purple" onClick={save} disabled={saving}>{saving ? 'Saving…' : (material ? 'Update material' : 'Add material')}</button>
-          <button className="btn" onClick={onClose}>Cancel</button>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Label Preview</div>
+          <div style={{ border: '2px solid var(--border)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>{matName}</div>
+            {typeLabel(material.material_type) && <div style={{ fontSize: 12, color: 'var(--text2)' }}>{typeLabel(material.material_type)}</div>}
+            {material.sampling_date && <div style={{ fontSize: 12, color: 'var(--text3)' }}>Sampled: {material.sampling_date}</div>}
+            {material.storage_date  && <div style={{ fontSize: 12, color: 'var(--text3)' }}>Stored: {material.storage_date}</div>}
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>Project: {project?.name || '—'}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -806,7 +850,9 @@ export default function ProjectMaterials({ project }) {
   const [showModal, setShowModal] = useState(false)
   const [editMaterial, setEditMaterial] = useState(null)
   const [expanded, setExpanded] = useState(null)
+  const [matTab, setMatTab] = useState('info')
 
+  useEffect(() => { setMatTab('info') }, [expanded])
   useEffect(() => { load() }, [project.id])
 
   async function load() {
@@ -865,86 +911,110 @@ export default function ProjectMaterials({ project }) {
                     {m.material_type === 'asphalt_binder' && m.ab_binder_pg && <span>PG: {m.ab_binder_pg}</span>}
                     {m.material_type === 'plant_mix' && m.pm_binder_pg && <span>PG: {m.pm_binder_pg}</span>}
                     {m.source_name && <span>📍 {m.source_name}</span>}
-                    {m.qty_total && <span>⚖️ {m.qty_total} {m.qty_unit}</span>}
+                    {m.qty_unit && <span>⚖️ {m.qty_unit}</span>}
                     {m.sampling_date && <span>📅 {m.sampling_date}</span>}
                     {m.photos?.length > 0 && <span>📷 {m.photos.length} photo{m.photos.length > 1 ? 's' : ''}</span>}
                   </div>
                 </div>
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button className="btn btn-sm" onClick={e => { e.stopPropagation(); setEditMaterial(m); setShowModal(true) }}>Edit</button>
                   <button className="btn btn-sm btn-danger" onClick={e => { e.stopPropagation(); deleteMaterial(m.id) }}>Delete</button>
                   <span style={{ fontSize: 13, color: 'var(--text3)', display: 'flex', alignItems: 'center' }}>{isOpen ? '▲' : '▼'}</span>
                 </div>
               </div>
 
-              {/* Expanded detail */}
+              {/* Expanded — 3-tab panel */}
               {isOpen && (() => {
                 const isSoloMat = !TEAM_TYPES.includes(m.material_type)
                 const soloSub = parseSoloSubfields(m.other_info)
                 const soloSubEntries = Object.entries(soloSub).filter(([, v]) => v)
                 const subDefs = SOLO_SUBFIELDS[m.material_type] || []
+                const MAT_TABS = [
+                  { key: 'info',    label: '1 · Material Info' },
+                  { key: 'edit',    label: '2 · Material' },
+                  { key: 'storage', label: '3 · Material Storage' },
+                ]
                 return (
-                <div style={{ borderTop: '1px solid var(--border)', padding: '16px 16px', background: 'var(--surface2)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: m.photos?.length ? 16 : 0 }}>
-                    {isSoloMat ? <>
-                      {/* Solo sub-fields */}
-                      {soloSubEntries.length > 0 && soloSubEntries.map(([key, val]) => {
-                        const def = subDefs.find(s => s.key === key)
-                        const label = def?.label || key
-                        if (key === 'sieve') {
-                          const sieves = val.split(',').filter(Boolean)
-                          return (
-                            <div key={key} style={{ gridColumn: '1/-1' }}>
-                              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{label}</div>
-                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{sieves.map(s => <span key={s} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 500 }}>{s}</span>)}</div>
-                            </div>
-                          )
-                        }
-                        return <div key={key}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div><div style={{ fontWeight: 500 }}>{val}</div></div>
-                      })}
-                      {/* Source */}
-                      {(m.source_name || m.source_type) && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Supplier</div><div style={{ fontWeight: 500 }}>{m.source_name || '—'}</div>{m.source_type && <div style={{ fontSize: 12, color: 'var(--text3)' }}>Ref: {m.source_type}</div>}</div>}
-                      {/* Location */}
-                      {m.source_location && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Location</div><div style={{ fontWeight: 500 }}>{m.source_location}</div></div>}
-                      {/* QTY */}
-                      {m.qty_total && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Quantity</div><div style={{ fontWeight: 500 }}>{m.qty_total} {m.qty_unit}{m.container_type ? ` · ${m.container_count || ''} ${m.container_type}` : ''}</div></div>}
-                    </> : <>
-                      {/* Team-specific details */}
-                      {m.material_type === 'aggregate' && <>
-                        <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Condition</div><div style={{ fontWeight: 500 }}>{m.agg_raw_or_rap || '—'}</div></div>
-                        <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Sieve Sizes</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{(m.agg_sieve_sizes || []).map(s => <span key={s} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 500 }}>{s}</span>)}</div></div>
-                      </>}
-                      {m.material_type === 'asphalt_binder' && <>
-                        <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>PG Grade</div><div style={{ fontWeight: 500 }}>{m.ab_binder_pg || '—'}</div></div>
-                        <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Polymer</div><div style={{ fontWeight: 500 }}>{m.ab_has_polymer ? `Yes — ${m.ab_polymer_info || 'see details'}` : 'No'}</div></div>
-                        {m.ab_mix_design && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Mix Design</div><div style={{ fontWeight: 500 }}>{m.ab_mix_design}</div></div>}
-                        {m.ab_other_additives && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Other Additives</div><div style={{ fontWeight: 500 }}>{m.ab_other_additives}</div></div>}
-                      </>}
-                      {m.material_type === 'plant_mix' && <>
-                        <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>PG Grade</div><div style={{ fontWeight: 500 }}>{m.pm_binder_pg || '—'}</div></div>
-                        {m.pm_mix_design && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Mix Design</div><div style={{ fontWeight: 500 }}>{m.pm_mix_design}</div></div>}
-                      </>}
-                      {/* Source */}
-                      {m.source_name && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Source</div><div style={{ fontWeight: 500 }}>{m.source_type && `${m.source_type} · `}{m.source_name}</div>{m.source_location && <div style={{ fontSize: 12, color: 'var(--text3)' }}>{m.source_location}</div>}</div>}
-                      {/* QTY */}
-                      {m.qty_total && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Quantity</div><div style={{ fontWeight: 500 }}>{m.qty_total} {m.qty_unit} · {m.container_count} {m.container_type}{m.container_color ? ` (${m.container_color})` : ''}</div></div>}
-                      {/* Locations */}
-                      {m.locations?.length > 0 && <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Locations</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{m.locations.map((l, i) => <span key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 99, padding: '4px 12px', fontSize: 12 }}>{l.location}{l.detail ? ` · ${l.detail}` : ''}</span>)}</div></div>}
-                    </>}
+                <div style={{ borderTop: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                  {/* Tab bar */}
+                  <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto' }}>
+                    {MAT_TABS.map(t => (
+                      <button key={t.key} onClick={e => { e.stopPropagation(); setMatTab(t.key) }}
+                        style={{ padding: '10px 14px', border: 'none', background: 'transparent', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: matTab === t.key ? 'var(--accent3)' : 'var(--text2)', borderBottom: `2px solid ${matTab === t.key ? 'var(--accent3)' : 'transparent'}`, whiteSpace: 'nowrap', transition: 'all 0.15s' }}>
+                        {t.label}
+                      </button>
+                    ))}
                   </div>
 
-                  {/* Photo strip */}
-                  {m.photos?.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Photos ({m.photos.length})</div>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {m.photos.map((url, i) => (
-                          <img key={i} src={url} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => window.open(url, '_blank')} />
-                        ))}
+                  {/* Tab 1: Material Info */}
+                  {matTab === 'info' && (
+                    <div style={{ padding: '16px 16px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: m.photos?.length ? 16 : 0 }}>
+                        {isSoloMat ? <>
+                          {soloSubEntries.length > 0 && soloSubEntries.map(([key, val]) => {
+                            const def = subDefs.find(s => s.key === key)
+                            const label = def?.label || key
+                            if (key === 'sieve') {
+                              const sieves = val.split(',').filter(Boolean)
+                              return (
+                                <div key={key} style={{ gridColumn: '1/-1' }}>
+                                  <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{label}</div>
+                                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{sieves.map(s => <span key={s} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 500 }}>{s}</span>)}</div>
+                                </div>
+                              )
+                            }
+                            return <div key={key}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div><div style={{ fontWeight: 500 }}>{val}</div></div>
+                          })}
+                          {(m.source_name || m.source_type) && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Supplier</div><div style={{ fontWeight: 500 }}>{m.source_name || '—'}</div>{m.source_type && <div style={{ fontSize: 12, color: 'var(--text3)' }}>Ref: {m.source_type}</div>}</div>}
+                          {m.source_location && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Location</div><div style={{ fontWeight: 500 }}>{m.source_location}</div></div>}
+                          {m.qty_unit && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Unit</div><div style={{ fontWeight: 500 }}>{m.qty_unit}{m.container_type ? ` · ${m.container_count || ''} ${m.container_type}` : ''}</div></div>}
+                        </> : <>
+                          {m.material_type === 'aggregate' && <>
+                            <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Condition</div><div style={{ fontWeight: 500 }}>{m.agg_raw_or_rap || '—'}</div></div>
+                            <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Sieve Sizes</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{(m.agg_sieve_sizes || []).map(s => <span key={s} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 500 }}>{s}</span>)}</div></div>
+                          </>}
+                          {m.material_type === 'asphalt_binder' && <>
+                            <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>PG Grade</div><div style={{ fontWeight: 500 }}>{m.ab_binder_pg || '—'}</div></div>
+                            <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Polymer</div><div style={{ fontWeight: 500 }}>{m.ab_has_polymer ? `Yes — ${m.ab_polymer_info || 'see details'}` : 'No'}</div></div>
+                            {m.ab_mix_design && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Mix Design</div><div style={{ fontWeight: 500 }}>{m.ab_mix_design}</div></div>}
+                            {m.ab_other_additives && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Other Additives</div><div style={{ fontWeight: 500 }}>{m.ab_other_additives}</div></div>}
+                          </>}
+                          {m.material_type === 'plant_mix' && <>
+                            <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>PG Grade</div><div style={{ fontWeight: 500 }}>{m.pm_binder_pg || '—'}</div></div>
+                            {m.pm_mix_design && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Mix Design</div><div style={{ fontWeight: 500 }}>{m.pm_mix_design}</div></div>}
+                          </>}
+                          {m.source_name && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Source</div><div style={{ fontWeight: 500 }}>{m.source_type && `${m.source_type} · `}{m.source_name}</div>{m.source_location && <div style={{ fontSize: 12, color: 'var(--text3)' }}>{m.source_location}</div>}</div>}
+                          {m.qty_unit && <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Unit</div><div style={{ fontWeight: 500 }}>{m.qty_unit}{m.container_type ? ` · ${m.container_count || ''} ${m.container_type}${m.container_color ? ` (${m.container_color})` : ''}` : ''}</div></div>}
+                          {m.locations?.length > 0 && <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Locations</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{m.locations.map((l, i) => <span key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 99, padding: '4px 12px', fontSize: 12 }}>{l.location}{l.detail ? ` · ${l.detail}` : ''}</span>)}</div></div>}
+                        </>}
                       </div>
+                      {m.photos?.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Photos ({m.photos.length})</div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {m.photos.map((url, i) => (
+                              <img key={i} src={url} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => window.open(url, '_blank')} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Tab 2: Edit form inline */}
+                  {matTab === 'edit' && (
+                    <MaterialModal
+                      inline
+                      projectId={project.id}
+                      projectName={project.name}
+                      material={m}
+                      onClose={() => setMatTab('info')}
+                      onSaved={() => { load(); setMatTab('info') }}
+                    />
+                  )}
+
+                  {/* Tab 3: QR label */}
+                  {matTab === 'storage' && <MaterialQRTab material={m} project={project} />}
                 </div>
               )
               })()}

@@ -5,8 +5,8 @@ import obfuscatorPlugin from 'vite-plugin-javascript-obfuscator'
 const isMobile = process.env.BUILD_TARGET === 'mobile'
 const isProd = process.env.NODE_ENV === 'production'
 
-export default defineConfig({
-  server: { port: 5174, strictPort: true, base: '/labhive/' },
+export default defineConfig(({ command }) => ({
+  server: { port: 5174, strictPort: true },
   plugins: [
     react(),
     isProd && obfuscatorPlugin({
@@ -41,9 +41,11 @@ export default defineConfig({
       },
     },
   ].filter(Boolean),
-  base: '/',
+  // Dev: base '/' for convenience. Prod: '/app/' so the SPA lives at labhive.app/app.
+  // Mobile always uses '/' (file:// serving in WKWebView).
+  base: isMobile ? '/' : (command === 'serve' ? '/' : '/app/'),
   build: {
-    outDir: isMobile ? 'dist' : 'docs',
+    outDir: isMobile ? 'dist' : 'docs/app',
     sourcemap: false,
   },
-})
+}))

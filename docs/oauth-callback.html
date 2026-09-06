@@ -6,11 +6,9 @@
 <script>
   var search = window.location.search;
   if (search) {
-    // Native Capacitor in-app browser: deep link fires appUrlOpen in the app
     window.location.href = 'ilab://oauth-callback' + search;
-    // Web fallback: redirect to SPA (handles both success ?code= and error ?error=)
     setTimeout(function() {
-      window.location.href = 'https://labhive.app/' + search;
+      window.location.href = 'https://labhive.app/app' + search;
     }, 600);
   }
 </script>

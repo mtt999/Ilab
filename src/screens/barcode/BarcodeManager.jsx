@@ -24,7 +24,7 @@ const PRINT_LOGO_SVG = (size) => `<svg width="${size}" height="${size}" viewBox=
 </svg>`
 
 function getScanUrl(id, type = 'equipment', name = '', meta = {}) {
-  const base = 'https://labhive.app/'
+  const base = 'https://labhive.app/app'
   if (type === 'equipment') return `${base}?eq=${id}&type=equipment`
   if (type === 'other') {
     const p = new URLSearchParams()

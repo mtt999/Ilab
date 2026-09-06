@@ -11,7 +11,7 @@
 //   location — equipment_inventory.location (e.g. "MPF - Aggregate hall")
 //   bookedBy — booking.user_name
 
-const BOOKING_URL = 'https://labhive.app/?screen=booking'
+const BOOKING_URL = 'https://labhive.app/app?screen=booking'
 
 function toCalUtc(iso) {
   // 2026-07-17T14:30:00.000Z -> 20260717T143000Z
