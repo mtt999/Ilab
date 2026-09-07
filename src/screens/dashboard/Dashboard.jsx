@@ -303,13 +303,20 @@ function DashboardView({ modules, onNavigate, labSafetyUrl, moduleImages }) {
     setLoading(true)
     try {
       const isSuperAdmin = !session?.userId
+      const isSolo = session?.loginMode === 'solo'
       const orgId = session?.organizationId
       let suppliesQ = sb.from('supplies').select('id,min_qty')
       let projectsQ = sb.from('projects').select('id,status').eq('status','active')
       let studentsQ = sb.from('users').select('id').eq('role','lab_user').eq('is_active',true)
       let inspectionsQ = sb.from('inspections').select('id,room_name,inspected_at,flag_count,inspector').order('inspected_at',{ascending:false}).limit(5)
       let trainingQ = sb.from('training_fresh').select('id').eq('admin_approved',false)
-      if (!isSuperAdmin && orgId) {
+      if (isSolo) {
+        suppliesQ = suppliesQ.eq('solo_owner_id', session.userId)
+        projectsQ = projectsQ.eq('solo_owner_id', session.userId)
+        inspectionsQ = inspectionsQ.eq('solo_owner_id', session.userId)
+        studentsQ = Promise.resolve({ data: [] })
+        trainingQ = Promise.resolve({ data: [] })
+      } else if (!isSuperAdmin && orgId) {
         suppliesQ = suppliesQ.eq('organization_id', orgId)
         projectsQ = projectsQ.eq('organization_id', orgId)
         studentsQ = studentsQ.eq('organization_id', orgId)

@@ -148,6 +148,14 @@ CREATE TABLE IF NOT EXISTS user_out_of_lab (
 );
 ALTER TABLE user_out_of_lab ENABLE ROW LEVEL SECURITY;
 -- Real RLS policy applied by rls_phase1.sql (org/owner scoped) — NOT allow_all.
+
+-- Supply Inventory solo scoping (required — without this column, solo users'
+-- rooms/supplies/inspections are silently rejected by RLS on insert and
+-- never appear in the Rooms/Supplies tabs or Inspect grid; see rls_phase1.sql STEP 11):
+ALTER TABLE rooms       ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
+ALTER TABLE supplies    ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
+ALTER TABLE inspections ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
+-- Then re-run rls_phase1.sql so the policy picks up the new solo branch.
 ```
 
 ### Row Level Security (RLS) — July 2026
@@ -647,6 +655,29 @@ ALTER TABLE notifications
   Edge Functions: `RESEND_API_KEY`, `RESEND_FROM` = `LabHive <noreply@labhive.app>`.
 - Setup lives in `email_queue_setup.sql` (idempotent; marks stale backlog sent
   before scheduling so users don't get flooded).
+
+### Custom labhive.app inbound addresses (Sept 2026)
+
+Set up via **Cloudflare Email Routing** (free, DNS already on Cloudflare) —
+`info@`, `quote@`, `support@labhive.app` all forward to the owner's Gmail.
+This is separate from Resend (which only *sends* from `noreply@labhive.app`).
+
+**Support form → email routing:** `CustomerServiceModal` (`?support=1`) inserts
+into `support_messages` with a `login_mode` column (added Sept 2026, mirrors
+`session.loginMode`). A `queue_support_email()` trigger (SECURITY DEFINER, in
+`email_queue_setup.sql`) fires on every insert and queues a real email via the
+existing `email_notifications_queue` → `send-emails` → Resend pipeline:
+- `login_mode = 'solo'` → `solo@labhive.app`
+- `login_mode = 'team'` or `NULL` (guests) → `support@labhive.app`
+
+The Team Plan "Request a quote" button on the landing page links directly to
+`mailto:quote@labhive.app` (not the in-app form). The Solo Plan "Contact us"
+button still opens the in-app form (routes to `solo@labhive.app` per the rule
+above once submitted).
+
+**Do not** add a new inbound address without also deciding whether it needs a
+Cloudflare routing rule (receiving) and/or a `send-emails` queue destination
+(app-triggered outbound) — they are two independent systems.
 
 ---
 

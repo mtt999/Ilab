@@ -4,6 +4,7 @@ import { useAppStore } from '../../store/useAppStore'
 
 export default function History() {
   const { setLastRecord, setScreen, session } = useAppStore()
+  const isSolo = session?.loginMode === 'solo'
   const orgId = session?.organizationId
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,7 +14,7 @@ export default function History() {
 
   async function load() {
     let q = sb.from('inspections').select('*').order('inspected_at', { ascending: false }).limit(200)
-    if (orgId) q = q.eq('organization_id', orgId)
+    q = isSolo ? q.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : q.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     const { data } = await q
     setData(data || [])
     setLoading(false)

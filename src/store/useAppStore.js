@@ -34,17 +34,30 @@ export const useAppStore = create((set, get) => ({
     const session = get().session
     const isSolo = session?.loginMode === 'solo'
     const mode = isSolo ? 'solo' : 'team'
+    // Never query without a scope key — a bare login_mode filter would return
+    // every org's / every solo user's rows. NONE is a UUID that matches nothing.
+    const NONE = '00000000-0000-0000-0000-000000000000'
     let roomsQ = sb.from('rooms').select('*').eq('login_mode', mode).order('created_at')
     let suppliesQ = sb.from('supplies').select('*').eq('login_mode', mode).order('created_at')
-    if (!isSolo) {
-      const safeOrgId = session?.organizationId || '00000000-0000-0000-0000-000000000000'
+    if (isSolo) {
+      const soloId = session?.userId || NONE
+      roomsQ = roomsQ.eq('solo_owner_id', soloId)
+      suppliesQ = suppliesQ.eq('solo_owner_id', soloId)
+    } else {
+      const safeOrgId = session?.organizationId || NONE
       roomsQ = roomsQ.eq('organization_id', safeOrgId)
       suppliesQ = suppliesQ.eq('organization_id', safeOrgId)
     }
     const [r, s, cfg] = await Promise.all([roomsQ, suppliesQ, sb.from('settings').select('*')])
     const settings = {}
     ;(cfg.data || []).forEach((x) => (settings[x.key] = x.value))
-    set({ rooms: r.data || [], supplies: s.data || [], settings })
+    // Natural alphanumeric sort so "Room 2" sorts before "Room 10" — every
+    // screen (Rooms tab, Supplies tab, Inspect grid, room dropdowns) reads
+    // rooms from this store, so sorting once here orders it everywhere.
+    const sortedRooms = [...(r.data || [])].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    )
+    set({ rooms: sortedRooms, supplies: s.data || [], settings })
   },
 
   // ── Toast ──

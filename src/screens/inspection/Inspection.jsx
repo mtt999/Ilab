@@ -96,6 +96,7 @@ export default function Inspection() {
       results: finalResults,
       login_mode: session?.loginMode === 'solo' ? 'solo' : 'team',
       organization_id: session?.loginMode !== 'solo' ? (session?.organizationId || null) : null,
+      solo_owner_id: session?.loginMode === 'solo' ? session?.userId : null,
     }
     const { data, error } = await sb.from('inspections').insert(record).select().single()
     if (error) { toast('Error saving. Check connection.'); return }

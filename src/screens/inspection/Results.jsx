@@ -139,7 +139,7 @@ export default function Results() {
     try {
       toast('Loading all records…')
       let q = sb.from('inspections').select('*').order('inspected_at', { ascending: true })
-      if (!isSolo) q = q.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+      q = isSolo ? q.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : q.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
       const { data: allRecs, error } = await q
       if (error || !allRecs?.length) { toast('No records found.'); return }
 

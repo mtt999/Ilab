@@ -52,3 +52,48 @@ SELECT cron.schedule(
 -- To inspect / remove the schedule later:
 --   SELECT * FROM cron.job;
 --   SELECT cron.unschedule('send-emails-every-minute');
+
+
+-- ================================================================
+-- 4. Support form → real email routing (added Sept 2026)
+--
+-- CustomerServiceModal (the "Contact Customer Service" form, opened via
+-- ?support=1 or the header ? menu) only ever wrote to support_messages —
+-- no email was ever sent anywhere, it just sat in the Admin panel.
+--
+-- This trigger fires on every new support_messages row and queues a real
+-- email via the existing send-emails/Resend pipeline, routed by who sent it:
+--   login_mode = 'solo'          -> solo@labhive.app
+--   login_mode = 'team' or NULL  -> support@labhive.app  (covers guests too)
+--
+-- SECURITY DEFINER is required: support_messages allows INSERT from `anon`
+-- (guests on the login page), but email_notifications_queue only allows
+-- INSERT from `authenticated` — without SECURITY DEFINER a guest's message
+-- would trigger but silently fail the queue insert due to RLS.
+-- ================================================================
+
+ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS login_mode TEXT;
+
+CREATE OR REPLACE FUNCTION queue_support_email()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  dest text := CASE WHEN NEW.login_mode = 'solo' THEN 'solo@labhive.app' ELSE 'support@labhive.app' END;
+BEGIN
+  INSERT INTO email_notifications_queue (to_email, subject, body, user_id, type)
+  VALUES (
+    dest,
+    'New support message: ' || NEW.subject,
+    'From: ' || COALESCE(NEW.user_name, 'Guest') || ' <' || NEW.user_email || '>' || E'\n\n' ||
+    NEW.message ||
+    CASE WHEN NEW.attachment_url IS NOT NULL THEN E'\n\nAttachment: ' || NEW.attachment_url ELSE '' END,
+    NEW.user_id,
+    'support_message'
+  );
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS support_message_email_trigger ON support_messages;
+CREATE TRIGGER support_message_email_trigger
+AFTER INSERT ON support_messages
+FOR EACH ROW EXECUTE FUNCTION queue_support_email();

@@ -505,7 +505,7 @@ export default function App() {
                 sb.from('users').update({ picker_done: true }).eq('id', session.userId).catch(() => {})
               }
             }
-            if (modules !== null && modules !== undefined) setActiveModules(modules)
+            if (modules?.length > 0) setActiveModules(modules)
             setShowIconPicker(false)
           }}
         />

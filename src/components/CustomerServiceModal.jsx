@@ -60,6 +60,7 @@ export default function CustomerServiceModal({ onClose }) {
         message: message.trim(),
         attachment_url,
         status: 'open',
+        login_mode: session?.loginMode || null,
       })
       if (error) throw new Error(error.message)
       setDone(true)

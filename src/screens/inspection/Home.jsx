@@ -92,10 +92,13 @@ function RoomModal({ room, onClose, onSaved }) {
   const [icon, setIcon] = useState(room?.icon || '🧪')
   async function save() {
     if (!name.trim()) { toast('Please enter a room name.'); return }
-    const loginMode = session?.loginMode === 'solo' ? 'solo' : 'team'
+    const isSolo = session?.loginMode === 'solo'
+    const loginMode = isSolo ? 'solo' : 'team'
     const orgId = session?.organizationId || null
-    if (room) await sb.from('rooms').update({ name, icon }).eq('id', room.id)
-    else await sb.from('rooms').insert({ name, icon, login_mode: loginMode, organization_id: loginMode === 'team' ? orgId : null })
+    const { error } = room
+      ? await sb.from('rooms').update({ name, icon }).eq('id', room.id)
+      : await sb.from('rooms').insert({ name, icon, login_mode: loginMode, organization_id: isSolo ? null : orgId, solo_owner_id: isSolo ? session.userId : null })
+    if (error) { toast(`Error saving room: ${error.message}`, true); return }
     toast('Room saved.'); onSaved(); onClose()
   }
   return (
@@ -239,11 +242,14 @@ function SupplyModal({ supply, rooms, defaultRoomId, onClose, onSaved }) {
 
   async function save() {
     if (!form.name.trim() || !form.unit.trim()) { toast('Please fill all required fields.'); return }
-    const loginMode = session?.loginMode === 'solo' ? 'solo' : 'team'
+    const isSolo = session?.loginMode === 'solo'
+    const loginMode = isSolo ? 'solo' : 'team'
     const orgId = session?.organizationId || null
     const payload = { ...form, min_qty: parseFloat(form.min_qty) || 0, links: form.links.filter(l => l.url) }
-    if (supply) await sb.from('supplies').update(payload).eq('id', supply.id)
-    else await sb.from('supplies').insert({ ...payload, login_mode: loginMode, organization_id: loginMode === 'team' ? orgId : null })
+    const { error } = supply
+      ? await sb.from('supplies').update(payload).eq('id', supply.id)
+      : await sb.from('supplies').insert({ ...payload, login_mode: loginMode, organization_id: isSolo ? null : orgId, solo_owner_id: isSolo ? session.userId : null })
+    if (error) { toast(`Error saving supply: ${error.message}`, true); return }
     toast('Supply saved.'); onSaved(); onClose()
   }
 
@@ -478,7 +484,7 @@ function ExportData() {
 
   async function load() {
     let q = sb.from('inspections').select('*').eq('login_mode', loginMode).order('inspected_at', { ascending: false }).limit(200)
-    if (!isSolo) q = q.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+    q = isSolo ? q.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : q.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     const { data } = await q
     setData(data || []); setLoading(false)
   }
@@ -968,7 +974,7 @@ function ExportData() {
     if (!dateStr) { toast('Please select a date.'); return }
     toast('Loading…')
     let rq = sb.from('inspections').select('*').eq('login_mode', loginMode).order('inspected_at', { ascending: true })
-    if (!isSolo) rq = rq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+    rq = isSolo ? rq.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : rq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     const { data: allRecs } = await rq
     const dateRecs = (allRecs || []).filter(r => new Date(r.inspected_at).toLocaleDateString('en-CA') === dateStr)
 
@@ -979,9 +985,9 @@ function ExportData() {
 
     // Excel: build uninspected rooms list, then call structured report
     let roomQ = sb.from('rooms').select('*').eq('login_mode', loginMode).order('name')
-    if (!isSolo) roomQ = roomQ.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+    roomQ = isSolo ? roomQ.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : roomQ.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     let supQ  = sb.from('supplies').select('*').eq('login_mode', loginMode)
-    if (!isSolo) supQ  = supQ.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+    supQ = isSolo ? supQ.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : supQ.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     const [{ data: allRooms }, { data: allSupplies }] = await Promise.all([roomQ, supQ])
     const inspectedRoomNames = new Set(dateRecs.map(r => r.room_name))
     const uninspected = (allRooms || [])
@@ -995,7 +1001,7 @@ function ExportData() {
   async function exportAll() {
     toast('Loading…')
     let aq = sb.from('inspections').select('*').eq('login_mode', loginMode).order('inspected_at', { ascending: true })
-    if (!isSolo) aq = aq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+    aq = isSolo ? aq.eq('solo_owner_id', session?.userId || '00000000-0000-0000-0000-000000000000') : aq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
     const { data: allRecs } = await aq
     if (!allRecs?.length) { toast('No records found.'); return }
 
@@ -1242,13 +1248,15 @@ function ImportTab() {
   async function confirmImport() {
     if (!importData) return
     setImporting(true)
-    const loginMode = session?.loginMode === 'solo' ? 'solo' : 'team'
+    const isSolo = session?.loginMode === 'solo'
+    const loginMode = isSolo ? 'solo' : 'team'
     const orgId = session?.organizationId || null
+    const soloId = session?.userId || null
     try {
       let rq = sb.from('rooms').select('*').eq('login_mode', loginMode)
-      if (loginMode === 'team') rq = rq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+      rq = isSolo ? rq.eq('solo_owner_id', soloId || '00000000-0000-0000-0000-000000000000') : rq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
       let sq = sb.from('supplies').select('*').eq('login_mode', loginMode)
-      if (loginMode === 'team') sq = sq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
+      sq = isSolo ? sq.eq('solo_owner_id', soloId || '00000000-0000-0000-0000-000000000000') : sq.eq('organization_id', orgId || '00000000-0000-0000-0000-000000000000')
       const { data: existingRooms } = await rq
       const { data: existingSupplies } = await sq
       const roomByName = {}; (existingRooms || []).forEach(r => roomByName[r.name.toLowerCase()] = r)
@@ -1259,11 +1267,11 @@ function ImportTab() {
         const name = roomNames[i]; let roomId
         const existing = roomByName[name.toLowerCase()]
         if (existing) { roomId = existing.id }
-        else { const { data: newRoom } = await sb.from('rooms').insert({ name, icon: ICONS[i % ICONS.length], login_mode: loginMode, organization_id: loginMode === 'team' ? orgId : null }).select().single(); if (!newRoom) continue; roomId = newRoom.id }
+        else { const { data: newRoom } = await sb.from('rooms').insert({ name, icon: ICONS[i % ICONS.length], login_mode: loginMode, organization_id: isSolo ? null : orgId, solo_owner_id: isSolo ? soloId : null }).select().single(); if (!newRoom) continue; roomId = newRoom.id }
         for (const s of importData[name]) {
           const key = supplyKey(roomId, s.name)
           if (supplyByKey[key]) { await sb.from('supplies').update({ min_qty: s.min_qty, qty: s.qty }).eq('id', supplyByKey[key].id); updated++ }
-          else { await sb.from('supplies').insert({ room_id: roomId, name: s.name, unit: s.unit, min_qty: s.min_qty, qty: s.qty, login_mode: loginMode, organization_id: loginMode === 'team' ? orgId : null }); added++ }
+          else { await sb.from('supplies').insert({ room_id: roomId, name: s.name, unit: s.unit, min_qty: s.min_qty, qty: s.qty, login_mode: loginMode, organization_id: isSolo ? null : orgId, solo_owner_id: isSolo ? soloId : null }); added++ }
         }
       }
       setImportData(null); await refreshCache(); toast(`Import done: ${added} added, ${updated} updated.`)
