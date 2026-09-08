@@ -15,12 +15,6 @@ const CATEGORIES = [
 
 const CONDITIONS = ['Good', 'Fair', 'Poor', 'Out of Service']
 
-const LOCATIONS = [
-  'Binder Lab', 'High Bay A', 'High Bay B', 'High Bay C',
-  'MPF - Saw Room', 'MPF - Sieve', 'MPF - Soil',
-  'Servo Room', 'Shed', 'Soils Lab', 'Storage', 'Volumetric Lab', 'Other',
-]
-
 function canEdit(session) { return session?.role === 'admin' || session?.role === 'user' }
 
 function EquipmentAvatar({ url, size = 34 }) {
@@ -156,10 +150,14 @@ function EquipmentModal({ item, onClose, onSaved, session, soloCats = [], teamCa
             <div className="field"><label>Location</label>
               {isSolo
                 ? <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. Bench A, Storage Room…" />
-                : <select value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))}>
-                    <option value="">— Select —</option>
-                    {(teamLocs.length ? teamLocs : LOCATIONS).map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
+                : teamLocs.length === 0
+                  ? <div style={{ fontSize: 13, color: '#92400e', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 6, padding: '8px 12px' }}>
+                      No locations yet — open the <strong>Equipment</strong> icon and go to the <strong>Settings</strong> tab to create them first.
+                    </div>
+                  : <select value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))}>
+                      <option value="">— Select —</option>
+                      {teamLocs.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
               }
             </div>
           </div>

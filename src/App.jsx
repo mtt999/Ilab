@@ -52,7 +52,6 @@ const Home                 = lazy(() => import('./screens/inspection/Home'))
 const Inspection           = lazy(() => import('./screens/inspection/Inspection'))
 const Results              = lazy(() => import('./screens/inspection/Results'))
 const ProjectMaterial      = lazy(() => import('./screens/projects/ProjectMaterial'))
-const ProjectDetail        = lazy(() => import('./screens/projects/ProjectDetail'))
 const History              = lazy(() => import('./screens/inspection/History'))
 const TrainingRecords      = lazy(() => import('./screens/training/TrainingRecords'))
 const TrainingRecordsProto = lazy(() => import('./screens/training/TrainingRecordsProto'))
@@ -214,33 +213,68 @@ export default function App() {
     return () => { listenerHandle?.remove() }
   }, [])
 
+  function applyRestoredTeamSession(teamUser) {
+    const adminLevel = teamUser.admin_level || 0
+    const role = teamUser.role === 'admin' || adminLevel >= 1 ? 'admin' : teamUser.role
+    const isDemo = teamUser.email?.toLowerCase() === 'demo@labhive.app'
+    localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'team', id: teamUser.id }))
+    setSession({ role, dbRole: teamUser.role, username: teamUser.nick_name?.trim() || teamUser.name, userId: teamUser.id, email: teamUser.email, adminLevel, photoUrl: teamUser.photo_url, avatar: teamUser.avatar, loginMode: 'team', organizationId: teamUser.organization_id || null, projectGroup: teamUser.project_group || null, mustChangePassword: teamUser.must_change_password === true, termsAcceptedVersion: isDemo ? null : (teamUser.terms_accepted_version || null), tourDone: isDemo ? false : (teamUser.tour_done === true), pickerDone: isDemo ? false : (teamUser.picker_done === true), isDemo })
+  }
+
+  function applyRestoredSoloSession(soloUser) {
+    const isDemo = soloUser.email?.toLowerCase() === 'demo@labhive.app'
+    localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'solo', id: soloUser.id }))
+    setSession({ role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id, email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar, activeModules: soloUser.active_modules || [], loginMode: 'solo', termsAcceptedVersion: isDemo ? null : (soloUser.terms_accepted_version || null), isPaid: soloUser.is_paid || false, tourDone: isDemo ? false : (soloUser.tour_done === true), pickerDone: isDemo ? false : (soloUser.picker_done === true), isDemo })
+    sb.from('solo_workspace_members').select('owner_id').eq('member_id', soloUser.id)
+      .then(({ data: memberships }) => {
+        if (memberships?.length) {
+          const ownerIds = memberships.map(m => m.owner_id)
+          sb.from('solo_users').select('id, name').in('id', ownerIds)
+            .then(({ data: owners }) => setSharedWorkspaces((owners || []).map(o => ({ ownerId: o.id, ownerName: o.name }))))
+        }
+      })
+  }
+
   async function restoreSessionFromAuth(authUser) {
     const { data: saRow } = await sb.from('settings').select('value').eq('key', 'super_admin_auth_id').maybeSingle()
-    if (saRow?.value === authUser.id) {
+    const isSuperAdmin = saRow?.value === authUser.id
+
+    // Prefer the exact identity chosen at login. A single auth_id can map to
+    // MULTIPLE `users` rows (demo's Manager + Lab User share one auth_id, and
+    // an org admin can be added as another role too) — without this, a hard
+    // refresh can't tell which one was active and .maybeSingle() below would
+    // error on 2+ rows, silently falling through to the wrong account type.
+    let stored = null
+    try { stored = JSON.parse(localStorage.getItem('ilab_active_identity') || 'null') } catch {}
+
+    if (stored?.kind === 'admin' && isSuperAdmin) {
+      localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'admin' }))
       setSession({ role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' })
       return
     }
-    const { data: teamUser } = await sb.from('users').select('*').eq('auth_id', authUser.id).eq('is_active', true).maybeSingle()
-    if (teamUser) {
-      const adminLevel = teamUser.admin_level || 0
-      const role = teamUser.role === 'admin' || adminLevel >= 1 ? 'admin' : teamUser.role
-      const isDemo = teamUser.email?.toLowerCase() === 'demo@labhive.app'
-      setSession({ role, dbRole: teamUser.role, username: teamUser.nick_name?.trim() || teamUser.name, userId: teamUser.id, email: teamUser.email, adminLevel, photoUrl: teamUser.photo_url, avatar: teamUser.avatar, loginMode: 'team', organizationId: teamUser.organization_id || null, projectGroup: teamUser.project_group || null, mustChangePassword: teamUser.must_change_password === true, termsAcceptedVersion: isDemo ? null : (teamUser.terms_accepted_version || null), tourDone: isDemo ? false : (teamUser.tour_done === true), pickerDone: isDemo ? false : (teamUser.picker_done === true), isDemo })
+    if (stored?.kind === 'team' && stored.id) {
+      const { data: teamUser } = await sb.from('users').select('*').eq('id', stored.id).eq('auth_id', authUser.id).eq('is_active', true).maybeSingle()
+      if (teamUser) { applyRestoredTeamSession(teamUser); return }
+    }
+    if (stored?.kind === 'solo' && stored.id) {
+      const { data: soloUser } = await sb.from('solo_users').select('*').eq('id', stored.id).eq('auth_id', authUser.id).maybeSingle()
+      if (soloUser) { applyRestoredSoloSession(soloUser); return }
+    }
+
+    // No stored identity, or the stored row is gone/deactivated — fall back
+    // to auto-detection. Ordered + limited to 1 so an ambiguous multi-row
+    // account never errors; it just deterministically picks one and persists
+    // it via applyRestoredTeamSession so future refreshes stay consistent.
+    if (isSuperAdmin) {
+      setSession({ role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' })
+      localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'admin' }))
       return
     }
+    const { data: teamUsers } = await sb.from('users').select('*').eq('auth_id', authUser.id).eq('is_active', true).order('id').limit(1)
+    if (teamUsers?.length) { applyRestoredTeamSession(teamUsers[0]); return }
+
     const { data: soloUser } = await sb.from('solo_users').select('*').eq('auth_id', authUser.id).maybeSingle()
-    if (soloUser) {
-      const isDemo = soloUser.email?.toLowerCase() === 'demo@labhive.app'
-      setSession({ role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name, userId: soloUser.id, email: soloUser.email, photoUrl: soloUser.photo_url, avatar: soloUser.avatar, activeModules: soloUser.active_modules || [], loginMode: 'solo', termsAcceptedVersion: isDemo ? null : (soloUser.terms_accepted_version || null), isPaid: soloUser.is_paid || false, tourDone: isDemo ? false : (soloUser.tour_done === true), pickerDone: isDemo ? false : (soloUser.picker_done === true), isDemo })
-      sb.from('solo_workspace_members').select('owner_id').eq('member_id', soloUser.id)
-        .then(({ data: memberships }) => {
-          if (memberships?.length) {
-            const ownerIds = memberships.map(m => m.owner_id)
-            sb.from('solo_users').select('id, name').in('id', ownerIds)
-              .then(({ data: owners }) => setSharedWorkspaces((owners || []).map(o => ({ ownerId: o.id, ownerName: o.name }))))
-          }
-        })
-    }
+    if (soloUser) applyRestoredSoloSession(soloUser)
   }
 
   useEffect(() => {
@@ -399,11 +433,11 @@ export default function App() {
       return
     }
     if (session?.role === 'lab_user') {
-      const baseAllowed = ['dashboard', 'projects', 'project-detail', 'training', 'profile', 'equipmenthub', 'booking', 'remessages', 'barcodeqr', 'equipmentscan', 'home', 'equipment', 'pm', 'history', 'training-proto', 'layout-proto']
+      const baseAllowed = ['dashboard', 'projects', 'training', 'profile', 'equipmenthub', 'booking', 'remessages', 'barcodeqr', 'equipmentscan', 'home', 'equipment', 'pm', 'history', 'training-proto', 'layout-proto']
       if (!baseAllowed.includes(screen) && !(userAccess && userAccess.has(screen))) setScreen('dashboard')
     }
     // equipmentscan, barcodeqr, home, equipment bypass per-user access control
-    const INTERNAL = new Set(['dashboard', 'profile', 'inspection', 'results', 'project-detail', 'pm', 'equipmentscan', 'barcodeqr', 'orgadmin', 'home', 'equipment', 'projects', 'training', 'training-proto', 'layout-proto', 'history', 'equipmenthub', 'booking', 'remessages', 'labmanagement'])
+    const INTERNAL = new Set(['dashboard', 'profile', 'inspection', 'results', 'pm', 'equipmentscan', 'barcodeqr', 'orgadmin', 'home', 'equipment', 'projects', 'training', 'training-proto', 'layout-proto', 'history', 'equipmenthub', 'booking', 'remessages', 'labmanagement'])
     if ((session?.role === 'user' || session?.role === 'admin') && userAccess && !INTERNAL.has(screen)) {
       if (!userAccess.has(screen)) setScreen('dashboard')
     }
@@ -456,7 +490,6 @@ export default function App() {
     inspection: <Inspection />,
     results: <Results />,
     projects: <ProjectMaterial />,
-    'project-detail': <ProjectDetail />,
     history: <History />,
     training: <TrainingRecords />,
     'training-proto': <TrainingRecordsProto />,

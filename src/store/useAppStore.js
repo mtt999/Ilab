@@ -8,6 +8,7 @@ export const useAppStore = create((set, get) => ({
   clearSession: () => {
     sb.auth.signOut()
     localStorage.removeItem('ilab_login_mode')
+    localStorage.removeItem('ilab_active_identity')
     set({ session: null, loginMode: null, sharedWorkspaces: [], viewingWorkspaceOwnerId: null, activeModules: null, currentProjectId: null, sidebarSubTab: null, screen: 'dashboard' })
   },
 

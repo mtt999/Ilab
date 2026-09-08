@@ -324,6 +324,15 @@ $b$);
 -- STEP 11: rooms, supplies, inspections
 -- ────────────────────────────────────────────────────────────────
 
+-- These three tables serve BOTH team users (organization_id) and solo users.
+-- solo_owner_id added Sept 2026: without it a solo user's rows carry
+-- organization_id = NULL, so `organization_id = my_org_id()` evaluates to NULL
+-- (never true) and every solo INSERT was silently rejected and every SELECT
+-- returned nothing. Do NOT drop the solo branch from these policies.
+ALTER TABLE rooms       ADD COLUMN IF NOT EXISTS solo_owner_id uuid;
+ALTER TABLE supplies    ADD COLUMN IF NOT EXISTS solo_owner_id uuid;
+ALTER TABLE inspections ADD COLUMN IF NOT EXISTS solo_owner_id uuid;
+
 DO $$
 DECLARE t TEXT;
 BEGIN
@@ -331,8 +340,16 @@ BEGIN
   LOOP
     PERFORM _apply_rls(t, 'org_scope_policy', $b$
       FOR ALL TO authenticated
-      USING    (is_super_admin() OR organization_id = my_org_id())
-      WITH CHECK (is_super_admin() OR organization_id = my_org_id())
+      USING (
+        is_super_admin()
+        OR (organization_id IS NOT NULL AND organization_id = my_org_id())
+        OR (solo_owner_id  IS NOT NULL AND solo_owner_id  = my_solo_id())
+      )
+      WITH CHECK (
+        is_super_admin()
+        OR (organization_id IS NOT NULL AND organization_id = my_org_id())
+        OR (solo_owner_id  IS NOT NULL AND solo_owner_id  = my_solo_id())
+      )
     $b$);
   END LOOP;
 END $$;
@@ -391,7 +408,7 @@ $b$);
 DO $$
 DECLARE t TEXT;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['project_materials','project_files','project_results','project_links']
+  FOREACH t IN ARRAY ARRAY['project_files','project_results','project_links']
   LOOP
     PERFORM _apply_rls(t, 'project_child_policy', $b$
       FOR ALL TO authenticated
@@ -406,6 +423,68 @@ BEGIN
     $b$);
   END LOOP;
 END $$;
+
+-- project_materials is NOT a simple project child: materials can exist
+-- "standalone" (project_id NULL, e.g. NewMaterialModal's "None / standalone"
+-- option) and app code scopes those directly by organization_id/solo_owner_id
+-- columns on this table (dozens of query filters in ProjectMaterial.jsx).
+-- Those two columns were missing from the schema entirely (Sept 2026 bug —
+-- blocked ALL material creation for every org and solo user, not just one).
+ALTER TABLE project_materials ADD COLUMN IF NOT EXISTS organization_id UUID;
+ALTER TABLE project_materials ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
+-- storage_date was also missing (found immediately after the above fix) —
+-- NewMaterialModal's payload has always included it alongside sampling_date.
+ALTER TABLE project_materials ADD COLUMN IF NOT EXISTS storage_date DATE;
+
+-- agg_sieve_sizes was typed `text` instead of `jsonb`, unlike its sibling
+-- array columns (locations, photos) on this same table. The app always sends
+-- a real JS array; against a `text` column the Supabase client JSON.stringifies
+-- it before insert, and PostgREST hands it back as a literal string on read
+-- (e.g. '["2\""]') instead of a parsed array. The Materials tab does
+-- `(m.agg_sieve_sizes || []).map(...)` — since a non-empty string is truthy,
+-- it skips the `|| []` fallback and calls .map() on a string, which crashes
+-- the whole screen (Sept 2026, hit on any aggregate material with a sieve
+-- size set, for every org).
+UPDATE project_materials SET agg_sieve_sizes = NULL
+WHERE agg_sieve_sizes IS NOT NULL AND agg_sieve_sizes::text !~ '^\s*\[.*\]\s*$';
+ALTER TABLE project_materials
+  ALTER COLUMN agg_sieve_sizes TYPE jsonb
+  USING CASE
+    WHEN agg_sieve_sizes IS NULL OR agg_sieve_sizes::text = '' THEN '[]'::jsonb
+    ELSE agg_sieve_sizes::jsonb
+  END;
+ALTER TABLE project_materials ALTER COLUMN agg_sieve_sizes SET DEFAULT '[]'::jsonb;
+
+-- project_materials.project_id had NO foreign key constraint at all — the
+-- Materials tab's load query embeds `projects(id, name, project_id)` via
+-- PostgREST, which requires a real FK to resolve the relationship. Without
+-- it the ENTIRE query errors out (not just rows missing a project), and
+-- loadAllMaterials() doesn't check the error, so the Materials list silently
+-- renders empty for every org and solo user, standalone or not (Sept 2026).
+-- Nullify any orphaned references first so the ADD CONSTRAINT doesn't fail.
+UPDATE project_materials SET project_id = NULL
+WHERE project_id IS NOT NULL AND project_id NOT IN (SELECT id FROM projects);
+
+ALTER TABLE project_materials DROP CONSTRAINT IF EXISTS project_materials_project_id_fkey;
+ALTER TABLE project_materials
+  ADD CONSTRAINT project_materials_project_id_fkey
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL;
+
+SELECT _apply_rls('project_materials', 'project_materials_policy', $b$
+FOR ALL TO authenticated
+USING (
+  is_super_admin()
+  OR (organization_id IS NOT NULL AND organization_id = my_org_id())
+  OR (solo_owner_id IS NOT NULL AND solo_owner_id = my_solo_id())
+  OR project_id IN (SELECT id FROM projects WHERE organization_id = my_org_id() OR solo_owner_id = my_solo_id())
+)
+WITH CHECK (
+  is_super_admin()
+  OR (organization_id IS NOT NULL AND organization_id = my_org_id())
+  OR (solo_owner_id IS NOT NULL AND solo_owner_id = my_solo_id())
+  OR project_id IN (SELECT id FROM projects WHERE organization_id = my_org_id() OR solo_owner_id = my_solo_id())
+)
+$b$);
 
 SELECT _apply_rls('project_record_files', 'project_record_files_policy', $b$
 FOR ALL TO authenticated
@@ -875,7 +954,7 @@ DECLARE
     'equipment_booking_settings_policy','equipment_bookings_policy','booking_notifications_policy',
     'equipment_booking_blocks_policy','eq_hub_policy','equipment_sop_notes_policy','equipment_list_policy',
     'org_scope_policy','floor_plans_policy','storage_locations_policy','student_lockers_policy',
-    'projects_policy','project_child_policy','project_record_files_policy','project_supplies_policy',
+    'projects_policy','project_child_policy','project_materials_policy','project_record_files_policy','project_supplies_policy',
     'test_result_entries_policy','analysis_comments_policy',
     'training_schedule_policy','training_policy','retraining_requests_policy',
     'tasks_policy','task_attachments_policy','task_comments_policy','user_out_of_lab_policy',

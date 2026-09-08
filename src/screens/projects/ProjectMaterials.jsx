@@ -671,7 +671,7 @@ export function MaterialModal({ projectId, projectName, material, onClose, onSav
   const [form, setForm] = useState(material ? {
     name: material.name || '',
     material_type: material.material_type || '',
-    agg_sieve_sizes: material.agg_sieve_sizes || [],
+    agg_sieve_sizes: Array.isArray(material.agg_sieve_sizes) ? material.agg_sieve_sizes : [],
     agg_raw_or_rap: material.agg_raw_or_rap || '',
     ab_binder_pg: material.ab_binder_pg || '',
     ab_mix_design: material.ab_mix_design || '',
@@ -971,7 +971,7 @@ export default function ProjectMaterials({ project }) {
                         </> : <>
                           {m.material_type === 'aggregate' && <>
                             <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Condition</div><div style={{ fontWeight: 500 }}>{m.agg_raw_or_rap || '—'}</div></div>
-                            <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Sieve Sizes</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{(m.agg_sieve_sizes || []).map(s => <span key={s} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 500 }}>{s}</span>)}</div></div>
+                            <div style={{ gridColumn: '1/-1' }}><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Sieve Sizes</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{(Array.isArray(m.agg_sieve_sizes) ? m.agg_sieve_sizes : []).map(s => <span key={s} style={{ background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: 99, padding: '2px 10px', fontSize: 12, fontWeight: 500 }}>{s}</span>)}</div></div>
                           </>}
                           {m.material_type === 'asphalt_binder' && <>
                             <div><div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>PG Grade</div><div style={{ fontWeight: 500 }}>{m.ab_binder_pg || '—'}</div></div>

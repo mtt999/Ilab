@@ -156,6 +156,16 @@ ALTER TABLE rooms       ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
 ALTER TABLE supplies    ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
 ALTER TABLE inspections ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
 -- Then re-run rls_phase1.sql so the policy picks up the new solo branch.
+
+-- Project Materials standalone scoping (required — without these columns,
+-- "Add material" fails for EVERY org and solo user with "Could not find the
+-- 'organization_id' column of 'project_materials'". Materials can exist
+-- without a project ("None / standalone" in NewMaterialModal), so they can't
+-- rely solely on project_id -> projects for RLS scoping; see rls_phase1.sql
+-- STEP 13, project_materials_policy):
+ALTER TABLE project_materials ADD COLUMN IF NOT EXISTS organization_id UUID;
+ALTER TABLE project_materials ADD COLUMN IF NOT EXISTS solo_owner_id UUID;
+-- Then re-run rls_phase1.sql so project_materials gets its own dedicated policy.
 ```
 
 ### Row Level Security (RLS) — July 2026

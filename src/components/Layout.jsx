@@ -596,7 +596,7 @@ export default function Layout({ children }) {
             </svg>
           </button>
         )}
-        <div onClick={() => setScreen('dashboard')} style={{ cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div onClick={() => window.open('https://labhive.app/', '_blank')} style={{ cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ marginTop: 20 }}><LabHiveLogo size={79} /></div>
           {!isMobile && (
             <div>

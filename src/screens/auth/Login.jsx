@@ -241,6 +241,11 @@ export default function Login() {
     const adminLevel = user.admin_level || 0
     const role = user.role === 'admin' || adminLevel >= 1 ? 'admin' : user.role
     const isDemo = user.email?.toLowerCase() === 'demo@labhive.app'
+    // Remember exactly which row was chosen — a single auth_id can have multiple
+    // `users` rows (e.g. demo's Manager + Lab User, or an admin added as another
+    // role). Without this, a hard refresh can't disambiguate which one was active
+    // and silently resolves to the wrong identity (see restoreSessionFromAuth).
+    localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'team', id: user.id }))
     setSession({
       role, dbRole: user.role,
       username: user.nick_name?.trim() || user.name,
@@ -258,11 +263,13 @@ export default function Login() {
   }
 
   function applySuperAdmin() {
+    localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'admin' }))
     setSession({ role: 'admin', username: 'Admin', userId: null, adminLevel: 3, loginMode: 'team' })
   }
 
   function applySoloSession(soloUser) {
     const isDemo = soloUser.email?.toLowerCase() === 'demo@labhive.app'
+    localStorage.setItem('ilab_active_identity', JSON.stringify({ kind: 'solo', id: soloUser.id }))
     setSession({
       role: 'solo', username: soloUser.nick_name?.trim() || soloUser.name,
       userId: soloUser.id, email: soloUser.email,

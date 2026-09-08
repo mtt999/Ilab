@@ -125,8 +125,6 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
     .btn-hero:hover { background: var(--teal-dark); }
     .btn-hero-outline { display: inline-block; background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.35); padding: 14px 28px; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none; transition: border-color 0.15s; }
     .btn-hero-outline:hover { border-color: #fff; }
-    .hero-demo { margin-top: 20px; font-size: 13px; color: #ffffff; }
-    .hero-demo code { background: rgba(255,255,255,0.12); padding: 2px 7px; border-radius: 4px; font-family: monospace; }
 
     /* ── Shared section ── */
     .section-inner { max-width: 1040px; margin: 0 auto; }
@@ -299,9 +297,7 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
       <p>LabHive brings equipment booking, training records, supply inspections, project tracking, and team messaging into one purpose-built platform for university and research labs.</p>
       <div class="hero-ctas">
         <a href="/app" class="btn-hero">Launch LabHive →</a>
-        <a href="/app" class="btn-hero-outline">Try the demo</a>
       </div>
-      <div class="hero-demo">Demo login — username: <code>demo</code> &nbsp; password: <code>demo</code></div>
     </div>
   </section>
 
@@ -397,7 +393,7 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
         <div class="price-card team">
           <h4>Team Plan</h4>
           <p>For university and research labs with multiple members. Pricing is based on the number of users and active modules. Includes full admin panel, all features, and email support.</p>
-          <a href="/app?support=1" class="price-cta team">Request a quote →</a>
+          <a href="mailto:quote@labhive.app?subject=LabHive%20Team%20Plan%20Quote%20Request" class="price-cta team">Request a quote →</a>
         </div>
         <div class="price-card solo">
           <h4>Solo Plan</h4>
@@ -412,9 +408,8 @@ writeFileSync('docs/index.html', `<!DOCTYPE html>
   <section class="cta-section">
     <div class="section-inner">
       <h2>Ready to organize your lab?</h2>
-      <p>Get started today — try the live demo with no sign-up required.</p>
+      <p>Get started today — contact us to set up your lab.</p>
       <a href="/app" class="btn-hero">Launch LabHive →</a>
-      <div class="hero-demo" style="margin-top:16px;">Demo login — username: <code>demo</code> &nbsp; password: <code>demo</code></div>
     </div>
   </section>
 
@@ -518,7 +513,7 @@ writeFileSync('docs/privacy/index.html', `<!DOCTYPE html>
   <p>LabHive uses browser local storage to maintain your login session, storage provider preferences, and dashboard settings. No third-party tracking cookies are used.</p>
 
   <h2>9. Contact</h2>
-  <p>For privacy questions or data requests: <a href="mailto:motlagh999@gmail.com">motlagh999@gmail.com</a></p>
+  <p>For privacy questions or data requests: <a href="mailto:support@labhive.app">support@labhive.app</a></p>
   <p style="margin-top:48px;font-size:13px;color:#aaa;">© 2026 LabHive. <a href="/" style="color:#aaa;">Back to home</a></p>
 </body>
 </html>`)
@@ -600,7 +595,7 @@ writeFileSync('docs/terms/index.html', `<!DOCTYPE html>
   <p>We may update these terms from time to time. Continued use of the platform after changes are posted constitutes acceptance of the updated terms.</p>
 
   <h2>12. Contact</h2>
-  <p>Questions about these terms: <a href="mailto:motlagh999@gmail.com">motlagh999@gmail.com</a></p>
+  <p>Questions about these terms: <a href="mailto:support@labhive.app">support@labhive.app</a></p>
   <p style="margin-top:48px;font-size:13px;color:#aaa;">© 2026 LabHive. <a href="/" style="color:#aaa;">Back to home</a></p>
 </body>
 </html>`)

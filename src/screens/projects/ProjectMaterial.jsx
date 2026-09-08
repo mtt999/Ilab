@@ -2104,9 +2104,28 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
   const [subTab, setSubTab] = useState('info')
   const [photoTarget, setPhotoTarget] = useState(null)
   const photoFileRef = useRef(null)
+  const [matPhotoTarget, setMatPhotoTarget] = useState(null)
+  const matPhotoFileRef = useRef(null)
 
   // Project photo: managers/admins (team) or the workspace owner (solo)
   const canSetPhoto = !viewingWorkspaceOwnerId && (isSolo || session?.userId === null || session?.dbRole === 'admin' || session?.dbRole === 'user')
+
+  async function uploadMaterialPhoto(file) {
+    if (!file || !matPhotoTarget) return
+    const filename = `materials/${matPhotoTarget.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`
+    const { error: upErr } = await sb.storage.from('item-photos').upload(filename, file, { contentType: file.type || 'image/jpeg' })
+    if (upErr) { toast('Upload failed: ' + upErr.message); return }
+    const { data: url } = sb.storage.from('item-photos').getPublicUrl(filename)
+    // Replace the card's primary (first) photo, keeping any additional photos
+    // added via the full material editor untouched.
+    const existing = matPhotoTarget.photos || []
+    const nextPhotos = existing.length ? [url.publicUrl, ...existing.slice(1)] : [url.publicUrl]
+    const { error } = await sb.from('project_materials').update({ photos: nextPhotos }).eq('id', matPhotoTarget.id)
+    if (error) { toast('Could not save photo: ' + error.message); return }
+    toast('Material photo updated ✓')
+    setMatPhotoTarget(null)
+    loadAllMaterials()
+  }
 
   async function uploadProjectPhoto(file) {
     if (!file || !photoTarget) return
@@ -2130,7 +2149,8 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
     let q = sb.from('project_materials').select('id, name, material_type, sampling_date, storage_date, project_id, photos, barcode_id, barcode_scanned_at, storage_confirmed, storage_notes, locations, projects(id, name, project_id)').order('created_at', { ascending: false })
     if (isSolo && session?.userId) q = q.eq('solo_owner_id', session.userId)
     else if (session?.organizationId) q = q.eq('organization_id', session.organizationId)
-    const { data } = await q
+    const { data, error } = await q
+    if (error) { toast('Failed to load materials: ' + error.message, true); return }
     setAllMaterials(data || [])
   }
 
@@ -2203,7 +2223,7 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
               + Add project
             </button>
             <button className={`btn btn-sm ${isSolo ? 'btn-purple' : 'btn-primary'}`} onClick={() => setShowMaterialModal(true)}>
-              + Add material
+              + Non-Project Material
             </button>
           </>
         )}
@@ -2249,11 +2269,14 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
       <input ref={photoFileRef} type="file" accept="image/*" style={{ display: 'none' }}
         onChange={e => { uploadProjectPhoto(e.target.files?.[0]); e.target.value = '' }} />
 
+      <input ref={matPhotoFileRef} type="file" accept="image/*" style={{ display: 'none' }}
+        onChange={e => { uploadMaterialPhoto(e.target.files?.[0]); e.target.value = '' }} />
+
       {/* ── Materials card grid (standalone only — same card style as projects) ── */}
       {viewMode === 'materials' && (() => {
         const standaloneMats = allMaterials.filter(m => !m.project_id)
         return standaloneMats.length === 0 ? (
-          <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">📦</div><div>No standalone materials yet. Use + Add material to create one.</div></div>
+          <div className="empty-state" style={{ padding: 24 }}><div className="empty-icon">📦</div><div>No standalone materials yet. Use + Non-Project Material to create one.</div></div>
         ) : (
           <>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
@@ -2270,7 +2293,11 @@ function MaterialInventoryTab({ session, isSolo, onProjectCreated }) {
                       : <div style={{ fontSize: 28, marginBottom: 8 }}>📦</div>}
                     <div style={{ fontWeight: 600, fontSize: 14, color: isSel ? 'var(--accent3)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name || '—'}</div>
                     {m.material_type && <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.material_type}</div>}
-                    {m.sampling_date && <div style={{ marginTop: 8 }}><span className="badge badge-hold" style={{ fontSize: 10, padding: '2px 8px' }}>📅 {m.sampling_date}</span></div>}
+                    {m.sampling_date && <div style={{ marginTop: 8, marginBottom: 10 }}><span className="badge badge-hold" style={{ fontSize: 10, padding: '2px 8px' }}>📅 {m.sampling_date}</span></div>}
+                    <button className="btn" style={{ fontSize: 12, padding: '4px 10px', marginTop: m.sampling_date ? 0 : 10 }}
+                      onClick={e => { e.stopPropagation(); setMatPhotoTarget(m); matPhotoFileRef.current?.click() }}>
+                      {firstPhoto ? 'Change photo' : 'Photo'}
+                    </button>
                   </div>
                 )
               })}
