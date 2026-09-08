@@ -1,7 +1,21 @@
 import { readFileSync, mkdirSync, writeFileSync, existsSync, rmSync, copyFileSync } from 'fs'
 
+// ─── Auto-update check: stamp every build with a unique id ──────────────────
+// Windows/Chrome users reported that even a hard refresh sometimes kept
+// showing the old build (intermediate CDN/proxy caching index.html). main.jsx
+// fetches /app/version.json (no-store) on load and compares it against
+// window.__BUILD_ID__ embedded in the currently-loaded HTML; a mismatch means
+// a newer deploy exists, so it force-reloads once with a cache-busting param.
+// Both values are written from this SAME buildId so a single deploy always
+// produces a matching pair.
+const buildId = Date.now().toString(36)
+writeFileSync('docs/app/version.json', JSON.stringify({ buildId }))
+console.log(`✓ docs/app/version.json written (buildId ${buildId})`)
+
 // ─── SPA admin mirror ────────────────────────────────────────────────────────
-const appSrc = readFileSync('docs/app/index.html', 'utf8')
+let appSrc = readFileSync('docs/app/index.html', 'utf8')
+appSrc = appSrc.replace('<head>', `<head>\n    <script>window.__BUILD_ID__=${JSON.stringify(buildId)}</script>`)
+writeFileSync('docs/app/index.html', appSrc)
 const adminHtml = appSrc.replace('<title>LabHive — Intelligent Lab Platform</title>', '<title>LabHive — Admin</title>')
 mkdirSync('docs/app/admin', { recursive: true })
 writeFileSync('docs/app/admin/index.html', adminHtml)

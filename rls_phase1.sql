@@ -838,6 +838,14 @@ $b$);
 -- STEP 19: email_notifications_queue
 -- ────────────────────────────────────────────────────────────────
 
+-- Explicit safety net (Sept 2026): Supabase's linter flagged this table with
+-- policies present but RLS disabled — _apply_rls() already re-enables RLS
+-- every time it (re)creates these policies below, so a stale/out-of-band
+-- toggle (e.g. via the dashboard) is the only way this table would ever be
+-- left open. This line makes re-enabling it explicit and independent of
+-- _apply_rls's internal behavior, in case that ever changes.
+ALTER TABLE email_notifications_queue ENABLE ROW LEVEL SECURITY;
+
 SELECT _apply_rls('email_notifications_queue', 'email_queue_insert',
   $b$FOR INSERT TO authenticated WITH CHECK (true)$b$);
 SELECT _apply_rls('email_notifications_queue', 'email_queue_select', $b$
