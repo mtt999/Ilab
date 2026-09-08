@@ -502,6 +502,13 @@ export default function Layout({ children }) {
   const accentColor = session?.loginMode === 'solo' ? '#534AB7' : '#1D9E75'
   const accentLight = session?.loginMode === 'solo' ? '#f0effe' : '#e6f7f2'
   const displayName = session?.role === 'admin' && !session?.userId ? '' : session?.username
+  const roleLabel = session?.isDemo
+    ? 'Demo'
+    : session?.role === 'admin' && !session?.userId
+      ? 'Super Admin'
+      : session?.role === 'admin' && session?.userId
+        ? 'Admin'
+        : ''
 
   const showSidebar = !isMobile && !isProto && !!session
 
@@ -646,8 +653,16 @@ export default function Layout({ children }) {
                     : <span style={{ fontSize: 12, fontWeight: 700, color: '#ffffff' }}>{(session.username || 'A')[0].toUpperCase()}</span>
                 }
               </div>
-              {!isMobile && displayName && (
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--mono)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+              {!isMobile && (displayName || roleLabel) && (
+                <span
+                  title={displayName && roleLabel ? `${displayName} (${roleLabel})` : (displayName || `(${roleLabel})`)}
+                  style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--mono)', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {displayName}
+                  {roleLabel && (
+                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>{displayName ? ` (${roleLabel})` : `(${roleLabel})`}</span>
+                  )}
+                </span>
               )}
             </button>
           )}
