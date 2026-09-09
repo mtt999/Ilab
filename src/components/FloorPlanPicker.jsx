@@ -380,7 +380,13 @@ function CustomPlanTab({ plan, selected, onToggle, occupancy, canEdit }) {
 // ══════════════════════════════════════════════════════════════
 // MAIN FLOOR PLAN PICKER
 // ══════════════════════════════════════════════════════════════
-export default function FloorPlanPicker({ projectId, projectName, materialId, materialType, currentLocations = [], onConfirm, onClose }) {
+export function formatLocation(loc) {
+  if (!loc) return ''
+  if (loc.location && loc.detail && loc.location !== loc.detail) return `${loc.location} — ${loc.detail}`
+  return loc.detail || loc.location || ''
+}
+
+export default function FloorPlanPicker({ projectId, projectName, materialId, materialType, currentLocations = [], onConfirm, onClose, viewOnly = false }) {
   const { session } = useAppStore()
   const [customPlans, setCustomPlans] = useState([])
   const [facility, setFacility] = useState(null)   // set after load
@@ -390,7 +396,7 @@ export default function FloorPlanPicker({ projectId, projectName, materialId, ma
   )
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const canEdit = !!session
+  const canEdit = !viewOnly && !!session
   const isSolo = session?.loginMode === 'solo'
   const isICTOrg = session?.organizationId === '5bab5b33-fff9-4a4a-b617-3dac179f9678'
 
@@ -538,8 +544,8 @@ export default function FloorPlanPicker({ projectId, projectName, materialId, ma
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>Select storage location</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Tap to select · Occupied locations show project info on tap</div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>{viewOnly ? '🗺️ Floor Map — Storage Location' : 'Select storage location'}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{viewOnly ? 'Highlighted zone shows where this material is stored' : 'Tap to select · Occupied locations show project info on tap'}</div>
           </div>
           <button className="btn btn-sm" onClick={onClose}>✕ Close</button>
         </div>
